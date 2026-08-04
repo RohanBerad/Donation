@@ -85,8 +85,12 @@ WSGI_APPLICATION = 'charity_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'b8itubcnzjvycuga2yon',
+        'USER': 'urjrohesshkd6enc',
+        'PASSWORD': 'btzGHAhO0GkQLo3fY3wo',
+        'HOST': 'b8itubcnzjvycuga2yon-mysql.services.clever-cloud.com',
+        'PORT': '3306',
     }
 }
 
@@ -143,3 +147,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'                # where @login_required sends non-logged-in users
 LOGIN_REDIRECT_URL = 'dashboard'   # where users go after logging in
 LOGOUT_REDIRECT_URL = 'home'       # where users go after logging out
+
+# ---- Email Configuration (Console backend for development) ----
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = "rohanberad5@gmail.com"
+EMAIL_HOST_PASSWORD = "zxobewrrqrlymfmq"
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

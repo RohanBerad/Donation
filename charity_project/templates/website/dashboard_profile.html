@@ -46,6 +46,9 @@
                 {{ form.username.label }}
             </label>
             {{ form.username }}
+            {% for error in form.username.errors %}
+                <small class="text-danger d-block mt-1">{{ error }}</small>
+            {% endfor %}
         </div>
 
         <div class="col-md-12">
@@ -53,6 +56,9 @@
                 {{ form.email.label }}
             </label>
             {{ form.email }}
+            {% for error in form.email.errors %}
+                <small class="text-danger d-block mt-1">{{ error }}</small>
+            {% endfor %}
         </div>
     </div>
 

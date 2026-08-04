@@ -13,8 +13,10 @@ Django ORM automatically converts these Python classes into database tables.
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 import random
 import string
+from datetime import timedelta
 
 
 # ==========================================================
@@ -245,3 +247,25 @@ class Testimonial(models.Model):
     def star_range(self):
         """Helper used in templates to draw filled stars easily."""
         return range(self.rating)
+
+
+# ==========================================================
+# 6. PASSWORD RESET OTP MODEL
+# ==========================================================
+class PasswordResetOTP(models.Model):
+    """
+    Stores OTP records for the forgot password flow.
+    Each record links an email address to a 6-digit OTP code.
+    """
+
+    email = models.EmailField()
+    otp_code = models.CharField(max_length=6)
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        """OTP expires after 10 minutes."""
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+
+    def __str__(self):
+        return f"OTP for {self.email} - {'Used' if self.is_used else 'Active'}"

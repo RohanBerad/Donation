@@ -12,16 +12,19 @@ so the code stays easy to read for beginners.
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm, SetPasswordForm
 from django.contrib import messages
 from django.http import HttpResponse
+from django.core.mail import send_mail
 from django.db.models import Sum
 from decimal import Decimal
+import random
 
-from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile
+from django.contrib.auth.models import User
+from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile, PasswordResetOTP
 from .forms import (
     DonationForm, RegisterForm, CampaignForm, AdminLoginForm,
-    SiteSettingsForm, TestimonialForm, ProfileForm,
+    SiteSettingsForm, TestimonialForm, ProfileForm, EmailLoginForm,
 )
 
 
@@ -312,18 +315,32 @@ def register_view(request):
 def login_view(request):
     """
     Shows the login form and logs the user in on submit.
+
+    NOTE: We log donors in by EMAIL, not username. Django's authentication
+    system only knows how to check a username + password pair, so behind
+    the scenes we first look up which account owns the entered email, then
+    authenticate using that account's real username -- the donor never
+    needs to know or type their username.
     """
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = EmailLoginForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, username=username, password=password)
+            email = form.cleaned_data['email'].strip().lower()
+            password = form.cleaned_data['password']
+
+            matching_user = User.objects.filter(email__iexact=email).first()
+
+            user = None
+            if matching_user is not None:
+                user = authenticate(request, username=matching_user.username, password=password)
+
             if user is not None:
                 login(request, user)
                 return redirect('dashboard')
+            else:
+                messages.error(request, 'Invalid email or password. Please try again.')
     else:
-        form = AuthenticationForm()
+        form = EmailLoginForm()
 
     return render(request, 'website/login.html', {'form': form})
 
@@ -337,6 +354,159 @@ def logout_view(request):
     """
     logout(request)
     return redirect('home')
+
+
+# ==========================================================
+# 10a. FORGOT PASSWORD (OTP-based, 3-step flow)
+# ==========================================================
+def forgot_password(request):
+    """
+    Step 1 of the forgot-password flow.
+    The user enters their email address. If that email is registered,
+    we generate a 6-digit OTP, save it to the DB, and send it via email
+    (in development, Django prints it to the console).
+    """
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+
+        if not email:
+            messages.error(request, 'Please enter your email address.')
+            return render(request, 'website/forgot_password.html')
+
+        # Check if a user with this email actually exists
+        user_exists = User.objects.filter(email__iexact=email).exists()
+
+        # For security, don't reveal whether the email exists or not
+        # but only proceed with OTP generation if it does
+        if user_exists:
+            otp_code = str(random.randint(100000, 999999))
+
+            # Invalidate any previous unused OTPs for this email
+            PasswordResetOTP.objects.filter(email=email, is_used=False).update(is_used=True)
+
+            # Create new OTP record
+            PasswordResetOTP.objects.create(email=email, otp_code=otp_code)
+
+            # Store email in session so the next steps know whose OTP to verify
+            request.session['reset_email'] = email
+            request.session.modified = True
+
+            # Send the OTP via email (console backend in dev)
+            try:
+                send_mail(
+                    subject='Your Password Reset OTP - Helping Hands',
+                    message=f'Your OTP for password reset is: {otp_code}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.',
+                    from_email=None,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                messages.error(request, f"Email could not be sent: {e}")
+                return redirect("forgot_password")  
+
+            messages.success(request, 'If an account with that email exists, an OTP has been sent.')
+            return redirect('verify_otp')
+        else:
+            # Still show success to prevent email enumeration
+            messages.success(request, 'If an account with that email exists, an OTP has been sent.')
+            return redirect('forgot_password')
+
+    return render(request, 'website/forgot_password.html')
+
+
+def verify_otp(request):
+    """
+    Step 2 of the forgot-password flow.
+    The user enters the 6-digit OTP they received by email.
+    We look up the most recent unused OTP for the session's email.
+    """
+    email = request.session.get('reset_email')
+
+    if not email:
+        messages.error(request, 'Session expired. Please start the password reset process again.')
+        return redirect('forgot_password')
+
+    if request.method == 'POST':
+        otp_input = request.POST.get('otp_code', '').strip()
+
+        if not otp_input:
+            messages.error(request, 'Please enter the OTP code.')
+            return render(request, 'website/verify_otp.html', {'email': email})
+
+        # Find the most recent unused OTP for this email
+        otp_record = PasswordResetOTP.objects.filter(
+            email=email, is_used=False
+        ).order_by('-created_at').first()
+
+        if not otp_record:
+            messages.error(request, 'No active OTP found. Please request a new one.')
+            return redirect('forgot_password')
+
+        if otp_record.is_expired():
+            messages.error(request, 'Your OTP has expired. Please request a new one.')
+            otp_record.is_used = True
+            otp_record.save()
+            return redirect('forgot_password')
+
+        if otp_record.otp_code != otp_input:
+            messages.error(request, 'Invalid OTP code. Please try again.')
+            return render(request, 'website/verify_otp.html', {'email': email})
+
+        # OTP is valid -- mark it as used and proceed
+# OTP is valid -- mark it as used and proceed
+        otp_record.is_used = True
+        otp_record.save()
+
+        request.session["otp_verified"] = True
+
+        messages.success(request, 'OTP verified successfully! Please set your new password.')
+        return redirect('reset_password')
+
+    return render(request, 'website/verify_otp.html', {'email': email})
+
+
+def reset_password(request):
+    """
+    Step 3 of the forgot-password flow.
+    The user enters their new password twice.
+    """
+    email = request.session.get('reset_email')
+    if not request.session.get("otp_verified"):
+        messages.error(request, "Please verify your OTP first.")
+        return redirect("verify_otp")
+
+    if not email:
+        messages.error(request, 'Session expired. Please start the password reset process again.')
+        return redirect('forgot_password')
+
+    # IMPORTANT: this uses the exact same lookup as login_view() above
+    # (User.objects.filter(email__iexact=email).first()) so that the account
+    # whose password gets reset here is ALWAYS the same account the donor
+    # will actually log into afterwards -- even for any old accounts that
+    # happen to share an email from before duplicate emails were blocked.
+    user = User.objects.filter(email__iexact=email).first()
+
+    if not user:
+        messages.error(request, 'User not found. Please try again.')
+        return redirect('forgot_password')
+
+    if request.method == 'POST':
+        form = SetPasswordForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+
+            request.session.pop("reset_email", None)
+            request.session.pop("otp_verified", None)
+            messages.success(request, 'Your password has been reset successfully! You can now log in.')
+            return redirect('login')
+    else:
+        form = SetPasswordForm(user)
+
+    # Add Bootstrap classes
+    for field in form.fields.values():
+        field.widget.attrs.update({'class': 'form-control'})
+
+    return render(request, 'website/reset_password.html', {'form': form})
 
 
 # ==========================================================

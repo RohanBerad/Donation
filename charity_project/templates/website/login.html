@@ -21,13 +21,19 @@
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">Username</label>
-                            <input type="text" name="username" class="form-control" placeholder="Enter your username" required>
+                            <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">Email Address</label>
+                            <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+                            {% for error in form.email.errors %}
+                                <small class="text-danger d-block mt-1">{{ error }}</small>
+                            {% endfor %}
                         </div>
                         <div class="mb-4">
                             <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">Password</label>
                             <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
-                            <a href="/dashboard/change-password/">Forgot password?</a>
+                            {% for error in form.password.errors %}
+                                <small class="text-danger d-block mt-1">{{ error }}</small>
+                            {% endfor %}
+                             <a href="{% url 'forgot_password' %}">Forgot password?</a>
                         </div>
                         <button type="submit" class="btn-hr-green w-100 py-3 fs-6">SIGN IN</button>
                     </form>

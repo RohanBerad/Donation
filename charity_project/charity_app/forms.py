@@ -77,6 +77,37 @@ class RegisterForm(UserCreationForm):
             'class': 'form-control', 'placeholder': 'Confirm password'
         })
 
+    def clean_email(self):
+        """
+        Makes sure two different accounts can never share the same email address.
+        This matters a lot for this site because BOTH login and "Forgot Password"
+        now look a user up by their email -- if two accounts shared an email,
+        there would be no way to tell them apart.
+        """
+        email = self.cleaned_data['email'].strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError('An account with this email already exists. Please sign in instead.')
+        return email
+
+
+class EmailLoginForm(forms.Form):
+    """
+    A login form that authenticates by EMAIL instead of username.
+
+    Django's built-in AuthenticationForm only knows how to check the
+    "username" field, so instead of using it we take the email + password
+    here, look up which account owns that email in the view (see
+    login_view() in views.py), and authenticate with that account's actual
+    username behind the scenes -- the donor never needs to know or type
+    their username to log in.
+    """
+    email = forms.EmailField(widget=forms.EmailInput(attrs={
+        'class': 'form-control', 'placeholder': 'Enter your email'
+    }))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'class': 'form-control', 'placeholder': 'Enter your password'
+    }))
+
 
 class ProfileForm(forms.ModelForm):
     """
@@ -130,6 +161,17 @@ class ProfileForm(forms.ModelForm):
         if existing.exists():
             raise forms.ValidationError('That username is already taken. Please choose another.')
         return username
+
+    def clean_email(self):
+        # Same idea as clean_username above -- but for email, since login and
+        # "Forgot Password" both look accounts up by email address.
+        email = self.cleaned_data['email'].strip().lower()
+        existing = User.objects.filter(email__iexact=email)
+        if self.current_user:
+            existing = existing.exclude(pk=self.current_user.pk)
+        if existing.exists():
+            raise forms.ValidationError('That email is already used by another account.')
+        return email
 
 
 class CampaignForm(forms.ModelForm):

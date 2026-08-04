@@ -1,0 +1,217 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_settings.ngo_name }} — HopeRise Charity Platform{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- HopeRise Exact Design CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <!-- ===================== NAVBAR (HopeRise Header) ===================== -->
+    <nav class="navbar navbar-expand-lg sticky-top hr-navbar">
+        <div class="container">
+            <a class="navbar-brand hr-logo" href="{% url 'home' %}">
+                <span class="hr-logo-icon"><i class="bi bi-grid-fill"></i></span>
+                {{ site_settings.ngo_name }}
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav mx-auto align-items-lg-center">
+                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'home' %}">Who We Are</a></li>
+                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'campaign_list' %}">What We Do</a></li>
+                                     <li class="nav-item"><a class="hr-nav-link" href="{% url 'home' %}#about">Get Involved</a></li>
+                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'home' %}#impact">News & Events</a></li>
+
+                </ul>
+
+                <div class="d-flex align-items-center gap-3">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="hr-nav-link d-flex align-items-center">
+                            {% if nav_user_profile.profile_picture %}
+                                <img src="{{ nav_user_profile.profile_picture.url }}" alt="{{ user.username }}"
+                                     class="rounded-circle me-1" style="width: 26px; height: 26px; object-fit: cover;">
+                            {% else %}
+                                <i class="bi bi-person-circle fs-6 me-1"></i>
+                            {% endif %}
+                            {{ user.username }}
+                        </a>
+                        <a href="{% url 'logout' %}" class="hr-nav-link text-danger">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="hr-nav-link">Sign In</a>
+                    {% endif %}
+
+                    <a href="tel:{{ site_settings.contact_phone }}" class="hr-icon-circle-btn" title="Call Us">
+                        <i class="bi bi-telephone"></i>
+                    </a>
+                    
+                    <a class="btn-hr-pill-outline hr-pulse" href="{% url 'donate_generic' %}" data-bs-toggle="modal" data-bs-target="#quickDonateModal">Donate</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Django Messages System -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-dismissible fade show rounded-pill px-4 bg-white border border-secondary shadow-sm d-flex align-items-center gap-2" role="alert">
+                    <span class="badge bg-success rounded-circle p-2"><i class="bi bi-check-lg text-white"></i></span>
+                    <span class="fw-semibold text-dark">{{ message }}</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- ===================== MAIN CONTENT ===================== -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block footer %}
+    <!-- ===================== FOOTER (HopeRise Styling) ===================== -->
+    <footer class="hr-footer">
+        <div class="container">
+            <div class="row g-4 justify-content-between mb-5">
+                <div class="col-lg-4">
+                    <a class="hr-logo mb-3 d-inline-flex" href="{% url 'home' %}">
+                        <span class="hr-logo-icon"><i class="bi bi-grid-fill"></i></span>
+                        {{ site_settings.ngo_name }}
+                    </a>
+                    <p class="text-muted small me-lg-4">{{ site_settings.footer_about_text }}</p>
+                </div>
+                <div class="col-lg-3">
+                    <h6 class="font-heading text-uppercase small fw-bold tracking-wider mb-3">Navigation</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2 small text-muted">
+                        <li><a href="{% url 'home' %}" class="hover-text-dark">Who We Are</a></li>
+                        <li><a href="{% url 'campaign_list' %}" class="hover-text-dark">What We Do</a></li>
+                        <li><a href="{% url 'register' %}" class="hover-text-dark">Become a Volunteer</a></li>
+                        <li><a href="{% url 'login' %}" class="hover-text-dark">Donor Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h6 class="font-heading text-uppercase small fw-bold tracking-wider mb-3">Contact Us</h6>
+                    <ul class="list-unstyled d-flex flex-column gap-2 small text-muted">
+                        <li><i class="bi bi-geo-alt me-2 text-dark"></i> {{ site_settings.contact_address }}</li>
+                        <li><i class="bi bi-envelope me-2 text-dark"></i> {{ site_settings.contact_email }}</li>
+                        <li><i class="bi bi-telephone me-2 text-dark"></i> {{ site_settings.contact_phone }}</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-top border-dark border-opacity-10 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center text-muted small">
+                <p class="mb-0">&copy; 2026 {{ site_settings.ngo_name }}. HopeRise UI Design Replica.</p>
+                <div>
+                    <a href="{% url 'admin_login' %}" class="text-muted">Staff Login</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <!-- ===================== QUICK DONATE MODAL ===================== -->
+    <div class="modal fade" id="quickDonateModal" tabindex="-1" aria-hidden="true" aria-labelledby="quickDonateLabel" data-donate-url="{% url 'donate_generic' %}">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content hr-donate-modal">
+                <div class="hr-donate-flip-outer">
+                    <div class="hr-donate-flip-inner" id="donateFlipInner">
+
+                        <!-- FRONT FACE: choose amount -->
+                        <div class="hr-donate-face hr-donate-face-front">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="font-heading fw-bold mb-0" id="quickDonateLabel">Choose Amount</h5>
+                                <button type="button" class="hr-modal-close" data-bs-dismiss="modal" aria-label="Close">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+                                <span class="hr-toggle-label active" id="labelOneTime">One-Time Donation</span>
+                                <label class="hr-toggle-switch mb-0">
+                                    <input type="checkbox" id="monthlyToggle">
+                                    <span class="hr-toggle-track"><span class="hr-toggle-thumb"></span></span>
+                                </label>
+                                <span class="hr-toggle-label" id="labelMonthly">Monthly Support <i class="bi bi-heart-fill text-emerald"></i></span>
+                            </div>
+
+                            <div class="hr-amount-input-wrap mb-3">
+                                <input type="number" id="donateAmountInput" class="hr-amount-input" value="500" min="1">
+                                <select class="hr-currency-select" id="donateCurrency">
+                                    <option value="Rs." selected>Rs.</option>
+                                    <option value="USD">USD</option>
+                                </select>
+                            </div>
+
+                            <div class="hr-amount-pills mb-4" id="amountPills">
+                                <button type="button" class="hr-amount-pill" data-amount="100">Rs.100</button>
+                                <button type="button" class="hr-amount-pill active" data-amount="500">Rs.500</button>
+                                <button type="button" class="hr-amount-pill" data-amount="1000">Rs.1000</button>
+                                <button type="button" class="hr-amount-pill" data-amount="2500">Rs.2500</button>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="anonymousCheck">
+                                <label class="form-check-label small" for="anonymousCheck">Donate Anonymously</label>
+                            </div>
+
+                            <input type="text" class="hr-name-input mb-3" id="donateNameInput" placeholder="Your full name">
+
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="termsCheck">
+                                <label class="form-check-label small" for="termsCheck">I Agree To The Terms</label>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="button" id="donateSubmitBtn" class="btn-hr-green flex-grow-1" disabled>DONATE</button>
+                                <button type="button" id="useQrBtn" class="btn-hr-qr-outline flex-grow-1">
+                                    <i class="bi bi-qr-code me-1"></i> USE QR CODE
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- BACK FACE: QR code -->
+                        <div class="hr-donate-face hr-donate-face-back">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <button type="button" class="hr-modal-close" id="qrBackBtn" aria-label="Back">
+                                    <i class="bi bi-arrow-left"></i>
+                                </button>
+                                <h5 class="font-heading fw-bold mb-0">Scan To Donate</h5>
+                                <button type="button" class="hr-modal-close" data-bs-dismiss="modal" aria-label="Close">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                            <div class="text-center">
+                                <div class="hr-qr-box mb-3">
+                                    <img id="qrCodeImg" src="" alt="QR Code" width="180" height="180">
+                                </div>
+                                <p class="text-muted small mb-1">Scan with any UPI app to pay</p>
+                                <h5 class="font-heading fw-bold text-emerald mb-4" id="qrAmountLabel">Rs. 500</h5>
+                                <button type="button" class="btn-hr-green w-100" id="qrDoneBtn">CONTINUE TO CHECKOUT</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

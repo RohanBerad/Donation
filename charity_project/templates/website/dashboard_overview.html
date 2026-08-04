@@ -1,0 +1,89 @@
+{% extends 'website/dashboard_base.html' %}
+
+{% block title %}Donor Dashboard | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="font-heading fw-bold text-dark mb-1">Welcome back, {{ user.username }}!</h3>
+        <p class="text-muted small mb-0">Here is your donation activity and impact overview.</p>
+    </div>
+    <a href="{% url 'campaign_list' %}" class="btn-hr-green py-2 px-3 fs-6">
+        DONATE NOW <i class="bi bi-arrow-up-right ms-1"></i>
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="dashboard-stat-card">
+            <i class="bi bi-cash-coin"></i>
+            <h4 class="font-heading fw-bold text-dark mt-2 mb-0">Rs. {{ total_donated }}</h4>
+            <p class="text-muted small mb-0">Total Contributed</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-stat-card">
+            <i class="bi bi-receipt-cutoff"></i>
+            <h4 class="font-heading fw-bold text-dark mt-2 mb-0">{{ total_donations_count }}</h4>
+            <p class="text-muted small mb-0">Total Donations</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-stat-card">
+            <i class="bi bi-flag"></i>
+            <h4 class="font-heading fw-bold text-dark mt-2 mb-0">{{ campaigns_supported }}</h4>
+            <p class="text-muted small mb-0">Causes Supported</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="dashboard-stat-card">
+            <i class="bi bi-calendar-check"></i>
+            <h4 class="font-heading fw-bold text-dark mt-2 mb-0">{{ user.date_joined|date:"M Y" }}</h4>
+            <p class="text-muted small mb-0">Member Since</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="font-heading fw-bold text-dark mb-0">Recent Donations</h5>
+        <a href="{% url 'dashboard_donations' %}" class="btn-hr-pill-outline py-1 px-3">View Full History</a>
+    </div>
+
+    {% if donations %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Campaign</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Payment Method</th>
+                    <th>Receipt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for donation in donations %}
+                <tr>
+                    <td class="fw-bold text-dark">{{ donation.campaign.campaign_name }}</td>
+                    <td class="text-emerald fw-bold font-heading">Rs. {{ donation.amount }}</td>
+                    <td class="text-muted small">{{ donation.donation_date|date:"d M Y" }}</td>
+                    <td class="text-muted small">{{ donation.get_payment_method_display }}</td>
+                    <td>
+                        <a href="{% url 'receipt_view' donation.id %}" class="btn-hr-pill-outline py-1 px-3">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-4">
+        <p class="text-muted mb-3">You haven't made any donations yet.</p>
+        <a href="{% url 'campaign_list' %}" class="btn-hr-green py-2 px-4">Make Your First Contribution</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

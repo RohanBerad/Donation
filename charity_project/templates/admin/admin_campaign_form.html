@@ -1,0 +1,74 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}{{ page_title }}{% endblock %}
+{% block admin_heading %}{{ page_title }}{% endblock %}
+
+{% block admin_content %}
+
+<div class="admin-card" style="max-width: 700px;">
+    <!-- enctype="multipart/form-data" is REQUIRED because this form includes a file (image) upload -->
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.campaign_name.label }}</label>
+            {{ form.campaign_name }}
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.category.label }}</label>
+                {{ form.category }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.status.label }}</label>
+                {{ form.status }}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.description.label }}</label>
+            {{ form.description }}
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.goal_amount.label }} (Rs.)</label>
+                {{ form.goal_amount }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.raised_amount.label }} (Rs.)</label>
+                {{ form.raised_amount }}
+                <small class="text-muted">Update this manually if you receive offline donations.</small>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.start_date.label }}</label>
+                {{ form.start_date }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.end_date.label }}</label>
+                {{ form.end_date }}
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fw-semibold">{{ form.campaign_image.label }}</label>
+            {{ form.campaign_image }}
+            {% if campaign and campaign.campaign_image %}
+                <div class="mt-2">
+                    <img src="{{ campaign.campaign_image.url }}" alt="" style="max-height: 100px; border-radius: 8px;">
+                </div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Save Campaign
+        </button>
+        <a href="{% url 'admin_campaign_list' %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

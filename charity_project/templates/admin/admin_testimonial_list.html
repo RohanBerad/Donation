@@ -1,0 +1,63 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Testimonials{% endblock %}
+{% block admin_heading %}Manage Testimonials{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted mb-0">{{ testimonials|length }} testimonial(s) total. Only "Active" ones show on the home page.</p>
+    <a href="{% url 'admin_testimonial_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add New Testimonial
+    </a>
+</div>
+
+<div class="admin-card">
+    {% if testimonials %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Donor</th>
+                    <th>Role</th>
+                    <th>Message</th>
+                    <th>Rating</th>
+                    <th>Active?</th>
+                    <th>Order</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for testimonial in testimonials %}
+                <tr>
+                    <td>{{ testimonial.donor_name }}</td>
+                    <td>{{ testimonial.donor_role }}</td>
+                    <td class="small text-muted">{{ testimonial.message|truncatewords:10 }}</td>
+                    <td>{{ testimonial.rating }} <i class="bi bi-star-fill text-warning"></i></td>
+                    <td>
+                        {% if testimonial.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Hidden</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ testimonial.display_order }}</td>
+                    <td>
+                        <a href="{% url 'admin_testimonial_edit' testimonial.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'admin_testimonial_delete' testimonial.id %}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No testimonials yet. Add one to show it in the "What Our Donors Say" section on the home page.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

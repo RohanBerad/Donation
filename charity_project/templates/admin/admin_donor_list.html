@@ -1,0 +1,39 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Donors{% endblock %}
+{% block admin_heading %}All Donors{% endblock %}
+
+{% block admin_content %}
+
+<div class="admin-card">
+    <p class="text-muted">{{ donors|length }} unique donor(s)</p>
+
+    {% if donors %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Donor Name</th>
+                    <th>Email</th>
+                    <th>Total Donations Made</th>
+                    <th>Total Amount Given</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for donor in donors %}
+                <tr>
+                    <td>{{ donor.donor_name }}</td>
+                    <td>{{ donor.email }}</td>
+                    <td>{{ donor.donation_count }}</td>
+                    <td>Rs. {{ donor.total_given }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No donors yet.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

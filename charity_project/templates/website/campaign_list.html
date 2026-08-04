@@ -1,0 +1,68 @@
+{% extends 'website/base.html' %}
+
+{% block title %}What We Do — All Campaigns | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block content %}
+<section class="hr-section">
+    <div class="container">
+        <div class="text-center mb-4">
+            <span class="hr-badge-pill">What We Do</span>
+            <h1 class="display-5 font-heading fw-bold mt-2">All Active Campaigns</h1>
+            <p class="text-muted mx-auto" style="max-width: 550px;">Choose a cause to support today and help us bring hope to those in need.</p>
+        </div>
+
+        <!-- Category filter buttons -->
+        <div class="text-center mb-5">
+            <a href="{% url 'campaign_list' %}" class="btn-hr-pill-outline {% if not selected_category %}bg-dark text-white{% endif %} m-1">All</a>
+            {% for value, label in categories %}
+                <a href="?category={{ value }}" class="btn-hr-pill-outline {% if selected_category == value %}bg-dark text-white{% endif %} m-1">{{ label }}</a>
+            {% endfor %}
+        </div>
+
+        <div class="row g-4">
+            {% for campaign in campaigns %}
+            <div class="col-md-4">
+                <div class="hr-campaign-card h-100 d-flex flex-column">
+                    <div class="position-relative">
+                        {% if campaign.campaign_image %}
+                            <img src="{{ campaign.campaign_image.url }}" class="card-img-top" alt="{{ campaign.campaign_name }}">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=600&auto=format&fit=crop" class="card-img-top" alt="{{ campaign.campaign_name }}">
+                        {% endif %}
+                        <span class="position-absolute top-0 end-0 m-3 hr-badge-pill bg-white text-dark border">{{ campaign.get_category_display }}</span>
+                    </div>
+
+                    <div class="p-4 d-flex flex-column flex-grow-1">
+                        <h5 class="font-heading fw-bold text-dark mb-2">{{ campaign.campaign_name }}</h5>
+                        <p class="text-muted small flex-grow-1 mb-4">{{ campaign.description|truncatewords:14 }}</p>
+
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-1 small font-heading fw-bold">
+                                <span>Raised</span>
+                                <span class="text-emerald">{{ campaign.progress_percentage }}%</span>
+                            </div>
+                            <div class="hr-progress mb-3">
+                                <div class="hr-progress-bar" style="width: {{ campaign.progress_percentage }}%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center small text-muted mb-4">
+                                <span><strong>Rs. {{ campaign.raised_amount }}</strong> raised</span>
+                                <span>Goal: <strong>Rs. {{ campaign.goal_amount }}</strong></span>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'campaign_detail' campaign.id %}" class="btn-hr-pill-outline flex-grow-1 text-center py-2">Details</a>
+                                <a href="{% url 'donate' campaign.id %}" class="btn-hr-green py-2 px-3">Donate</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center text-muted py-5">
+                <p class="fs-5">No campaigns found in this category.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

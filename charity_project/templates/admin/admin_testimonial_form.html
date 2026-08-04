@@ -1,0 +1,58 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}{{ page_title }}{% endblock %}
+{% block admin_heading %}{{ page_title }}{% endblock %}
+
+{% block admin_content %}
+
+<div class="admin-card" style="max-width: 650px;">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.donor_name.label }}</label>
+                {{ form.donor_name }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.donor_role.label }}</label>
+                {{ form.donor_role }}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.message.label }}</label>
+            {{ form.message }}
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">{{ form.rating.label }}</label>
+                {{ form.rating }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">{{ form.display_order.label }}</label>
+                {{ form.display_order }}
+                <small class="text-muted">Lower shows first</small>
+            </div>
+            <div class="col-md-4 mb-3 d-flex align-items-end">
+                <div class="form-check">
+                    {{ form.is_active }}
+                    <label class="form-check-label ms-1">{{ form.is_active.label }}</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fw-semibold">{{ form.photo.label }}</label>
+            {{ form.photo }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Save Testimonial
+        </button>
+        <a href="{% url 'admin_testimonial_list' %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

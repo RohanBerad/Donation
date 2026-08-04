@@ -1,0 +1,81 @@
+{% extends 'website/base.html' %}
+
+{% block title %}{{ campaign.campaign_name }} | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block content %}
+<section class="hr-section">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <div class="position-relative mb-4">
+                    {% if campaign.campaign_image %}
+                        <img src="{{ campaign.campaign_image.url }}" class="w-100 rounded-5 shadow-sm" alt="{{ campaign.campaign_name }}" style="max-height: 420px; object-fit: cover;">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=800&auto=format&fit=crop" class="w-100 rounded-5 shadow-sm" alt="{{ campaign.campaign_name }}" style="max-height: 420px; object-fit: cover;">
+                    {% endif %}
+                </div>
+
+                <h4 class="font-heading fw-bold text-dark mb-3">Campaign Story</h4>
+                <div class="text-muted leading-relaxed fs-5">
+                    {{ campaign.description|linebreaks }}
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="hr-card-white p-4 p-md-5 sticky-top shadow-sm" style="top: 100px;">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="hr-badge-pill">{{ campaign.get_category_display }}</span>
+                        <span class="badge {% if campaign.status == 'active' %}bg-dark text-white{% elif campaign.status == 'completed' %}bg-secondary{% else %}bg-warning text-dark{% endif %} px-3 py-2 rounded-pill font-heading">
+                            {{ campaign.get_status_display }}
+                        </span>
+                    </div>
+
+                    <h3 class="font-heading fw-bold text-dark mb-3">{{ campaign.campaign_name }}</h3>
+
+                    <div class="row g-3 my-3 p-3 rounded-4 bg-light border">
+                        <div class="col-6">
+                            <span class="text-muted small d-block mb-1">Target Goal</span>
+                            <h4 class="font-heading fw-bold text-dark mb-0">Rs. {{ campaign.goal_amount }}</h4>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted small d-block mb-1">Raised So Far</span>
+                            <h4 class="font-heading fw-bold text-emerald mb-0">Rs. {{ campaign.raised_amount }}</h4>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1 small font-heading fw-bold">
+                            <span class="text-muted">Funding Progress</span>
+                            <span class="text-emerald">{{ campaign.progress_percentage }}% funded</span>
+                        </div>
+                        <div class="hr-progress">
+                            <div class="hr-progress-bar" style="width: {{ campaign.progress_percentage }}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="row text-center my-4 py-3 border-top border-bottom">
+                        <div class="col-6 d-flex align-items-center justify-content-center gap-3">
+                            <div class="hr-card-icon-wrap mb-0" style="width: 40px; height: 40px;"><i class="bi bi-people-fill"></i></div>
+                            <div class="text-start">
+                                <div class="fw-bold font-heading text-dark fs-5">{{ campaign.donor_count }}</div>
+                                <small class="text-muted">Donors</small>
+                            </div>
+                        </div>
+                        <div class="col-6 d-flex align-items-center justify-content-center gap-3">
+                            <div class="hr-card-icon-wrap mb-0" style="width: 40px; height: 40px;"><i class="bi bi-clock-fill"></i></div>
+                            <div class="text-start">
+                                <div class="fw-bold font-heading text-dark fs-5">{{ campaign.days_left }}</div>
+                                <small class="text-muted">Days Left</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'donate' campaign.id %}" class="btn-hr-green w-100 py-3 fs-6">
+                        DONATE NOW <i class="bi bi-arrow-up-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

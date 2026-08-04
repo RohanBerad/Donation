@@ -1,0 +1,102 @@
+{% extends 'website/dashboard_base.html' %}
+
+{% block title %}My Profile | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block dashboard_content %}
+
+<div class="dashboard-card profile-card">
+    <h4 class="font-heading fw-bold text-dark mb-4">Profile Settings</h4>
+
+<form method="post" enctype="multipart/form-data" class="profile-form">
+    {% csrf_token %}
+
+    <!-- Profile Image -->
+    <div class="text-center mb-4">
+        <div class="profile-avatar-wrap mx-auto mb-3">
+            {% if form.instance.profile_picture %}
+                <img src="{{ form.instance.profile_picture.url }}"
+                     class="profile-avatar"
+                     id="profileImagePreview">
+            {% else %}
+                <div class="profile-avatar-placeholder" id="profileImagePreview">
+                    <i class="bi bi-person"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <input type="file"
+               name="{{ form.profile_picture.name }}"
+               id="{{ form.profile_picture.id_for_label }}"
+               class="d-none"
+               accept="image/*"
+               onchange="previewImage(this)">
+
+        <label for="{{ form.profile_picture.id_for_label }}"
+               class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-camera me-2"></i>Change Photo
+        </label>
+    </div>
+
+    <hr class="mb-4">
+
+    <!-- Username + Email -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">
+                {{ form.username.label }}
+            </label>
+            {{ form.username }}
+        </div>
+
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">
+                {{ form.email.label }}
+            </label>
+            {{ form.email }}
+        </div>
+    </div>
+
+    <!-- Phone + Address -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">
+                {{ form.phone_number.label }}
+            </label>
+            {{ form.phone_number }}
+        </div>
+
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">
+                {{ form.address.label }}
+            </label>
+            {{ form.address }}
+        </div>
+    </div>
+
+    <!-- Save Button -->
+    <div class="text-end">
+        <button type="submit" class="btn btn-success px-5 py-2 rounded-pill fw-semibold">
+            Save Changes
+        </button>
+    </div>
+</form>
+</div>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var preview = document.getElementById('profileImagePreview');
+            if (preview.tagName === 'IMG') {
+                preview.src = e.target.result;
+            } else {
+                preview.outerHTML = '<img src="' + e.target.result + '" alt="Profile preview" class="profile-avatar" id="profileImagePreview">';
+            }
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+
+{% endblock %}

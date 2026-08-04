@@ -1,0 +1,635 @@
+{% extends 'website/base.html' %}
+{% load static %}
+
+{% block title %}Home | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+
+<!-- ===================== 1. HERO SECTION (Screenshot 1) ===================== -->
+<section class="hr-hero">
+    <div class="container py-4">
+        <h1 class="hr-hero-title">
+            Hope
+            <span class="hr-hero-inline-img">
+                {% if settings.hero_image %}
+                    <img src="{{ settings.hero_image.url }}" alt="Hero image">
+                {% else %}
+                    <img src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?q=80&w=400&auto=format&fit=crop" alt="Hero image">
+                {% endif %}
+            </span>
+            Rise<br>
+            is Support
+        </h1>
+
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
+            <a href="{% url 'donate_generic' %}" class="btn-hr-green" data-bs-toggle="modal" data-bs-target="#quickDonateModal">
+                DONATE
+            </a>
+            <a href="#get-help" class="d-inline-flex align-items-center gap-2 text-dark font-heading fw-bold text-uppercase small">
+                I NEED HELP
+                <span class="hr-icon-circle-btn"><i class="bi bi-arrow-up-right"></i></span>
+            </a>
+        </div>
+
+        <!-- HopeRise Partner & Quick Links Bar -->
+        <div class="hr-partner-bar mt-5">
+            <div class="d-flex align-items-center gap-2 cursor-pointer" role="button" data-bs-toggle="modal" data-bs-target="#quickDonateModal">
+                <i class="bi bi-grid-3x3-gap-fill text-dark fs-6"></i>
+                <span>QUICK DONATE</span>
+            </div>
+            <div>
+                <span class="fw-extrabold text-dark fs-5 me-4">gofundme</span>
+                <span class="fw-bold text-dark me-4"><i class="bi bi-asterisk text-emerald me-1"></i> CANCER RESEARCH UK</span>
+                <span class="fw-extrabold text-dark fs-5">Medtronic</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 cursor-pointer">
+                <span>SCROLL DOWN</span>
+                <span class="hr-icon-circle-btn" style="width: 32px; height: 32px; font-size: 0.75rem;"><i class="bi bi-arrow-down"></i></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== 2. WHAT WE DO SECTION (Screenshot 2) ===================== -->
+<section class="hr-section" id="about">
+    <div class="container">
+        <div class="text-center mb-4">
+            <span class="hr-badge-pill">What We Do</span>
+        </div>
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 text-center text-md-start">
+            <h2 class="display-5 font-heading fw-bold mx-auto mx-md-0" style="max-width: 650px;">
+                Providing Hope And Help During Challenging Times
+            </h2>
+            <div class="mt-3 mt-md-0">
+                <a href="{% url 'campaign_list' %}" class="d-inline-flex align-items-center gap-2 text-dark font-heading fw-bold text-uppercase small">
+                    LEARN MORE
+                    <span class="hr-icon-circle-btn"><i class="bi bi-arrow-up-right"></i></span>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Card 1: Make a Donation (Warm Beige Card) -->
+            <div class="col-lg-4">
+                <div class="hr-card-white h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="hr-card-icon-wrap"><i class="bi bi-currency-dollar"></i></div>
+                        <h4 class="font-heading fw-bold text-dark mb-3">Make a Donation</h4>
+                        <p class="text-muted small leading-relaxed mb-4">
+                            Contribute today to help fund treatments, research, and essential support services for those battling critical illnesses.
+                        </p>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-end mt-4 pt-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-apple fs-5"></i>
+                            <i class="bi bi-google fs-6"></i>
+                            <i class="bi bi-paypal fs-6"></i>
+                            <span class="small font-heading fw-bold text-muted ms-1">Payment Options</span>
+                        </div>
+                        <a href="{% url 'donate_generic' %}" class="btn-hr-circle-arrow bg-emerald border-0" data-bs-toggle="modal" data-bs-target="#quickDonateModal">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Get Support (White Card) -->
+            <div class="col-lg-4">
+                <div class="hr-card-white h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="hr-card-icon-wrap bg-light"><i class="bi bi-heart-pulse-fill text-dark"></i></div>
+                        <h4 class="font-heading fw-bold text-dark mb-3">Get Support</h4>
+                        <p class="text-muted small leading-relaxed mb-4">
+                            Access vital resources, financial aid, and counseling for patients and their families in their time of need.
+                        </p>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-end mt-4 pt-3">
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-light text-dark fw-bold border small py-2 px-3"># Financial Aid</span>
+                            <span class="badge bg-light text-dark fw-bold border small py-2 px-3"># Therapy</span>
+                        </div>
+                        <a href="#get-help" class="btn-hr-circle-arrow">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Become a Volunteer (White Card) -->
+            <div class="col-lg-4">
+                <div class="hr-card-white h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="hr-card-icon-wrap bg-light"><i class="bi bi-person-fill text-dark"></i></div>
+                        <h4 class="font-heading fw-bold text-dark mb-3">Become a Volunteer</h4>
+                        <p class="text-muted small leading-relaxed mb-4">
+                            Join our team of volunteers to support healthcare programs, assist with community outreach, and make a positive impact.
+                        </p>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-end mt-4 pt-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center">
+                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" class="rounded-circle border border-2 border-white" width="32" height="32" style="object-fit: cover;" alt="Volunteer">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop" class="rounded-circle border border-2 border-white ms-n2" width="32" height="32" style="object-fit: cover;" alt="Volunteer">
+                                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=100&auto=format&fit=crop" class="rounded-circle border border-2 border-white ms-n2" width="32" height="32" style="object-fit: cover;" alt="Volunteer">
+                            </div>
+                            <span class="small font-heading fw-bold text-dark">Join Our Team</span>
+                        </div>
+                        <a href="{% url 'register' %}" class="btn-hr-circle-arrow">
+                            <i class="bi bi-arrow-up-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== 3. GET HELP INTERACTIVE FORM SECTION (Screenshot 5) ===================== -->
+<section class="hr-section py-0" id="get-help">
+    <div class="container">
+        <div class="position-relative rounded-5 overflow-hidden p-5 d-flex align-items-center" style="min-height: 550px; background: url('https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;">
+            
+            <div class="position-absolute inset-0 bg-dark bg-opacity-40"></div>
+
+            <div class="position-relative z-1 w-100">
+                <div class="hr-gethelp-card">
+                    <div class="mb-3">
+                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 small fw-bold">Get Help</span>
+                    </div>
+
+                    <h3 class="font-heading fw-bold mb-4 text-white">We're Here To Support You Every Step Of The Way</h3>
+
+                    <h6 class="fw-bold mb-3">What's going on?</h6>
+
+                    <div class="mb-3">
+                        <label class="small text-white-50 d-block mb-1">Diagnosis or condition</label>
+                        <select class="form-select hr-glass-input">
+                            <option>Kidney Cancer</option>
+                            <option>Leukemia & Blood Disorders</option>
+                            <option>Pediatric Care</option>
+                            <option>General Financial Assistance</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small text-white-50 d-block mb-1">Funding Goal</label>
+                        <div class="position-relative">
+                            <input type="text" class="form-control hr-glass-input" value="56 000">
+                            <span class="position-absolute end-0 top-50 translate-middle-y me-3 fw-bold">$</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="small text-white-50 d-block mb-2">Treatment stage</label>
+                        <div class="d-flex gap-2">
+                            <span class="hr-stage-pill">Pre-op</span>
+                            <span class="hr-stage-pill active">Active</span>
+                            <span class="hr-stage-pill">Recovery</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="button" class="btn btn-link text-white text-uppercase font-heading fw-bold small p-0 text-decoration-none">
+                            ATTACH DOCUMENTS <i class="bi bi-upload ms-1"></i>
+                        </button>
+                        <a href="{% url 'donate_generic' %}" class="btn bg-white text-dark rounded-pill font-heading fw-bold text-uppercase px-4 py-2 small ms-auto">
+                            REQUEST HELP
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== 4. OUR IMPACT SECTION (Screenshot 3) ===================== -->
+<section class="hr-section text-center" id="impact">
+    <div class="container">
+        <div class="mb-3">
+            <span class="hr-badge-pill">Our Impact</span>
+        </div>
+
+        <h2 class="display-5 font-heading fw-bold mb-4">Together, We're Making A Difference</h2>
+
+        <div class="my-4">
+            <h1 class="hr-impact-number">{{ settings.stat_campaigns }}</h1>
+            <p class="font-heading fw-bold fs-5 text-dark mt-2 mb-0">Events Organized</p>
+        </div>
+
+        <!-- White curved card for extra statistics -->
+        <div class="bg-white rounded-5 p-5 border shadow-sm mt-5 mx-auto" style="max-width: 900px;">
+            <div class="row g-4 text-center">
+                <div class="col-md-4">
+                    <h3 class="font-heading fw-bold text-dark mb-1">{{ settings.stat_lives_impacted }}</h3>
+                    <p class="text-muted small mb-0">Lives Impacted</p>
+                </div>
+                <div class="col-md-4 border-start border-end">
+                    <h3 class="font-heading fw-bold text-emerald mb-1">{{ settings.stat_funds_raised }}</h3>
+                    <p class="text-muted small mb-0">Funds Raised</p>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="font-heading fw-bold text-dark mb-1">{{ settings.stat_donors }}</h3>
+                    <p class="text-muted small mb-0">Generous Donors</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== 5. INSPIRING JOURNEYS / STORIES SECTION (Screenshot 4) ===================== -->
+<section class="hr-section">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 text-center text-md-start">
+            <div>
+                <span class="hr-badge-pill mb-2">Patient Stories</span>
+                <h2 class="display-5 font-heading fw-bold">Inspiring Journeys Of Strength And Hope</h2>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="{% url 'campaign_list' %}" class="d-inline-flex align-items-center gap-2 text-dark font-heading fw-bold text-uppercase small">
+                    SEE ALL STORIES
+                    <span class="hr-icon-circle-btn"><i class="bi bi-arrow-up-right"></i></span>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4 align-items-center justify-content-center">
+            {% for campaign in featured_campaigns %}
+                {% if forloop.first %}
+                <!-- Center Featured Active Story Card -->
+                <div class="col-lg-5 col-md-8">
+                    <div class="hr-story-card active">
+                        <div class="position-relative">
+                            {% if campaign.campaign_image %}
+                                <img src="{{ campaign.campaign_image.url }}" class="hr-story-img" alt="{{ campaign.campaign_name }}">
+                            {% else %}
+                                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop" class="hr-story-img" alt="{{ campaign.campaign_name }}">
+                            {% endif %}
+                            
+                            <a href="{% url 'donate' campaign.id %}" class="btn-hr-green hr-story-overlay-btn py-3 px-4">
+                                DONATE <i class="bi bi-arrow-up-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="hr-story-info-card shadow-sm">
+                        <h5 class="font-heading fw-bold text-dark mb-1">{{ campaign.campaign_name }}</h5>
+                        <p class="text-muted small mb-3">{{ campaign.description|truncatewords:10 }}</p>
+                        
+                        <div class="hr-progress mb-2">
+                            <div class="hr-progress-bar" style="width: {{ campaign.progress_percentage }}%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small font-heading fw-bold">
+                            <span class="text-dark">Rs. {{ campaign.raised_amount }}</span>
+                            <span class="text-emerald">{{ campaign.progress_percentage }}%</span>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Side Grayscale Cards -->
+                <div class="col-lg-3 col-md-6 d-none d-lg-block">
+                    <div class="hr-story-card bw">
+                        {% if campaign.campaign_image %}
+                            <img src="{{ campaign.campaign_image.url }}" class="hr-story-img" alt="{{ campaign.campaign_name }}">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=600&auto=format&fit=crop" class="hr-story-img" alt="{{ campaign.campaign_name }}">
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            {% empty %}
+                <div class="col-lg-5">
+                    <div class="hr-story-card active">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop" class="hr-story-img" alt="John Smith">
+                            <a href="{% url 'donate_generic' %}" class="btn-hr-green hr-story-overlay-btn py-3 px-4">
+                                DONATE <i class="bi bi-arrow-up-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="hr-story-info-card shadow-sm">
+                        <h5 class="font-heading fw-bold text-dark mb-1">John Smith, 12</h5>
+                        <p class="text-muted small mb-3">Diagnosed with Stage 2 Health Condition</p>
+                        <div class="hr-progress mb-2">
+                            <div class="hr-progress-bar" style="width: 72%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small font-heading fw-bold">
+                            <span class="text-dark">Rs. 16,545</span>
+                            <span class="text-emerald">72%</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ===================== 6. WHAT PEOPLE SAY / TESTIMONIALS SECTION ===================== -->
+<section class="hr-section hr-testimonial-bg" id="testimonials">
+    <div class="container">
+        <div class="text-center mb-4">
+            <span class="hr-badge-pill">What People Say</span>
+        </div>
+
+        <h2 class="display-5 font-heading fw-bold text-center mb-2">Stories of Hope From Our Donors</h2>
+        <p class="text-center text-muted mb-5 mx-auto" style="max-width: 680px;">
+            Hear from the generous hearts whose support turns compassion into lasting impact.
+        </p>
+
+        <!-- Testimonial carousel (Bootstrap) -->
+        <div id="hrTestimonialCarousel" class="carousel slide" data-bs-ride="false">
+            <div class="carousel-inner">
+                {% if testimonials %}
+                    {% for testimonial in testimonials %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <div class="row justify-content-center">
+                                <div class="col-lg-8">
+                                    <div class="hr-testimonial-card">
+                                        <div class="hr-quote-mark">
+                                            <i class="bi bi-quote-quote align-middle"></i>
+                                        </div>
+
+                                        <p class="hr-testimonial-message text-dark mb-4">
+                                            "{{ testimonial.message }}"
+                                        </p>
+
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if testimonial.photo %}
+                                                <img src="{{ testimonial.photo.url }}"
+                                                     class="hr-testimonial-avatar"
+                                                     alt="{{ testimonial.donor_name }}">
+                                            {% else %}
+                                                <img src="https://ui-avatars.com/api/?name={{ testimonial.donor_name|urlencode }}&background=26e07f&color=fff&size=128&bold=true"
+                                                     class="hr-testimonial-avatar"
+                                                     alt="{{ testimonial.donor_name }}">
+                                            {% endif %}
+
+                                            <div class="d-flex flex-column">
+                                                <span class="font-heading fw-bold text-dark mb-1">{{ testimonial.donor_name }}</span>
+                                                <small class="text-muted">{{ testimonial.donor_role }}</small>
+                                                <div class="hr-testimonial-rating mt-1">
+                                                    {% for i in "12345"|make_list %}
+                                                        {% if forloop.counter <= testimonial.rating %}
+                                                            <i class="bi bi-star-fill text-warning"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-star text-warning"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="carousel-item active">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="hr-testimonial-card">
+                                    <div class="hr-quote-mark"><i class="bi bi-quote-quote align-middle"></i></div>
+                                    <p class="text-dark mb-4 fst-italic text-center">
+                                        "HopeRise transformed my family's journey — their support gave us strength when we needed it most."
+                                    </p>
+                                    <div class="text-center">
+                                        <img src="{% static 'images/default_avatar.png' %}"
+                                             class="hr-testimonial-avatar mx-auto" alt="Default donor">
+                                        <div class="font-heading fw-bold">Maria Gomez</div>
+                                        <small class="text-muted d-block mb-2">Regular Donor</small>
+                                        <div class="hr-testimonial-rating justify-content-center">
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if testimonials|length > 1 %}
+                <!-- Navigation -->
+                <div class="carousel-control-prev hr-carousel-nav-prev" data-bs-target="#hrTestimonialCarousel" data-bs-slide="prev">
+                    <i class="bi bi-arrow-left"></i>
+                    <span class="visually-hidden">Previous</span>
+                </div>
+                <div class="carousel-control-next hr-carousel-nav-next" data-bs-target="#hrTestimonialCarousel" data-bs-slide="next">
+                    <i class="bi bi-arrow-right"></i>
+                    <span class="visually-hidden">Next</span>
+                </div>
+
+                <!-- Indicators -->
+                <div class="carousel-indicators hr-testimonial-indicators">
+                    {% for t in testimonials %}
+                        <button type="button" data-bs-target="#hrTestimonialCarousel"
+                                data-bs-slide-to="{{ forloop.counter0 }}"
+                                class="{% if forloop.first %}active{% endif %}"
+                                aria-current="{% if forloop.first %}true{% endif %}"
+                                aria-label="Slide {{ forloop.counter }}">
+                            <span></span>
+                        </button>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Static grid fallback (shows 3 testimonials on larger screens when JS is off / for visual richness) -->
+        <div class="row g-4 mt-2 d-none d-lg-grid hr-testimonial-grid">
+            {% for testimonial in testimonials|slice:":3" %}
+                <div class="col-md-4">
+                    <div class="hr-testimonial-grid-card h-100">
+                        <div class="hr-testimonial-grid-header d-flex align-items-center gap-3 pb-3 border-bottom">
+                             {% if testimonial.photo %}
+                                 <img src="{{ testimonial.photo.url }}" class="hr-grid-avatar" alt="{{ testimonial.donor_name }}">
+                             {% else %}
+                                 <img src="https://ui-avatars.com/api/?name={{ testimonial.donor_name|urlencode }}&background=26e07f&color=fff&size=96&bold=true" class="hr-grid-avatar" alt="{{ testimonial.donor_name }}">
+                             {% endif %}
+                            <div>
+                                <span class="d-block font-heading fw-bold text-dark">{{ testimonial.donor_name }}</span>
+                                <small class="text-muted">{{ testimonial.donor_role }}</small>
+                                <div class="hr-testimonial-rating">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= testimonial.rating %}<i class="bi bi-star-fill text-warning"></i>{% else %}<i class="bi bi-star text-warning"></i>{% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <p class="hr-testimonial-grid-message text-muted small pt-3 mb-0">
+                            "{{ testimonial.message|truncatechars:160 }}"
+                        </p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ===================== 7. UPDATES FROM HOPERISE SECTION (Screenshot 6) ===================== -->
+<section class="hr-section">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 text-center text-md-start">
+            <div>
+                <h2 class="display-5 font-heading fw-bold">Updates From HopeRise</h2>
+            </div>
+            <div class="mt-3 mt-md-0 d-flex align-items-center gap-3">
+                <a href="{% url 'campaign_list' %}" class="d-inline-flex align-items-center gap-2 text-dark font-heading fw-bold text-uppercase small me-3">
+                    SEE ALL
+                    <span class="hr-icon-circle-btn"><i class="bi bi-arrow-up-right"></i></span>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- News Card 1 -->
+            <div class="col-lg-3 col-md-6">
+                <div class="hr-story-card h-100 p-0 border-0 bg-transparent">
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop" class="hr-story-img mb-3" style="height: 240px;" alt="News 1">
+                    <small class="text-muted d-block mb-1">June 12, 2025</small>
+                    <h6 class="font-heading fw-bold text-dark">Adam Williams Celebrates Successful Remission</h6>
+                </div>
+            </div>
+
+            <!-- News Card 2 -->
+            <div class="col-lg-3 col-md-6">
+                <div class="hr-story-card h-100 p-0 border-0 bg-transparent">
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=400&auto=format&fit=crop" class="hr-story-img mb-3" style="height: 240px;" alt="News 2">
+                    <small class="text-muted d-block mb-1">June 5, 2025</small>
+                    <h6 class="font-heading fw-bold text-dark">Our Team Expands to 50 Members Already</h6>
+                </div>
+            </div>
+
+            <!-- News Card 3 -->
+            <div class="col-lg-3 col-md-6">
+                <div class="hr-story-card h-100 p-0 border-0 bg-transparent">
+                    <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=400&auto=format&fit=crop" class="hr-story-img mb-3" style="height: 240px;" alt="News 3">
+                    <small class="text-muted d-block mb-1">June 2, 2025</small>
+                    <h6 class="font-heading fw-bold text-dark">Another Successful Therapeutic Session</h6>
+                </div>
+            </div>
+
+            <!-- News Card 4 -->
+            <div class="col-lg-3 col-md-6">
+                <div class="hr-story-card h-100 p-0 border-0 bg-transparent">
+                    <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=400&auto=format&fit=crop" class="hr-story-img mb-3" style="height: 240px;" alt="News 4">
+                    <small class="text-muted d-block mb-1">May 29, 2025</small>
+                    <h6 class="font-heading fw-bold text-dark">A Volunteer Who Inspires All Our Crue</h6>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <span class="hr-icon-circle-btn"><i class="bi bi-arrow-left"></i></span>
+            <span class="hr-icon-circle-btn bg-emerald border-0"><i class="bi bi-arrow-right text-dark"></i></span>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== 7. TAKE ACTION FLOATING ORBIT SECTION (Screenshot 7) ===================== -->
+<section class="hr-floating-circle-container">
+    <div class="container position-relative z-1">
+        <div class="mb-3">
+            <span class="hr-badge-pill">TAKE ACTION</span>
+        </div>
+
+        <h1 class="display-3 font-heading fw-bold mb-4 mx-auto" style="max-width: 600px;">
+            Join Us In Making A Difference
+        </h1>
+
+        <div class="d-flex justify-content-center align-items-center gap-3">
+            <a href="{% url 'register' %}" class="btn-hr-green">
+                VOLUNTEER NOW
+            </a>
+            <a href="{% url 'campaign_list' %}" class="d-inline-flex align-items-center gap-2 text-dark font-heading fw-bold text-uppercase small">
+                LEARN MORE
+                <span class="hr-icon-circle-btn"><i class="bi bi-arrow-up-right"></i></span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Floating Circular Patient & Volunteer Avatars orbiting around text -->
+    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop" class="hr-circle-avatar hr-circle-1" alt="Avatar">
+    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop" class="hr-circle-avatar hr-circle-2" alt="Avatar">
+    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop" class="hr-circle-avatar hr-circle-3" alt="Avatar">
+    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=300&auto=format&fit=crop" class="hr-circle-avatar hr-circle-4" alt="Avatar">
+    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=300&auto=format&fit=crop" class="hr-circle-avatar hr-circle-5" alt="Avatar">
+    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop" class="hr-circle-avatar hr-circle-6" alt="Avatar">
+</section>
+
+<!-- ===================== 8. HOPERISE FOOTER (Screenshot 8) ===================== -->
+<footer class="hr-footer">
+    <div class="container text-center">
+        <!-- Giant Centered Green Donate Button -->
+        <div class="mb-5">
+            <a href="{% url 'donate_generic' %}" class="btn-hr-green py-3 px-5 fs-5" data-bs-toggle="modal" data-bs-target="#quickDonateModal">
+                DONATE
+            </a>
+        </div>
+
+        <div class="row g-4 text-start justify-content-between mb-5">
+            <!-- Brand & Socials -->
+            <div class="col-lg-4">
+                <a class="hr-logo mb-4 d-inline-flex" href="{% url 'home' %}">
+                    <span class="hr-logo-icon"><i class="bi bi-grid-fill"></i></span>
+                    {{ site_settings.ngo_name }}
+                </a>
+
+                <div class="d-flex gap-2">
+                    <a href="#" class="hr-social-icon-btn"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" class="hr-social-icon-btn"><i class="bi bi-youtube"></i></a>
+                    <a href="#" class="hr-social-icon-btn"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" class="hr-social-icon-btn"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="hr-social-icon-btn"><i class="bi bi-facebook"></i></a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="col-lg-4">
+                <h6 class="font-heading fw-bold text-muted small text-uppercase mb-3">Quick Links</h6>
+                <ul class="list-unstyled d-flex flex-column gap-2 font-heading fw-bold small text-uppercase">
+                    <li><a href="{% url 'home' %}">HOME</a></li>
+                    <li><a href="#get-help">GET HELP</a></li>
+                    <li><a href="{% url 'donate_generic' %}">DONATE</a></li>
+                    <li><a href="{% url 'campaign_list' %}">STORIES</a></li>
+                    <li><a href="{% url 'register' %}">VOLUNTEER</a></li>
+                    <li><a href="{% url 'campaign_list' %}">BLOG & RESOURCES</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact Buttons -->
+            <div class="col-lg-4">
+                <h6 class="font-heading fw-bold text-muted small text-uppercase mb-3">Contact Us</h6>
+                <div class="d-flex flex-column gap-3">
+                    <a href="mailto:{{ site_settings.contact_email }}" class="btn-hr-pill-outline d-inline-flex align-items-center justify-content-center gap-2 py-3">
+                        <i class="bi bi-envelope"></i> SEND EMAIL
+                    </a>
+                    <a href="tel:{{ site_settings.contact_phone }}" class="btn-hr-pill-outline d-inline-flex align-items-center justify-content-center gap-2 py-3">
+                        <i class="bi bi-telephone"></i> MAKE A CALL
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-top border-dark border-opacity-10 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center text-muted small">
+            <p class="mb-0">&copy; 2025 HopeRise Foundation | All Rights Reserved</p>
+            <div class="d-flex gap-3">
+                <a href="#" class="text-muted">Privacy Policy</a>
+                <a href="#" class="text-muted">Terms Of Service</a>
+            </div>
+            <a href="#" class="text-dark font-heading fw-bold text-uppercase extra-small">
+                BACK TO TOP <span class="hr-icon-circle-btn ms-1" style="width:28px; height:28px; font-size:0.7rem;"><i class="bi bi-arrow-up"></i></span>
+            </a>
+        </div>
+    </div>
+</footer>
+
+{% endblock %}

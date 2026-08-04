@@ -1,0 +1,66 @@
+{% extends 'website/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/dashboard_style.css' %}">
+
+<section class="hr-section py-5">
+    <div class="container">
+        <div class="row g-4">
+
+            <!-- SIDEBAR -->
+            <div class="col-lg-3">
+                <div class="dashboard-sidebar p-4">
+                    <div class="text-center pb-4 mb-4 border-bottom">
+                        {% if nav_user_profile.profile_picture %}
+                            <img src="{{ nav_user_profile.profile_picture.url }}" alt="{{ user.username }}"
+                                 class="rounded-circle mx-auto mb-2 d-block" style="width: 56px; height: 56px; object-fit: cover;">
+                        {% else %}
+                            <div class="hr-card-icon-wrap mx-auto mb-2" style="width: 56px; height: 56px; font-size: 1.8rem;"><i class="bi bi-person-fill"></i></div>
+                        {% endif %}
+                        <h6 class="font-heading fw-bold text-dark mb-0">{{ user.username }}</h6>
+                        <small class="text-muted">{{ user.email }}</small>
+                    </div>
+                    <ul class="nav flex-column dashboard-nav">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                                <i class="bi bi-speedometer2"></i> Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_donations' %}active{% endif %}" href="{% url 'dashboard_donations' %}">
+                                <i class="bi bi-cash-coin"></i> My Donations
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_receipts' %}active{% endif %}" href="{% url 'dashboard_receipts' %}">
+                                <i class="bi bi-receipt"></i> Receipts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_profile' %}active{% endif %}" href="{% url 'dashboard_profile' %}">
+                                <i class="bi bi-person"></i> Profile Settings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_change_password' %}active{% endif %}" href="{% url 'dashboard_change_password' %}">
+                                <i class="bi bi-key"></i> Change Password
+                            </a>
+                        </li>
+                        <li class="nav-item mt-3 pt-3 border-top">
+                            <a class="nav-link text-danger" href="{% url 'logout' %}">
+                                <i class="bi bi-box-arrow-left text-danger"></i> Sign Out
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- DASHBOARD CONTENT AREA -->
+            <div class="col-lg-7">
+                {% block dashboard_content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

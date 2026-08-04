@@ -1,0 +1,56 @@
+{% extends 'website/base.html' %}
+
+{% block title %}Payment Successful | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block content %}
+<section class="hr-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 text-center">
+                <div class="hr-form-card">
+                    <div class="hr-card-icon-wrap mx-auto mb-3" style="width: 72px; height: 72px; font-size: 2.2rem; background: var(--hr-green); color: var(--hr-text);">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+
+                    <h2 class="font-heading fw-bold text-dark mb-1">Thank You for Your Support!</h2>
+                    <p class="text-muted mb-4">Your donation has been received successfully and is creating a real impact.</p>
+
+                    <div class="p-4 rounded-4 bg-light border text-start mb-4">
+                        <table class="table table-borderless text-muted mb-0">
+                            <tr>
+                                <th class="text-dark ps-0">Transaction ID</th>
+                                <td class="text-end pe-0"><span class="badge bg-dark text-white font-heading fs-6">{{ donation.transaction_id }}</span></td>
+                            </tr>
+                            <tr>
+                                <th class="text-dark ps-0">Amount Donated</th>
+                                <td class="text-end pe-0 font-heading fw-bold text-emerald fs-5">Rs. {{ donation.amount }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-dark ps-0">Campaign</th>
+                                <td class="text-end pe-0 text-dark fw-bold">{{ donation.campaign.campaign_name }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-dark ps-0">Payment Method</th>
+                                <td class="text-end pe-0">{{ donation.get_payment_method_display }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-dark ps-0">Date & Time</th>
+                                <td class="text-end pe-0">{{ donation.donation_date|date:"d M Y, h:i A" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'receipt_view' donation.id %}" class="btn-hr-pill-outline py-3 fs-6">
+                            <i class="bi bi-file-earmark-arrow-down-fill me-2"></i> View & Print Receipt
+                        </a>
+                        <a href="{% url 'home' %}" class="btn-hr-green py-3 fs-6">
+                            Back to Home Page
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

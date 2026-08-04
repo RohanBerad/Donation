@@ -1,0 +1,65 @@
+{% extends 'website/base.html' %}
+
+{% block title %}Create Account | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block content %}
+<section class="hr-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5">
+                <div class="hr-form-card">
+                    <div class="text-center mb-4">
+                        <div class="hr-card-icon-wrap mx-auto mb-3"><i class="bi bi-person-plus-fill text-dark"></i></div>
+                        <h3 class="font-heading fw-bold text-dark mb-1">Create Account</h3>
+                        <p class="text-muted small">Join our community of impactful donors</p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">Username</label>
+                            {{ form.username }}
+                            {% for error in form.username.errors %}
+                                <small class="text-danger d-block mt-1">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">Email Address</label>
+                            {{ form.email }}
+                            {% for error in form.email.errors %}
+                                <small class="text-danger d-block mt-1">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">Password</label>
+                            {{ form.password1 }}
+                            {% for error in form.password1.errors %}
+                                <small class="text-danger d-block mt-1">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">Confirm Password</label>
+                            {{ form.password2 }}
+                            {% for error in form.password2.errors %}
+                                <small class="text-danger d-block mt-1">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+
+                        <button type="submit" class="btn-hr-green w-100 py-3 fs-6">REGISTER NOW</button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p class="text-muted small mb-0">
+                            Already registered? <a href="{% url 'login' %}" class="text-dark fw-bold ms-1">Sign In</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

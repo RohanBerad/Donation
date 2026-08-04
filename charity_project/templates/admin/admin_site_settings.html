@@ -1,0 +1,115 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Website Content{% endblock %}
+{% block admin_heading %}Website Content{% endblock %}
+
+{% block admin_content %}
+
+<p class="text-muted mb-4">
+    Everything below controls text and images shown on the public Home Page.
+    Changes here are reflected on the website immediately after saving.
+</p>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="admin-card mb-4">
+        <h5 class="fw-bold mb-3">General</h5>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.ngo_name.label }}</label>
+            {{ form.ngo_name }}
+        </div>
+    </div>
+
+    <div class="admin-card mb-4">
+        <h5 class="fw-bold mb-3">Hero Section</h5>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.hero_title_line1.label }}</label>
+                {{ form.hero_title_line1 }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.hero_title_highlight.label }}</label>
+                {{ form.hero_title_highlight }}
+                <small class="text-muted">Shown in green on the home page.</small>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.hero_subtitle.label }}</label>
+            {{ form.hero_subtitle }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.hero_image.label }}</label>
+            {{ form.hero_image }}
+            {% if form.instance.hero_image %}
+                <img src="{{ form.instance.hero_image.url }}" class="d-block mt-2 rounded" style="max-height: 100px;">
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="admin-card mb-4">
+        <h5 class="fw-bold mb-3">Impact Statistics</h5>
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label class="form-label fw-semibold">{{ form.stat_campaigns.label }}</label>
+                {{ form.stat_campaigns }}
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label fw-semibold">{{ form.stat_lives_impacted.label }}</label>
+                {{ form.stat_lives_impacted }}
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label fw-semibold">{{ form.stat_funds_raised.label }}</label>
+                {{ form.stat_funds_raised }}
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label fw-semibold">{{ form.stat_donors.label }}</label>
+                {{ form.stat_donors }}
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-card mb-4">
+        <h5 class="fw-bold mb-3">Mission Section</h5>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.mission_title.label }}</label>
+            {{ form.mission_title }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.mission_text.label }}</label>
+            {{ form.mission_text }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.mission_image.label }}</label>
+            {{ form.mission_image }}
+        </div>
+    </div>
+
+    <div class="admin-card mb-4">
+        <h5 class="fw-bold mb-3">Footer / Contact Info</h5>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.footer_about_text.label }}</label>
+            {{ form.footer_about_text }}
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">{{ form.contact_address.label }}</label>
+                {{ form.contact_address }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">{{ form.contact_email.label }}</label>
+                {{ form.contact_email }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">{{ form.contact_phone.label }}</label>
+                {{ form.contact_phone }}
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg">
+        <i class="bi bi-check-circle"></i> Save Website Content
+    </button>
+</form>
+
+{% endblock %}

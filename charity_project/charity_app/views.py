@@ -20,6 +20,10 @@ from django.db.models import Sum
 from decimal import Decimal
 import random
 
+import razorpay
+from django.conf import settings
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile, PasswordResetOTP
 from .forms import (
@@ -128,24 +132,27 @@ def campaign_detail(request, campaign_id):
 # ==========================================================
 def donate(request, campaign_id=None):
     """
-    Shows the donation form. If the donor arrived from a specific
-    campaign's "Donate Now" button, that campaign is pre-selected in the
-    dropdown; otherwise they can pick any active campaign themselves.
-
-    On submit, we do NOT save the donation yet -- we temporarily store the
-    submitted details in the session and send the donor to the Payment
-    Gateway page (step 2), which is where the "payment" is confirmed and
-    the Donation row is actually created.
+    Donation Form
     """
+
     preselected_campaign = None
+
     if campaign_id:
-        preselected_campaign = get_object_or_404(Campaign, id=campaign_id)
+        preselected_campaign = get_object_or_404(
+            Campaign,
+            id=campaign_id
+        )
 
     if request.method == 'POST':
+
+        print("FORM SUBMITTED")
+
         form = DonationForm(request.POST)
+
         if form.is_valid():
-            # Temporarily remember the donor's details in the session.
-            # Decimal amounts must be converted to strings to be stored in the session.
+
+            print("FORM VALID")
+
             request.session['pending_donation'] = {
                 'campaign_id': form.cleaned_data['campaign'].id,
                 'donor_name': form.cleaned_data['donor_name'],
@@ -153,92 +160,132 @@ def donate(request, campaign_id=None):
                 'amount': str(form.cleaned_data['amount']),
                 'payment_method': form.cleaned_data['payment_method'],
             }
+
             return redirect('payment_gateway')
+
+        else:
+
+            print("FORM ERRORS")
+            print(form.errors)
+
     else:
-        initial = {'campaign': preselected_campaign} if preselected_campaign else {}
+
+        initial = {}
+
+        if preselected_campaign:
+            initial['campaign'] = preselected_campaign
+
         form = DonationForm(initial=initial)
 
-    # Build a small lookup of every active campaign's details (as plain numbers/strings)
-    # so donate.html's JavaScript can update the live preview card without a page reload.
     campaigns_json = {}
+
     for c in Campaign.objects.filter(status='active'):
+
         campaigns_json[str(c.id)] = {
             'name': c.campaign_name,
-            'image': c.campaign_image.url if c.campaign_image else 'https://placehold.co/400x250/dcfce7/16a34a?text=' + c.campaign_name,
+            'image': c.campaign_image.url if c.campaign_image else '',
             'raised': str(c.raised_amount),
             'goal': str(c.goal_amount),
             'percent': str(c.progress_percentage()),
         }
 
-    context = {'form': form, 'campaign': preselected_campaign, 'campaigns_json': campaigns_json}
-    return render(request, 'website/donate.html', context)
+    context = {
+        'form': form,
+        'campaign': preselected_campaign,
+        'campaigns_json': campaigns_json
+    }
 
-
+    return render(
+        request,
+        'website/donate.html',
+        context
+    )
 # ==========================================================
 # 5. PAYMENT GATEWAY PAGE -- Step 2 of the payment flow
 # ==========================================================
 def payment_gateway(request):
-    """
-    Shows a demo "Complete Your Payment" screen (UPI/Card/Net Banking tabs
-    with a QR code) using the details stored in the session by donate().
-
-    When the donor clicks "I Have Completed the Payment", we finally
-    create the real Donation row, update the campaign's raised amount,
-    and send them to the Success page.
-
-    NOTE: This is a DEMO payment flow for a college/portfolio project.
-    No real money moves and no real payment gateway is contacted.
-    """
     pending = request.session.get('pending_donation')
+
     if not pending:
-        messages.error(request, 'Your donation session expired. Please fill the form again.')
         return redirect('campaign_list')
 
-    campaign = get_object_or_404(Campaign, id=pending['campaign_id'])
-
-    if request.method == 'POST':
-        donation = Donation(
-            campaign=campaign,
-            donor_name=pending['donor_name'],
-            email=pending['email'],
-            amount=Decimal(pending['amount']),
-            payment_method=pending['payment_method'],
+    client = razorpay.Client(
+        auth=(
+            settings.RAZORPAY_KEY_ID,
+            settings.RAZORPAY_KEY_SECRET
         )
-        if request.user.is_authenticated:
-            donation.user = request.user
+    )
 
-        # transaction_id is generated automatically inside models.py -> save()
-        donation.save()
+    amount = int(float(pending['amount']) * 100)
 
-        # Update the campaign's raised amount
-        campaign.raised_amount += donation.amount
-        campaign.save()
-
-        # Clear the pending donation from the session -- it's been "paid" now
-        del request.session['pending_donation']
-
-        return redirect('success', donation_id=donation.id)
+    payment = client.order.create({
+        "amount": amount,
+        "currency": "INR",
+        "payment_capture": "1"
+    })
 
     context = {
-        'campaign': campaign,
-        'pending': pending,
-        # A fake UPI QR code image, generated on the fly for the demo flow
-        'qr_data': f"upi://pay?pa=helpinghands@upi&am={pending['amount']}&cu=INR&tn=Donation-{campaign.id}",
+        "pending": pending,
+        "payment": payment,
+        "key": settings.RAZORPAY_KEY_ID,
     }
-    return render(request, 'website/payment_gateway.html', context)
 
+    return render(
+        request,
+        "website/payment_gateway.html",
+        context
+    )
 
 # ==========================================================
 # 6. PAYMENT SUCCESS PAGE
 # ==========================================================
-def success(request, donation_id):
-    """
-    Shown right after a donation is submitted.
-    Displays Thank You message, transaction ID, amount, campaign name.
-    """
+
+
+def payment_success(request):
+
+    payment_id = request.GET.get('payment_id')
+
+    if not payment_id:
+        return redirect('campaign_list')
+
+    pending = request.session.get('pending_donation')
+
+    if not pending:
+        return redirect('campaign_list')
+
+    campaign = get_object_or_404(
+        Campaign,
+        id=pending['campaign_id']
+    )
+
+    donation = Donation(
+        campaign=campaign,
+        donor_name=pending['donor_name'],
+        email=pending['email'],
+        amount=Decimal(pending['amount']),
+        payment_method=pending['payment_method'],
+    )
+
+    if request.user.is_authenticated:
+        donation.user = request.user
+
+    donation.razorpay_payment_id = payment_id
+    donation.save()
+
+    campaign.raised_amount += donation.amount
+    campaign.save()
+
+    del request.session['pending_donation']
+    return redirect(
+            'success',
+            donation_id=donation.id
+        )
+
+
+def success_view(request, donation_id):
+    """Shows the payment success page with donation details."""
     donation = get_object_or_404(Donation, id=donation_id)
-    context = {'donation': donation}
-    return render(request, 'website/success.html', context)
+    return render(request, 'website/success.html', {'donation': donation})
 
 
 # ==========================================================

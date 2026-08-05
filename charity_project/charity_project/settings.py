@@ -158,3 +158,7 @@ EMAIL_HOST_USER = "rohanberad5@gmail.com"
 EMAIL_HOST_PASSWORD = "zxobewrrqrlymfmq"
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# pyment integration 
+RAZORPAY_KEY_ID = "rzp_test_TLhS4kqWUsTnMT"
+RAZORPAY_KEY_SECRET = "aDbAycta4AeH5WB3f8NtVY0I"

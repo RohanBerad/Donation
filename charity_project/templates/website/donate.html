@@ -41,18 +41,30 @@
                             <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">{{ form.amount.label }}</label>
                             {{ form.amount }}
                         </div>
+<div class="mb-4">
+    <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">
+        Payment Method
+    </label>
 
-                        <div class="mb-4">
-                            <label class="form-label text-dark fw-bold small text-uppercase tracking-wider d-block mb-3">{{ form.payment_method.label }}</label>
-                            <div class="payment-method-grid">
-                                {% for radio in form.payment_method %}
-                                    <label class="payment-method-option">
-                                        {{ radio.tag }}
-                                        <span>{{ radio.choice_label }}</span>
-                                    </label>
-                                {% endfor %}
-                            </div>
-                        </div>
+    <div class="d-flex flex-column gap-2">
+
+        {% for radio in form.payment_method %}
+        <div class="form-check border rounded-3 p-3">
+            {{ radio.tag }}
+            <label class="form-check-label ms-2" for="{{ radio.id_for_label }}">
+                {{ radio.choice_label }}
+            </label>
+        </div>
+        {% endfor %}
+
+    </div>
+
+    {% if form.payment_method.errors %}
+        <div class="text-danger mt-2">
+            {{ form.payment_method.errors }}
+        </div>
+    {% endif %}
+</div>
 
                         <button type="submit" class="btn-hr-green w-100 py-3 fs-6">
                             PROCEED TO PAYMENT <i class="bi bi-arrow-up-right ms-2"></i>

@@ -17,7 +17,8 @@ urlpatterns = [
     path('donate/', views.donate, name='donate_generic'),
     path('donate/<int:campaign_id>/', views.donate, name='donate'),
     path('payment/', views.payment_gateway, name='payment_gateway'),
-    path('success/<int:donation_id>/', views.success, name='success'),
+    path('payment-success/',views.payment_success,name='payment_success'),
+    path('success/<int:donation_id>/', views.success_view, name='success'),
 
     # Receipts
     path('receipt/<int:donation_id>/', views.receipt_view, name='receipt_view'),

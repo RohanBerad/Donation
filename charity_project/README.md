@@ -215,7 +215,7 @@ Then open your browser to:
 2. Go to **Website Content** and fill in your NGO name, hero text, stats, mission text,
    and contact details
 3. Go to **Campaigns → Add New Campaign** to create your first fundraiser
-4. Go to **Testimonials → Add New Testimonial** to add a donor quote to the home page
+4. Go to **Testimonials → Edit/Delete** to manage donor quotes on the home page
 
 ---
 

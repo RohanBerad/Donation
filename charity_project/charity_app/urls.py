@@ -13,6 +13,13 @@ urlpatterns = [
     path('campaigns/', views.campaign_list, name='campaign_list'),
     path('campaigns/<int:campaign_id>/', views.campaign_detail, name='campaign_detail'),
 
+    # Static / informational pages
+    path('about/', views.about_view, name='about'),
+    path('contact/', views.contact_view, name='contact'),
+    path('faq/', views.faq_view, name='faq'),
+    path('privacy-policy/', views.privacy_policy_view, name='privacy_policy'),
+    path('terms-of-service/', views.terms_view, name='terms'),
+
     # Donation flow: Step 1 (details form) -> Step 2 (payment gateway) -> Success
     path('donate/', views.donate, name='donate_generic'),
     path('donate/<int:campaign_id>/', views.donate, name='donate'),
@@ -56,7 +63,20 @@ urlpatterns = [
     path('myadmin/settings/', views.admin_site_settings, name='admin_site_settings'),
 
     path('myadmin/testimonials/', views.admin_testimonial_list, name='admin_testimonial_list'),
-    path('myadmin/testimonials/add/', views.admin_testimonial_add, name='admin_testimonial_add'),
     path('myadmin/testimonials/<int:testimonial_id>/edit/', views.admin_testimonial_edit, name='admin_testimonial_edit'),
     path('myadmin/testimonials/<int:testimonial_id>/delete/', views.admin_testimonial_delete, name='admin_testimonial_delete'),
+
+    path('myadmin/faqs/', views.admin_faq_list, name='admin_faq_list'),
+    path('myadmin/faqs/add/', views.admin_faq_add, name='admin_faq_add'),
+    path('myadmin/faqs/<int:faq_id>/edit/', views.admin_faq_edit, name='admin_faq_edit'),
+    path('myadmin/faqs/<int:faq_id>/delete/', views.admin_faq_delete, name='admin_faq_delete'),
+
+    path('myadmin/messages/', views.admin_contact_list, name='admin_contact_list'),
+    path('myadmin/messages/<int:message_id>/', views.admin_contact_view, name='admin_contact_view'),
+    path('myadmin/messages/<int:message_id>/delete/', views.admin_contact_delete, name='admin_contact_delete'),
+
+    # Help requests (submitted from the homepage "Get Help" form)
+    path('myadmin/requests/', views.admin_request_list, name='request'),
+    path('myadmin/requests/<int:request_id>/', views.admin_request_detail, name='admin_request_detail'),
+    path('myadmin/requests/<int:request_id>/delete/', views.admin_request_delete, name='admin_request_delete'),
 ]

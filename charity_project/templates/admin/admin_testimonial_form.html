@@ -20,6 +20,19 @@
             </div>
         </div>
 
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.email.label }}</label>
+                {{ form.email }}
+                <small class="text-muted">Not shown publicly -- used by staff to follow up if needed.</small>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.story_title.label }}</label>
+                {{ form.story_title }}
+                <small class="text-muted">Optional headline shown on the story card.</small>
+            </div>
+        </div>
+
         <div class="mb-3">
             <label class="form-label fw-semibold">{{ form.message.label }}</label>
             {{ form.message }}
@@ -31,15 +44,33 @@
                 {{ form.rating }}
             </div>
             <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">{{ form.category.label }}</label>
+                {{ form.category }}
+                <small class="text-muted">Controls the badge on the story card.</small>
+            </div>
+            <div class="col-md-4 mb-3">
                 <label class="form-label fw-semibold">{{ form.display_order.label }}</label>
                 {{ form.display_order }}
                 <small class="text-muted">Lower shows first</small>
             </div>
-            <div class="col-md-4 mb-3 d-flex align-items-end">
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3 d-flex align-items-end">
                 <div class="form-check">
                     {{ form.is_active }}
                     <label class="form-check-label ms-1">{{ form.is_active.label }}</label>
                 </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-check">
+                    {{ form.is_approved }}
+                    <label class="form-check-label ms-1">{{ form.is_approved.label }}</label>
+                </div>
+                <small class="text-muted">Only approved stories appear publicly.</small>
             </div>
         </div>
 

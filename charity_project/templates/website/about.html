@@ -1,0 +1,353 @@
+{% extends 'website/base.html' %}
+
+{% block title %}About Us | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block content %}
+
+<!-- ===================== HERO ===================== -->
+<section class="hr-about-hero"
+         style="background-image: url('{% if site_settings.about_image %}{{ site_settings.about_image.url }}{% else %}https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?q=80&w=1600&auto=format&fit=crop{% endif %}');">
+    <div class="hr-about-hero-overlay"></div>
+    <div class="container hr-about-hero-content py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <span class="hr-about-hero-badge">Who We Are</span>
+                <h1 class="display-4 font-heading fw-bold mt-3 mb-1">{{ site_settings.about_heading }}</h1>
+                <h1 class="display-4 font-heading fw-bold mb-4 text-emerald" style="color: var(--hr-green) !important;">{{ site_settings.about_heading_highlight }}</h1>
+
+                <p class="mb-4" style="max-width: 560px; color: rgba(255,255,255,0.85);">
+                    {{ site_settings.about_text|truncatewords:45 }}
+                </p>
+
+                <div class="row g-3 mb-4" style="max-width: 560px;">
+                    <div class="col-sm-6">
+                        <div class="hr-about-hero-check">
+                            <i class="bi bi-check-circle-fill text-emerald mt-1" style="color: var(--hr-green) !important;"></i>
+                            <span>Trusted by thousands of donors and partners</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="hr-about-hero-check">
+                            <i class="bi bi-check-circle-fill mt-1" style="color: var(--hr-green) !important;"></i>
+                            <span>Transparent and accountable</span>
+                        </div>
+                    </div>
+                    {% if site_settings.registration_number %}
+                    <div class="col-sm-12">
+                        <div class="hr-about-hero-check">
+                            <i class="bi bi-check-circle-fill mt-1" style="color: var(--hr-green) !important;"></i>
+                            <span>Registered NGO -- Reg. No: {{ site_settings.registration_number }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <a href="{% url 'donate_generic' %}" class="btn-hr-green">
+                        Join Our Mission <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                    {% if site_settings.about_video_url %}
+                        <a href="#" class="btn-hr-outline-white" data-bs-toggle="modal" data-bs-target="#aboutVideoModal">
+                            <i class="bi bi-play-circle-fill"></i> Watch Our Full Story
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if site_settings.about_video_url %}
+            <div class="col-lg-5 text-center text-lg-end mt-5 mt-lg-0">
+                <button type="button" class="hr-about-play-btn" data-bs-toggle="modal" data-bs-target="#aboutVideoModal">
+                    <i class="bi bi-play-fill"></i>
+                </button>
+                <div class="hr-about-play-label">Watch Our Story</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- ===================== FLOATING STATS BAR ===================== -->
+<div class="container">
+    <div class="hr-about-stats-bar">
+        <div class="row g-4 g-lg-3">
+            <div class="col-6 col-md-4 col-lg">
+                <div class="hr-about-stat-item">
+                    <div class="hr-about-stat-icon"><i class="bi bi-megaphone-fill"></i></div>
+                    <div>
+                        <h5 class="font-heading fw-bold mb-0">{{ site_settings.stat_campaigns }}</h5>
+                        <span class="text-muted small">Campaigns Run</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg">
+                <div class="hr-about-stat-item">
+                    <div class="hr-about-stat-icon"><i class="bi bi-people-fill"></i></div>
+                    <div>
+                        <h5 class="font-heading fw-bold mb-0">{{ site_settings.stat_lives_impacted }}</h5>
+                        <span class="text-muted small">Lives Impacted</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg">
+                <div class="hr-about-stat-item">
+                    <div class="hr-about-stat-icon"><i class="bi bi-currency-rupee"></i></div>
+                    <div>
+                        <h5 class="font-heading fw-bold mb-0">{{ site_settings.stat_funds_raised }}</h5>
+                        <span class="text-muted small">Funds Raised</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg">
+                <div class="hr-about-stat-item">
+                    <div class="hr-about-stat-icon"><i class="bi bi-heart-fill"></i></div>
+                    <div>
+                        <h5 class="font-heading fw-bold mb-0">{{ site_settings.stat_donors }}</h5>
+                        <span class="text-muted small">Generous Donors</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg">
+                <div class="hr-about-stat-item">
+                    <div class="hr-about-stat-icon"><i class="bi bi-person-hearts"></i></div>
+                    <div>
+                        <h5 class="font-heading fw-bold mb-0">{{ site_settings.stat_partners_volunteers }}</h5>
+                        <span class="text-muted small">Partners &amp; Volunteers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== OUR PURPOSE ===================== -->
+<section class="hr-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="hr-badge-pill">Our Purpose</span>
+            <h2 class="display-5 font-heading fw-bold mt-2 mb-2">We exist to create a <span class="text-emerald">better tomorrow</span></h2>
+            <p class="text-muted mx-auto" style="max-width: 620px;">
+                To empower people in need through compassion, accountability and development programs that deliver immediate relief and build lasting solutions.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="hr-purpose-card hr-purpose-green">
+                    <div class="hr-purpose-icon"><i class="bi bi-bullseye"></i></div>
+                    <h5 class="font-heading fw-bold mb-2">Our Mission</h5>
+                    <p class="text-muted small mb-0">{{ site_settings.mission_text }}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="hr-purpose-card hr-purpose-blue">
+                    <div class="hr-purpose-icon"><i class="bi bi-eye-fill"></i></div>
+                    <h5 class="font-heading fw-bold mb-2">Our Vision</h5>
+                    <p class="text-muted small mb-0">{{ site_settings.about_vision_text }}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="hr-purpose-card hr-purpose-orange">
+                    <div class="hr-purpose-icon"><i class="bi bi-gem"></i></div>
+                    <h5 class="font-heading fw-bold mb-2">Our Values</h5>
+                    <div class="mt-2">
+                        <div class="hr-purpose-value-item"><i class="bi bi-check-circle-fill text-warning"></i> Compassion</div>
+                        <div class="hr-purpose-value-item"><i class="bi bi-check-circle-fill text-warning"></i> Integrity</div>
+                        <div class="hr-purpose-value-item"><i class="bi bi-check-circle-fill text-warning"></i> Accountability</div>
+                        <div class="hr-purpose-value-item"><i class="bi bi-check-circle-fill text-warning"></i> Respect</div>
+                        <div class="hr-purpose-value-item mb-0"><i class="bi bi-check-circle-fill text-warning"></i> Transparency</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== OUR STORY + DONATIONS DONUT ===================== -->
+<section class="hr-section pt-0">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Our Story -->
+            <div class="col-lg-4">
+                <div class="hr-card-white p-4 h-100">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="hr-card-icon-wrap"><i class="bi bi-bookmark-heart text-dark"></i></div>
+                        <h5 class="font-heading fw-bold mb-0">Our Story</h5>
+                    </div>
+                    <p class="text-muted small">{{ site_settings.about_text|truncatewords:35 }}</p>
+                    <div class="mt-4">
+                        <div class="hr-timeline-item"><span class="hr-timeline-dot"></span><span><strong>2015</strong> -- Started with small community relief projects.</span></div>
+                        <div class="hr-timeline-item"><span class="hr-timeline-dot"></span><span><strong>2017</strong> -- Expanded into education and healthcare initiatives.</span></div>
+                        <div class="hr-timeline-item"><span class="hr-timeline-dot"></span><span><strong>2020</strong> -- Launched livelihood and women empowerment programs.</span></div>
+                        <div class="hr-timeline-item"><span class="hr-timeline-dot"></span><span><strong>2023</strong> -- Reached thousands of families through campaigns.</span></div>
+                        <div class="hr-timeline-item mb-0"><span class="hr-timeline-dot"></span><span><strong>2024+</strong> -- Continuing our journey of impact and change.</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Story photo -->
+            <div class="col-lg-4">
+                <div class="hr-story-photo-wrap h-100">
+                    {% if site_settings.about_story_image %}
+                        <img src="{{ site_settings.about_story_image.url }}" alt="{{ site_settings.ngo_name }}">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=700&auto=format&fit=crop" alt="{{ site_settings.ngo_name }}">
+                    {% endif %}
+                    {% if site_settings.about_story_quote %}
+                        <div class="hr-story-quote-card">
+                            <i class="bi bi-quote text-emerald mb-1 d-block" style="color: var(--hr-green-hover) !important; font-size: 1.3rem;"></i>
+                            <p class="fw-bold mb-0 small">{{ site_settings.about_story_quote }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Donations donut -->
+            <div class="col-lg-4">
+                <div class="hr-card-white p-4 h-100">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="hr-card-icon-wrap"><i class="bi bi-cash-stack text-dark"></i></div>
+                        <h5 class="font-heading fw-bold mb-0">How Donations Are Used</h5>
+                    </div>
+                    <p class="text-muted small mb-4">We believe in transparency and responsible stewardship. Every contribution is directed towards initiatives that create the greatest impact for people in need.</p>
+
+                    <div class="d-flex align-items-center gap-4 flex-wrap">
+                        <div class="hr-donut-chart" style="background: conic-gradient(var(--hr-green) 0deg 126deg, #3b82f6 126deg 234deg, #8b5cf6 234deg 306deg, #f97316 306deg 342deg, #eab308 342deg 360deg);">
+                            <div class="hr-donut-chart-inner">100%</div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 small mb-2">
+                                <span class="hr-donut-legend-dot" style="background: var(--hr-green);"></span>
+                                <span class="text-muted flex-grow-1">Education &amp; Scholarships</span>
+                                <strong>35%</strong>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 small mb-2">
+                                <span class="hr-donut-legend-dot" style="background: #3b82f6;"></span>
+                                <span class="text-muted flex-grow-1">Healthcare &amp; Medical Aid</span>
+                                <strong>30%</strong>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 small mb-2">
+                                <span class="hr-donut-legend-dot" style="background: #8b5cf6;"></span>
+                                <span class="text-muted flex-grow-1">Livelihood &amp; Skill Development</span>
+                                <strong>20%</strong>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 small mb-2">
+                                <span class="hr-donut-legend-dot" style="background: #f97316;"></span>
+                                <span class="text-muted flex-grow-1">Food &amp; Shelter</span>
+                                <strong>10%</strong>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 small mb-0">
+                                <span class="hr-donut-legend-dot" style="background: #eab308;"></span>
+                                <span class="text-muted flex-grow-1">Awareness &amp; Outreach</span>
+                                <strong>5%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== ACCOUNTABILITY BANNER ===================== -->
+<section class="hr-section pt-0">
+    <div class="container">
+       
+    </div>
+</section>
+
+<!-- ===================== MEET THE TEAM (carousel) ===================== -->
+<section class="hr-section pt-0">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h3 class="font-heading fw-bold">{{ site_settings.team_section_title }}</h3>
+            <p class="text-muted mb-0">{{ site_settings.team_section_subtitle }}</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+                {% for member in site_settings.team_members %}
+                    {% with name=member.name role=member.role photo=member.photo %}
+                        {% if name %}
+                        <div class="col-6 col-md-3">
+                            <div class="hr-team-card">
+                                {% if photo %}
+                                    <img src="{{ photo.url }}" alt="{{ name }}">
+                                {% else %}
+                                    <img src="https://ui-avatars.com/api/?name={{ name|urlencode }}&background=26e07f&color=fff&size=400&bold=true" alt="{{ name }}">
+                                {% endif %}
+                                <div class="p-3">
+                                    <h6 class="fw-bold mb-1">{{ name }}</h6>
+                                    <p class="text-emerald small fw-semibold mb-2" style="color: var(--hr-green-hover) !important;">{{ role }}</p>
+                                    <div class="d-flex gap-2">
+                                        <a href="#" class="hr-team-social-icon"><i class="bi bi-linkedin"></i></a>
+                                        <a href="#" class="hr-team-social-icon"><i class="bi bi-twitter-x"></i></a>
+                                        <a href="mailto:{{ site_settings.contact_email }}" class="hr-team-social-icon"><i class="bi bi-envelope-fill"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endwith %}
+                {% empty %}
+                <div class="col-12 text-center text-muted small">No team members configured yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+</section>
+
+<!-- ===================== DARK CTA BANNER ===================== -->
+<section class="hr-section pt-0">
+    <div class="container">
+        <div class="hr-about-cta-dark">
+            <div class="d-flex align-items-center gap-3">
+                <div class="hr-about-cta-icon"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <h5 class="font-heading fw-bold mb-1">Want to be part of the change?</h5>
+                    <p class="mb-0 small" style="color: rgba(255,255,255,0.7);">Every contribution makes a difference. Join us in building a better tomorrow for someone in need.</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'register' %}" class="btn-hr-outline-white">
+                    <i class="bi bi-person-plus-fill"></i> Become a Volunteer
+                </a>
+                <a href="{% url 'donate_generic' %}" class="btn-hr-green">
+                    <i class="bi bi-heart-fill me-1"></i> Make a Donation
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if site_settings.about_video_url %}
+<!-- ===================== VIDEO MODAL ===================== -->
+<div class="modal fade" id="aboutVideoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-black border-0">
+            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" style="z-index: 5;" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="ratio ratio-16x9">
+                <iframe id="aboutVideoFrame" src="" title="Our Story" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var videoModal = document.getElementById('aboutVideoModal');
+        var videoFrame = document.getElementById('aboutVideoFrame');
+        var videoUrl = "{{ site_settings.about_video_url|escapejs }}";
+
+        if (videoModal) {
+            videoModal.addEventListener('show.bs.modal', function () {
+                videoFrame.src = videoUrl;
+            });
+            videoModal.addEventListener('hidden.bs.modal', function () {
+                videoFrame.src = '';
+            });
+        }
+    });
+</script>
+{% endif %}
+
+
+
+{% endblock %}

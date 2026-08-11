@@ -10,25 +10,25 @@ so the code stays easy to read for beginners.
 """
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm, SetPasswordForm
 from django.contrib import messages
 from django.http import HttpResponse
 from django.core.mail import send_mail
-from django.db.models import Sum
+from django.db.models import Sum, Avg
 from decimal import Decimal
 import random
 
 import razorpay
 from django.conf import settings
-from decimal import Decimal
-
 from django.contrib.auth.models import User
-from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile, PasswordResetOTP
+from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile, PasswordResetOTP, FAQ, ContactMessage, HelpRequest
 from .forms import (
     DonationForm, RegisterForm, CampaignForm, AdminLoginForm,
-    SiteSettingsForm, TestimonialForm, ProfileForm, EmailLoginForm,
+    SiteSettingsForm, TestimonialForm, TestimonialSubmissionForm, ProfileForm, EmailLoginForm,
+    FAQForm, ContactForm, HelpRequestForm,
 )
 
 
@@ -68,8 +68,43 @@ def home(request):
     numbers, footer contact info) comes from the SiteSettings model, which
     NGO staff can edit from our custom admin panel at /myadmin/settings/.
     There is no hardcoded marketing copy in this view or its template.
+
+    This view also handles the "We're Here To Support You" (Get Help) form
+    submission -- it lives inline on this page, so POSTs here too. On
+    success we save a HelpRequest (including any attached document) and
+    redirect back to the #get-help section with a confirmation message.
     """
     site_settings = SiteSettings.load()
+
+    story_form = TestimonialSubmissionForm()
+    help_request_form = HelpRequestForm()
+
+    if request.method == 'POST' and 'submit_story' in request.POST:
+        story_form = TestimonialSubmissionForm(request.POST, request.FILES)
+        if story_form.is_valid():
+            testimonial = story_form.save(commit=False)
+            testimonial.is_active = False
+            testimonial.is_approved = False
+            testimonial.save()
+            messages.success(
+                request,
+                "Thank you for sharing your message. Our team will review it and decide whether to publish it on the website."
+            )
+            return redirect('home')
+        else:
+            messages.error(request, "Please fill in a valid story before submitting.")
+    elif request.method == 'POST' and 'submit_help_request' in request.POST:
+        help_request_form = HelpRequestForm(request.POST, request.FILES)
+
+        if help_request_form.is_valid():
+            help_request_form.save()
+            messages.success(
+                request,
+                "Your request has been submitted. Our team will review it and reach out to you soon."
+            )
+            return redirect(f"{reverse('home')}#get-help")
+        else:
+            messages.error(request, "Please fix the errors below and submit the form again.")
 
     # Show only 3 active campaigns as "Featured Campaigns" on the home page
     featured_campaigns = Campaign.objects.filter(status='active').order_by('-created_at')[:3]
@@ -80,14 +115,21 @@ def home(request):
         info = CATEGORY_ICONS.get(value, {'icon': 'bi-heart-fill', 'blurb': ''})
         impact_cards.append({'label': label, 'icon': info['icon'], 'blurb': info['blurb']})
 
-    # Testimonials that staff have marked as active, in their chosen display order
-    testimonials = Testimonial.objects.filter(is_active=True)
+    # Testimonials that staff have approved AND marked active, in their chosen display order
+    testimonials = Testimonial.objects.filter(is_active=True, is_approved=True)
+
+    stories_shared_count = testimonials.count()
+    average_rating = testimonials.aggregate(avg=Avg('rating'))['avg'] or 0
 
     context = {
         'settings': site_settings,
         'featured_campaigns': featured_campaigns,
         'impact_cards': impact_cards,
         'testimonials': testimonials,
+        'help_request_form': help_request_form,
+        'story_form': story_form,
+        'stories_shared_count': stories_shared_count,
+        'average_rating': average_rating,
     }
     return render(request, 'website/index.html', context)
 
@@ -125,6 +167,72 @@ def campaign_detail(request, campaign_id):
     campaign = get_object_or_404(Campaign, id=campaign_id)
     context = {'campaign': campaign}
     return render(request, 'website/campaign_detail.html', context)
+
+
+# ==========================================================
+# 3B. ABOUT / CONTACT / FAQ / PRIVACY / TERMS PAGES
+# ==========================================================
+def about_view(request):
+    """
+    Public "About Us" page. All of the text/image here comes from the
+    same SiteSettings singleton used on the Home Page, so staff can edit
+    it from /myadmin/settings/ without touching any code.
+    """
+    site_settings = SiteSettings.load()
+    testimonials = Testimonial.objects.filter(is_active=True, is_approved=True)
+
+    story_form = TestimonialSubmissionForm()
+    if request.method == 'POST' and 'submit_story' in request.POST:
+        story_form = TestimonialSubmissionForm(request.POST, request.FILES)
+        if story_form.is_valid():
+            testimonial = story_form.save(commit=False)
+            testimonial.is_active = False
+            testimonial.is_approved = False
+            testimonial.save()
+            messages.success(request, "Thank you for sharing. The story is waiting for admin approval.")
+            return redirect('about')
+        else:
+            messages.error(request, "Please fix the story form and try again.")
+
+    context = {
+        'site_settings': site_settings,
+        'testimonials': testimonials,
+        'story_form': story_form,
+    }
+    return render(request, 'website/about.html', context)
+
+
+def contact_view(request):
+    """
+    Public "Contact Us" page. Saves every submission as a ContactMessage
+    row so staff can read it later from /myadmin/messages/.
+    """
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Thanks for reaching out! We'll get back to you soon.")
+            return redirect('contact')
+    else:
+        form = ContactForm()
+
+    return render(request, 'website/contact.html', {'form': form})
+
+
+def faq_view(request):
+    """Shows every active FAQ, ordered the way staff arranged them in the admin panel."""
+    faqs = FAQ.objects.filter(is_active=True)
+    return render(request, 'website/faq.html', {'faqs': faqs})
+
+
+def privacy_policy_view(request):
+    """Static Privacy Policy page."""
+    return render(request, 'website/privacy_policy.html')
+
+
+def terms_view(request):
+    """Static Terms of Service page."""
+    return render(request, 'website/terms.html')
 
 
 # ==========================================================
@@ -216,6 +324,8 @@ def payment_gateway(request):
         )
     )
 
+    campaign = get_object_or_404(Campaign, id=pending['campaign_id'])
+
     amount = int(float(pending['amount']) * 100)
 
     payment = client.order.create({
@@ -228,6 +338,7 @@ def payment_gateway(request):
         "pending": pending,
         "payment": payment,
         "key": settings.RAZORPAY_KEY_ID,
+        "campaign": campaign,
     }
 
     return render(
@@ -382,6 +493,8 @@ def login_view(request):
                 user = authenticate(request, username=matching_user.username, password=password)
 
             if user is not None:
+                request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+                request.session.modified = True
                 login(request, user)
                 return redirect('dashboard')
             else:
@@ -400,7 +513,9 @@ def logout_view(request):
     Logs the current user out and sends them back to the home page.
     """
     logout(request)
-    return redirect('home')
+    response = redirect('home')
+    response.delete_cookie('sessionid', path=settings.SESSION_COOKIE_PATH)
+    return response
 
 
 # ==========================================================
@@ -666,6 +781,8 @@ def admin_login_view(request):
             user = authenticate(request, username=username, password=password)
 
             if user is not None and user.is_staff:
+                request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+                request.session.modified = True
                 login(request, user)
                 return redirect('admin_dashboard')
             else:
@@ -679,7 +796,9 @@ def admin_login_view(request):
 def admin_logout_view(request):
     """Logs the staff member out and returns them to the custom admin login page."""
     logout(request)
-    return redirect('admin_login')
+    response = redirect('admin_login')
+    response.delete_cookie('admin_sessionid', path=settings.SESSION_COOKIE_PATH)
+    return response
 
 
 @admin_required
@@ -695,6 +814,12 @@ def admin_dashboard(request):
         'total_raised': Donation.objects.aggregate(total=Sum('amount'))['total'] or 0,
         'total_donors': Donation.objects.values('email').distinct().count(),
         'recent_donations': Donation.objects.order_by('-donation_date')[:5],
+        'unread_messages': ContactMessage.objects.filter(is_read=False).count(),
+        'new_help_requests': HelpRequest.objects.filter(status='new').count(),
+        'total_testimonials': Testimonial.objects.count(),
+        'active_testimonials': Testimonial.objects.filter(is_active=True).count(),
+        'approved_testimonials': Testimonial.objects.filter(is_approved=True).count(),
+        'pending_testimonials': Testimonial.objects.filter(is_approved=False).count(),
     }
     return render(request, 'admin/admin_dashboard.html', context)
 
@@ -817,23 +942,6 @@ def admin_testimonial_list(request):
 
 
 @admin_required
-def admin_testimonial_add(request):
-    """Lets a staff member add a new testimonial to show on the home page."""
-    if request.method == 'POST':
-        form = TestimonialForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Testimonial added successfully!')
-            return redirect('admin_testimonial_list')
-    else:
-        form = TestimonialForm()
-
-    return render(request, 'admin/admin_testimonial_form.html', {
-        'form': form, 'page_title': 'Add New Testimonial'
-    })
-
-
-@admin_required
 def admin_testimonial_edit(request, testimonial_id):
     """Lets a staff member edit an existing testimonial."""
     testimonial = get_object_or_404(Testimonial, id=testimonial_id)
@@ -863,3 +971,146 @@ def admin_testimonial_delete(request, testimonial_id):
         return redirect('admin_testimonial_list')
 
     return render(request, 'admin/admin_testimonial_delete.html', {'testimonial': testimonial})
+
+
+# ==========================================================
+# ADMIN: FAQ MANAGEMENT
+# ==========================================================
+@admin_required
+def admin_faq_list(request):
+    """Shows every FAQ with quick Edit / Delete actions."""
+    faqs = FAQ.objects.all()
+    return render(request, 'admin/admin_faq_list.html', {'faqs': faqs})
+
+
+@admin_required
+def admin_faq_add(request):
+    """Lets a staff member add a new FAQ entry to show on the public FAQ page."""
+    if request.method == 'POST':
+        form = FAQForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'FAQ added successfully!')
+            return redirect('admin_faq_list')
+    else:
+        form = FAQForm()
+
+    return render(request, 'admin/admin_faq_form.html', {
+        'form': form, 'page_title': 'Add New FAQ'
+    })
+
+
+@admin_required
+def admin_faq_edit(request, faq_id):
+    """Lets a staff member edit an existing FAQ entry."""
+    faq = get_object_or_404(FAQ, id=faq_id)
+
+    if request.method == 'POST':
+        form = FAQForm(request.POST, instance=faq)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'FAQ updated successfully!')
+            return redirect('admin_faq_list')
+    else:
+        form = FAQForm(instance=faq)
+
+    return render(request, 'admin/admin_faq_form.html', {
+        'form': form, 'page_title': 'Edit FAQ'
+    })
+
+
+@admin_required
+def admin_faq_delete(request, faq_id):
+    """Deletes a FAQ entry after confirmation."""
+    faq = get_object_or_404(FAQ, id=faq_id)
+
+    if request.method == 'POST':
+        faq.delete()
+        messages.success(request, 'FAQ deleted.')
+        return redirect('admin_faq_list')
+
+    return render(request, 'admin/admin_faq_delete.html', {'faq': faq})
+
+
+# ==========================================================
+# ADMIN: CONTACT MESSAGES
+# ==========================================================
+@admin_required
+def admin_contact_list(request):
+    """Shows every message submitted through the public Contact Us page."""
+    contact_messages = ContactMessage.objects.all()
+    return render(request, 'admin/admin_contact_list.html', {'contact_messages': contact_messages})
+
+
+@admin_required
+def admin_contact_view(request, message_id):
+    """Shows one message's full detail and marks it as read."""
+    contact_message = get_object_or_404(ContactMessage, id=message_id)
+    if not contact_message.is_read:
+        contact_message.is_read = True
+        contact_message.save()
+    return render(request, 'admin/admin_contact_detail.html', {'contact_message': contact_message})
+
+
+@admin_required
+def admin_contact_delete(request, message_id):
+    """Deletes a contact message after confirmation."""
+    contact_message = get_object_or_404(ContactMessage, id=message_id)
+
+    if request.method == 'POST':
+        contact_message.delete()
+        messages.success(request, 'Message deleted.')
+        return redirect('admin_contact_list')
+
+    return render(request, 'admin/admin_contact_delete.html', {'contact_message': contact_message})
+
+@admin_required
+def admin_request_list(request):
+    """Shows every submission from the public 'Get Help' form on the homepage."""
+    status_filter = request.GET.get('status')
+    help_requests = HelpRequest.objects.all()
+    if status_filter:
+        help_requests = help_requests.filter(status=status_filter)
+
+    context = {
+        'help_requests': help_requests,
+        'status_choices': HelpRequest.STATUS_CHOICES,
+        'selected_status': status_filter,
+    }
+    return render(request, 'admin/admin_request_list.html', context)
+
+
+@admin_required
+def admin_request_detail(request, request_id):
+    """
+    Shows one help request's full detail, including the attached document
+    (if any) and lets staff update its status / add internal notes.
+    """
+    help_request = get_object_or_404(HelpRequest, id=request_id)
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        admin_notes = request.POST.get('admin_notes', '')
+
+        if new_status in dict(HelpRequest.STATUS_CHOICES):
+            help_request.status = new_status
+        help_request.admin_notes = admin_notes
+        help_request.save()
+
+        messages.success(request, 'Request updated.')
+        return redirect('admin_request_detail', request_id=help_request.id)
+
+    return render(request, 'admin/admin_request_detail.html', {'help_request': help_request})
+
+
+@admin_required
+def admin_request_delete(request, request_id):
+    """Deletes a help request (and its attached document) after confirmation."""
+    help_request = get_object_or_404(HelpRequest, id=request_id)
+
+    if request.method == 'POST':
+        help_request.delete()
+        messages.success(request, 'Request deleted.')
+        return redirect('admin_request_list')
+
+    return render(request, 'admin/admin_request_delete.html', {'help_request': help_request})

@@ -6,23 +6,52 @@
 {% block admin_content %}
 
 <p class="text-muted mb-4">
-    Everything below controls text and images shown on the public Home Page.
-    Changes here are reflected on the website immediately after saving.
+    Choose a website page card below and update the content for that public page.
+    Changes are reflected immediately after saving.
 </p>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <button type="button" class="btn btn-link p-0 text-start text-decoration-none w-100 page-card-button" data-page-target="home-page">
+            <div class="card border-0 shadow-sm h-100 admin-page-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">Home</span>
+                        <i class="bi bi-house-door-fill text-primary"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-dark">Home Page</h6>
+                    <p class="text-muted small mb-0">Hero, mission, stats and homepage branding.</p>
+                </div>
+            </div>
+        </button>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <button type="button" class="btn btn-link p-0 text-start text-decoration-none w-100 page-card-button" data-page-target="about-page">
+            <div class="card border-0 shadow-sm h-100 admin-page-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">About</span>
+                        <i class="bi bi-info-circle-fill text-success"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-dark">About Page</h6>
+                    <p class="text-muted small mb-0">Story, vision, registration and about media.</p>
+                </div>
+            </div>
+        </button>
+    </div>
+
+</div>
 
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
 
-    <div class="admin-card mb-4">
-        <h5 class="fw-bold mb-3">General</h5>
+    <div class="admin-card mb-4 page-form-panel d-none" id="home-page" data-content-panel="home-page">
+        <h5 class="fw-bold mb-3">Home Page</h5>
         <div class="mb-3">
             <label class="form-label fw-semibold">{{ form.ngo_name.label }}</label>
             {{ form.ngo_name }}
         </div>
-    </div>
-
-    <div class="admin-card mb-4">
-        <h5 class="fw-bold mb-3">Hero Section</h5>
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">{{ form.hero_title_line1.label }}</label>
@@ -45,10 +74,7 @@
                 <img src="{{ form.instance.hero_image.url }}" class="d-block mt-2 rounded" style="max-height: 100px;">
             {% endif %}
         </div>
-    </div>
 
-    <div class="admin-card mb-4">
-        <h5 class="fw-bold mb-3">Impact Statistics</h5>
         <div class="row">
             <div class="col-md-3 mb-3">
                 <label class="form-label fw-semibold">{{ form.stat_campaigns.label }}</label>
@@ -66,11 +92,12 @@
                 <label class="form-label fw-semibold">{{ form.stat_donors.label }}</label>
                 {{ form.stat_donors }}
             </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label fw-semibold">{{ form.stat_partners_volunteers.label }}</label>
+                {{ form.stat_partners_volunteers }}
+            </div>
         </div>
-    </div>
 
-    <div class="admin-card mb-4">
-        <h5 class="fw-bold mb-3">Mission Section</h5>
         <div class="mb-3">
             <label class="form-label fw-semibold">{{ form.mission_title.label }}</label>
             {{ form.mission_title }}
@@ -83,33 +110,187 @@
             <label class="form-label fw-semibold">{{ form.mission_image.label }}</label>
             {{ form.mission_image }}
         </div>
+
+        <div class="border-top pt-4 mt-4">
+            <h5 class="fw-bold mb-3">Footer & Contact Information</h5>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">{{ form.footer_about_text.label }}</label>
+                {{ form.footer_about_text }}
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-semibold">{{ form.contact_address.label }}</label>
+                    {{ form.contact_address }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-semibold">{{ form.contact_email.label }}</label>
+                    {{ form.contact_email }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-semibold">{{ form.contact_phone.label }}</label>
+                    {{ form.contact_phone }}
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="admin-card mb-4">
-        <h5 class="fw-bold mb-3">Footer / Contact Info</h5>
+    <div class="admin-card mb-4 page-form-panel d-none" id="about-page" data-content-panel="about-page">
+        <h5 class="fw-bold mb-3">About Page</h5>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.about_heading.label }}</label>
+                {{ form.about_heading }}
+                <small class="text-muted">First (white) line of the About page hero, e.g. "We stand with"</small>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.about_heading_highlight.label }}</label>
+                {{ form.about_heading_highlight }}
+                <small class="text-muted">Second (green) line, e.g. "people in need."</small>
+            </div>
+        </div>
         <div class="mb-3">
-            <label class="form-label fw-semibold">{{ form.footer_about_text.label }}</label>
-            {{ form.footer_about_text }}
+            <label class="form-label fw-semibold">{{ form.about_text.label }}</label>
+            {{ form.about_text }}
         </div>
         <div class="row">
-            <div class="col-md-4 mb-3">
-                <label class="form-label fw-semibold">{{ form.contact_address.label }}</label>
-                {{ form.contact_address }}
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.about_image.label }}</label>
+                {{ form.about_image }}
+                <small class="text-muted">Hero background photo on the About page</small>
+                {% if form.instance.about_image %}
+                    <img src="{{ form.instance.about_image.url }}" class="d-block mt-2 rounded" style="max-height: 100px;">
+                {% endif %}
             </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label fw-semibold">{{ form.contact_email.label }}</label>
-                {{ form.contact_email }}
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.about_video_url.label }}</label>
+                {{ form.about_video_url }}
+                <small class="text-muted">{{ form.about_video_url.help_text }}</small>
             </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label fw-semibold">{{ form.contact_phone.label }}</label>
-                {{ form.contact_phone }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.about_vision_text.label }}</label>
+            {{ form.about_vision_text }}
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.about_story_image.label }}</label>
+                {{ form.about_story_image }}
+                <small class="text-muted">{{ form.about_story_image.help_text }}</small>
+                {% if form.instance.about_story_image %}
+                    <img src="{{ form.instance.about_story_image.url }}" class="d-block mt-2 rounded" style="max-height: 100px;">
+                {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.about_story_quote.label }}</label>
+                {{ form.about_story_quote }}
+                <small class="text-muted">{{ form.about_story_quote.help_text }}</small>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.registration_number.label }}</label>
+            {{ form.registration_number }}
+            <small class="text-muted">{{ form.registration_number.help_text }}</small>
+        </div>
+
+        <div class="border-top pt-4 mt-4">
+            <h5 class="fw-bold mb-3">Team Information</h5>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">{{ form.team_section_title.label }}</label>
+                {{ form.team_section_title }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">{{ form.team_section_subtitle.label }}</label>
+                {{ form.team_section_subtitle }}
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">{{ form.team_member_1_name.label }}</label>
+                    {{ form.team_member_1_name }}
+                    <label class="form-label fw-semibold mt-2">{{ form.team_member_1_role.label }}</label>
+                    {{ form.team_member_1_role }}
+                    <label class="form-label fw-semibold mt-2">{{ form.team_member_1_photo.label }}</label>
+                    {{ form.team_member_1_photo }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">{{ form.team_member_2_name.label }}</label>
+                    {{ form.team_member_2_name }}
+                    <label class="form-label fw-semibold mt-2">{{ form.team_member_2_role.label }}</label>
+                    {{ form.team_member_2_role }}
+                    <label class="form-label fw-semibold mt-2">{{ form.team_member_2_photo.label }}</label>
+                    {{ form.team_member_2_photo }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">{{ form.team_member_3_name.label }}</label>
+                    {{ form.team_member_3_name }}
+                    <label class="form-label fw-semibold mt-2">{{ form.team_member_3_role.label }}</label>
+                    {{ form.team_member_3_role }}
+                    <label class="form-label fw-semibold mt-2">{{ form.team_member_3_photo.label }}</label>
+                    {{ form.team_member_3_photo }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">{{ form.team_member_4_name.label }}</label>
+                    {{ form.team_member_4_name }}
+                    <label class="form-label fw-semibold mt-2">{{ form.team_member_4_role.label }}</label>
+                    {{ form.team_member_4_role }}
+                    <label class="form-label fw-semibold mt-2">{{ form.team_member_4_photo.label }}</label>
+                    {{ form.team_member_4_photo }}
+                </div>
             </div>
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary btn-lg">
-        <i class="bi bi-check-circle"></i> Save Website Content
-    </button>
+    <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary btn-lg d-none page-save-button">
+            <i class="bi bi-check-circle"></i> Save Website Content
+        </button>
+    </div>
 </form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const pageCards = document.querySelectorAll('[data-page-target]');
+        const panels = document.querySelectorAll('[data-content-panel]');
+        const saveButton = document.querySelector('.page-save-button');
+
+        panels.forEach(function (panel) {
+            if (panel.classList.contains('page-form-panel')) {
+                panel.classList.add('d-none');
+            }
+        });
+
+        if (saveButton) {
+            saveButton.classList.add('d-none');
+        }
+
+        pageCards.forEach(function (card) {
+            card.addEventListener('click', function () {
+                const target = card.getAttribute('data-page-target');
+
+                panels.forEach(function (panel) {
+                    if (panel.classList.contains('page-form-panel')) {
+                        if (panel.getAttribute('data-content-panel') === target) {
+                            panel.classList.remove('d-none');
+                        } else {
+                            panel.classList.add('d-none');
+                        }
+                    }
+                });
+
+                if (saveButton) {
+                    saveButton.classList.remove('d-none');
+                }
+
+                pageCards.forEach(function (item) {
+                    const itemCard = item.querySelector('.card');
+                    if (item === card) {
+                        itemCard.classList.add('border-primary', 'shadow');
+                    } else {
+                        itemCard.classList.remove('border-primary', 'shadow');
+                    }
+                });
+            });
+        });
+    });
+</script>
 
 {% endblock %}

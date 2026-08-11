@@ -9,7 +9,79 @@ the public donation form, registration, the custom admin panel's forms
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Donation, Campaign, SiteSettings, Testimonial, UserProfile
+from .models import Donation, Campaign, SiteSettings, Testimonial, UserProfile, FAQ, ContactMessage, HelpRequest
+
+import re
+
+# ==========================================================
+# SHARED VALIDATION HELPERS
+# ----------------------------------------------------------
+# Every form below reuses these so the "normal" rules (valid name,
+# valid phone number, sane file size/type, positive money amounts,
+# minimum text length) are enforced the same way everywhere on the site.
+# ==========================================================
+
+NAME_REGEX = re.compile(r"^[A-Za-z][A-Za-z.'\- ]{1,99}$")
+PHONE_REGEX = re.compile(r"^\+?[0-9][0-9\s\-]{6,14}$")
+
+ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+ALLOWED_DOCUMENT_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx']
+
+MAX_IMAGE_SIZE_MB = 5
+MAX_DOCUMENT_SIZE_MB = 10
+
+
+def validate_name(value, field_label="Name"):
+    """Letters, spaces, apostrophes, hyphens and periods only -- no digits or symbols."""
+    value = (value or '').strip()
+    if not NAME_REGEX.match(value):
+        raise forms.ValidationError(
+            f"{field_label} should contain only letters (and spaces/hyphens/apostrophes), "
+            f"and be at least 2 characters long."
+        )
+    return value
+
+
+def validate_phone(value):
+    """Optional field -- only validated if the user actually typed something."""
+    value = (value or '').strip()
+    if value and not PHONE_REGEX.match(value):
+        raise forms.ValidationError(
+            "Enter a valid phone number (7-15 digits, may include +, spaces, or -)."
+        )
+    return value
+
+
+def _is_newly_uploaded(f):
+    """
+    Distinguishes a freshly-uploaded file (InMemoryUploadedFile /
+    TemporaryUploadedFile, which have .content_type) from an existing
+    FieldFile already saved on the model (which doesn't) -- so we only
+    re-validate size/type when the user actually picked a new file.
+    """
+    return bool(f) and hasattr(f, 'content_type')
+
+
+def _file_extension(f):
+    return f.name.rsplit('.', 1)[-1].lower() if f and '.' in f.name else ''
+
+
+def validate_image_file(f, max_mb=MAX_IMAGE_SIZE_MB):
+    if not _is_newly_uploaded(f):
+        return
+    if f.size > max_mb * 1024 * 1024:
+        raise forms.ValidationError(f"Image is too large. Maximum allowed size is {max_mb}MB.")
+    if _file_extension(f) not in ALLOWED_IMAGE_EXTENSIONS:
+        raise forms.ValidationError("Unsupported image format. Please upload a JPG, PNG, GIF, or WEBP file.")
+
+
+def validate_document_file(f, max_mb=MAX_DOCUMENT_SIZE_MB):
+    if not _is_newly_uploaded(f):
+        return
+    if f.size > max_mb * 1024 * 1024:
+        raise forms.ValidationError(f"File is too large. Maximum allowed size is {max_mb}MB.")
+    if _file_extension(f) not in ALLOWED_DOCUMENT_EXTENSIONS:
+        raise forms.ValidationError("Unsupported file type. Please upload a PDF, Word document, or image (JPG/PNG).")
 
 
 class DonationForm(forms.ModelForm):
@@ -50,6 +122,17 @@ class DonationForm(forms.ModelForm):
         self.fields['campaign'].label = 'Select Campaign'
         self.fields['amount'].label = 'Donation Amount (Rs.)'
 
+    def clean_donor_name(self):
+        return validate_name(self.cleaned_data['donor_name'], "Name")
+
+    def clean_amount(self):
+        amount = self.cleaned_data['amount']
+        if amount < 10:
+            raise forms.ValidationError("Minimum donation amount is Rs. 10.")
+        if amount > 1000000:
+            raise forms.ValidationError("For donations above Rs. 10,00,000, please contact us directly.")
+        return amount
+
 
 class RegisterForm(UserCreationForm):
     """
@@ -76,6 +159,12 @@ class RegisterForm(UserCreationForm):
         self.fields['password2'].widget.attrs.update({
             'class': 'form-control', 'placeholder': 'Confirm password'
         })
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        if len(username) < 4:
+            raise forms.ValidationError("Username must be at least 4 characters long.")
+        return username
 
     def clean_email(self):
         """
@@ -173,6 +262,14 @@ class ProfileForm(forms.ModelForm):
             raise forms.ValidationError('That email is already used by another account.')
         return email
 
+    def clean_phone_number(self):
+        return validate_phone(self.cleaned_data.get('phone_number', ''))
+
+    def clean_profile_picture(self):
+        picture = self.cleaned_data.get('profile_picture')
+        validate_image_file(picture)
+        return picture
+
 
 class CampaignForm(forms.ModelForm):
     """
@@ -204,6 +301,50 @@ class CampaignForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
 
+    def clean_campaign_name(self):
+        name = self.cleaned_data['campaign_name'].strip()
+        if len(name) < 5:
+            raise forms.ValidationError("Campaign name should be at least 5 characters long.")
+        return name
+
+    def clean_description(self):
+        description = self.cleaned_data['description'].strip()
+        if len(description) < 20:
+            raise forms.ValidationError("Please provide a more detailed description (at least 20 characters).")
+        return description
+
+    def clean_goal_amount(self):
+        goal_amount = self.cleaned_data['goal_amount']
+        if goal_amount <= 0:
+            raise forms.ValidationError("Goal amount must be greater than zero.")
+        return goal_amount
+
+    def clean_raised_amount(self):
+        raised_amount = self.cleaned_data['raised_amount']
+        if raised_amount < 0:
+            raise forms.ValidationError("Raised amount cannot be negative.")
+        return raised_amount
+
+    def clean_campaign_image(self):
+        image = self.cleaned_data.get('campaign_image')
+        validate_image_file(image)
+        return image
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        goal_amount = cleaned_data.get('goal_amount')
+        raised_amount = cleaned_data.get('raised_amount')
+
+        if start_date and end_date and end_date <= start_date:
+            self.add_error('end_date', "End date must be after the start date.")
+
+        if goal_amount is not None and raised_amount is not None and raised_amount > goal_amount:
+            self.add_error('raised_amount', "Raised amount cannot exceed the goal amount.")
+
+        return cleaned_data
+
 
 class SiteSettingsForm(forms.ModelForm):
     """
@@ -217,8 +358,14 @@ class SiteSettingsForm(forms.ModelForm):
         fields = [
             'ngo_name',
             'hero_title_line1', 'hero_title_highlight', 'hero_subtitle', 'hero_image',
-            'stat_campaigns', 'stat_lives_impacted', 'stat_funds_raised', 'stat_donors',
-            'mission_title', 'mission_text', 'mission_image',
+            'stat_campaigns', 'stat_lives_impacted', 'stat_funds_raised', 'stat_donors', 'stat_partners_volunteers',
+            'about_heading', 'about_heading_highlight', 'about_text', 'about_image', 'about_video_url',
+            'about_vision_text', 'about_story_image', 'about_story_quote', 'registration_number',
+            'team_section_title', 'team_section_subtitle',
+            'team_member_1_name', 'team_member_1_role', 'team_member_1_photo',
+            'team_member_2_name', 'team_member_2_role', 'team_member_2_photo',
+            'team_member_3_name', 'team_member_3_role', 'team_member_3_photo',
+            'team_member_4_name', 'team_member_4_role', 'team_member_4_photo',
             'footer_about_text', 'contact_address', 'contact_email', 'contact_phone',
         ]
         widgets = {
@@ -231,14 +378,120 @@ class SiteSettingsForm(forms.ModelForm):
             'stat_lives_impacted': forms.TextInput(attrs={'class': 'form-control'}),
             'stat_funds_raised': forms.TextInput(attrs={'class': 'form-control'}),
             'stat_donors': forms.TextInput(attrs={'class': 'form-control'}),
-            'mission_title': forms.TextInput(attrs={'class': 'form-control'}),
-            'mission_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'mission_image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'stat_partners_volunteers': forms.TextInput(attrs={'class': 'form-control'}),
+            'about_heading': forms.TextInput(attrs={'class': 'form-control'}),
+            'about_heading_highlight': forms.TextInput(attrs={'class': 'form-control'}),
+            'about_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            'about_image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'about_video_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://youtube.com/watch?v=...'}),
+            'about_vision_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'about_story_image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'about_story_quote': forms.TextInput(attrs={'class': 'form-control'}),
+            'registration_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. NGO/2019/00123'}),
+            'team_section_title': forms.TextInput(attrs={'class': 'form-control'}),
+            'team_section_subtitle': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'team_member_1_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'team_member_1_role': forms.TextInput(attrs={'class': 'form-control'}),
+            'team_member_1_photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'team_member_2_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'team_member_2_role': forms.TextInput(attrs={'class': 'form-control'}),
+            'team_member_2_photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'team_member_3_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'team_member_3_role': forms.TextInput(attrs={'class': 'form-control'}),
+            'team_member_3_photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'team_member_4_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'team_member_4_role': forms.TextInput(attrs={'class': 'form-control'}),
+            'team_member_4_photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'footer_about_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'contact_address': forms.TextInput(attrs={'class': 'form-control'}),
             'contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
             'contact_phone': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+    def clean_contact_phone(self):
+        return validate_phone(self.cleaned_data.get('contact_phone', ''))
+
+    def clean_hero_image(self):
+        image = self.cleaned_data.get('hero_image')
+        validate_image_file(image)
+        return image
+
+    def clean_about_image(self):
+        image = self.cleaned_data.get('about_image')
+        validate_image_file(image)
+        return image
+
+    def clean_about_story_image(self):
+        image = self.cleaned_data.get('about_story_image')
+        validate_image_file(image)
+        return image
+
+    def clean_team_member_1_photo(self):
+        image = self.cleaned_data.get('team_member_1_photo')
+        validate_image_file(image)
+        return image
+
+    def clean_team_member_2_photo(self):
+        image = self.cleaned_data.get('team_member_2_photo')
+        validate_image_file(image)
+        return image
+
+    def clean_team_member_3_photo(self):
+        image = self.cleaned_data.get('team_member_3_photo')
+        validate_image_file(image)
+        return image
+
+    def clean_team_member_4_photo(self):
+        image = self.cleaned_data.get('team_member_4_photo')
+        validate_image_file(image)
+        return image
+
+
+class TestimonialSubmissionForm(forms.ModelForm):
+    """
+    The public "Share Your Story" form, shown inside a modal on the
+    homepage (not inline on the page). Saves a new testimonial with
+    is_active=False / is_approved=False and waits for admin approval.
+    """
+
+    class Meta:
+        model = Testimonial
+        fields = ['donor_name', 'email', 'donor_role', 'message', 'rating', 'photo']
+        widgets = {
+            'donor_name': forms.TextInput(attrs={
+                'class': 'form-control hr-story-input', 'placeholder': 'Enter your full name'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control hr-story-input', 'placeholder': 'Enter your email'
+            }),
+            'donor_role': forms.Select(attrs={'class': 'form-select hr-story-input'}, choices=Testimonial.ROLE_CHOICES),
+            'message': forms.Textarea(attrs={
+                'class': 'form-control hr-story-input', 'rows': 5,
+                'placeholder': 'Share your story, experience or message...'
+            }),
+            'rating': forms.Select(attrs={'class': 'form-select'}, choices=[(i, f'{i} Stars') for i in range(1, 6)]),
+            'photo': forms.ClearableFileInput(attrs={'class': 'd-none', 'id': 'id_story_photo'}),
+        }
+
+    def clean_donor_name(self):
+        return validate_name(self.cleaned_data['donor_name'], "Name")
+
+    def clean_message(self):
+        message = self.cleaned_data['message'].strip()
+        if len(message) < 10:
+            raise forms.ValidationError("Please share a bit more -- your story should be at least 10 characters long.")
+        return message
+
+    def clean_rating(self):
+        rating = self.cleaned_data.get('rating')
+        if rating not in (1, 2, 3, 4, 5):
+            raise forms.ValidationError("Please select a rating between 1 and 5 stars.")
+        return rating
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        validate_image_file(photo)
+        return photo
 
 
 class TestimonialForm(forms.ModelForm):
@@ -246,16 +499,95 @@ class TestimonialForm(forms.ModelForm):
 
     class Meta:
         model = Testimonial
-        fields = ['donor_name', 'donor_role', 'message', 'rating', 'photo', 'is_active', 'display_order']
+        fields = [
+            'donor_name', 'email', 'donor_role', 'message', 'rating', 'photo',
+            'story_title', 'category', 'is_active', 'is_approved', 'display_order',
+        ]
         widgets = {
             'donor_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'donor_role': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Regular Donor'}),
             'message': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'rating': forms.Select(attrs={'class': 'form-select'}, choices=[(i, f'{i} Stars') for i in range(1, 6)]),
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'story_title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional headline for the story card'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_approved': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'display_order': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean_donor_name(self):
+        return validate_name(self.cleaned_data['donor_name'], "Donor name")
+
+    def clean_message(self):
+        message = self.cleaned_data['message'].strip()
+        if len(message) < 10:
+            raise forms.ValidationError("Testimonial message should be at least 10 characters long.")
+        return message
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        validate_image_file(photo)
+        return photo
+
+
+class FAQForm(forms.ModelForm):
+    """Used in the custom admin panel to Add/Edit a FAQ entry."""
+
+    class Meta:
+        model = FAQ
+        fields = ['question', 'answer', 'is_active', 'display_order']
+        widgets = {
+            'question': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. How is my donation used?'}),
+            'answer': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'display_order': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+    def clean_question(self):
+        question = self.cleaned_data['question'].strip()
+        if len(question) < 5:
+            raise forms.ValidationError("Question should be at least 5 characters long.")
+        return question
+
+    def clean_answer(self):
+        answer = self.cleaned_data['answer'].strip()
+        if len(answer) < 10:
+            raise forms.ValidationError("Answer should be at least 10 characters long.")
+        return answer
+
+
+class ContactForm(forms.ModelForm):
+    """
+    The public "Contact Us" form. A plain ModelForm around ContactMessage --
+    every submission is saved so staff can review it from the admin panel.
+    """
+
+    class Meta:
+        model = ContactMessage
+        fields = ['name', 'email', 'subject', 'message']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Your full name'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Your email address'}),
+            'subject': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'What is this about?'}),
+            'message': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Write your message here...'}),
+        }
+
+    def clean_name(self):
+        return validate_name(self.cleaned_data['name'], "Name")
+
+    def clean_subject(self):
+        subject = self.cleaned_data['subject'].strip()
+        if len(subject) < 3:
+            raise forms.ValidationError("Subject should be at least 3 characters long.")
+        return subject
+
+    def clean_message(self):
+        message = self.cleaned_data['message'].strip()
+        if len(message) < 10:
+            raise forms.ValidationError("Message should be at least 10 characters long.")
+        return message
 
 
 class AdminLoginForm(forms.Form):
@@ -269,3 +601,62 @@ class AdminLoginForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput(attrs={
         'class': 'form-control', 'placeholder': 'Admin password'
     }))
+
+
+class HelpRequestForm(forms.ModelForm):
+    """
+    Powers the "We're Here To Support You" glass-card form on the homepage.
+    Diagnosis/condition is a plain free-typed text field (not a dropdown),
+    per the client's request. Document upload is optional but recommended.
+    """
+
+    class Meta:
+        model = HelpRequest
+        fields = [
+            'full_name', 'email', 'phone',
+            'diagnosis_condition', 'funding_goal', 'treatment_stage', 'document',
+        ]
+        widgets = {
+            'full_name': forms.TextInput(attrs={
+                'class': 'form-control hr-glass-input', 'placeholder': 'Your full name'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control hr-glass-input', 'placeholder': 'Your email address'
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control hr-glass-input', 'placeholder': 'Phone number (optional)'
+            }),
+            'diagnosis_condition': forms.TextInput(attrs={
+                'class': 'form-control hr-glass-input', 'placeholder': 'e.g. Kidney Cancer'
+            }),
+            'funding_goal': forms.NumberInput(attrs={
+                'class': 'form-control hr-glass-input', 'placeholder': '56000', 'step': '1'
+            }),
+            'treatment_stage': forms.RadioSelect(attrs={'class': 'd-none'}),
+            'document': forms.ClearableFileInput(attrs={'class': 'form-control d-none', 'id': 'id_document'}),
+        }
+
+    def clean_full_name(self):
+        return validate_name(self.cleaned_data['full_name'], "Name")
+
+    def clean_phone(self):
+        return validate_phone(self.cleaned_data.get('phone', ''))
+
+    def clean_diagnosis_condition(self):
+        condition = self.cleaned_data['diagnosis_condition'].strip()
+        if len(condition) < 3:
+            raise forms.ValidationError("Please describe the diagnosis or condition (at least 3 characters).")
+        return condition
+
+    def clean_funding_goal(self):
+        funding_goal = self.cleaned_data['funding_goal']
+        if funding_goal <= 0:
+            raise forms.ValidationError("Funding goal must be greater than zero.")
+        if funding_goal > 10000000:
+            raise forms.ValidationError("For funding goals above Rs. 1,00,00,000, please contact us directly.")
+        return funding_goal
+
+    def clean_document(self):
+        document = self.cleaned_data.get('document')
+        validate_document_file(document)
+        return document

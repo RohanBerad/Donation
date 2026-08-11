@@ -1,0 +1,79 @@
+{% extends 'website/base.html' %}
+
+{% block title %}Contact Us | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block content %}
+<section class="hr-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="hr-badge-pill">Get In Touch</span>
+            <h1 class="display-5 font-heading fw-bold mt-2">Contact Us</h1>
+            <p class="text-muted mx-auto" style="max-width: 550px;">
+                Questions about a campaign, a donation, or how you can help? Send us a message
+                and our team will get back to you.
+            </p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            <!-- CONTACT FORM -->
+            <div class="col-lg-7">
+                <div class="hr-form-card">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">{{ form.name.label }}</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">{{ form.email.label }}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">{{ form.subject.label }}</label>
+                            {{ form.subject }}
+                            {% if form.subject.errors %}<div class="text-danger small mt-1">{{ form.subject.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">{{ form.message.label }}</label>
+                            {{ form.message }}
+                            {% if form.message.errors %}<div class="text-danger small mt-1">{{ form.message.errors }}</div>{% endif %}
+                        </div>
+
+                        <button type="submit" class="btn-hr-green w-100 py-3 fs-6">
+                            SEND MESSAGE <i class="bi bi-send ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- CONTACT DETAILS -->
+            <div class="col-lg-4">
+                <div class="hr-card-white h-100">
+                    <div class="hr-card-icon-wrap"><i class="bi bi-geo-alt text-dark"></i></div>
+                    <h6 class="font-heading fw-bold">Address</h6>
+                    <p class="text-muted small mb-4">{{ site_settings.contact_address }}</p>
+
+                    <div class="hr-card-icon-wrap"><i class="bi bi-envelope text-dark"></i></div>
+                    <h6 class="font-heading fw-bold">Email</h6>
+                    <p class="text-muted small mb-4">
+                        <a href="mailto:{{ site_settings.contact_email }}" class="text-muted">{{ site_settings.contact_email }}</a>
+                    </p>
+
+                    <div class="hr-card-icon-wrap"><i class="bi bi-telephone text-dark"></i></div>
+                    <h6 class="font-heading fw-bold">Phone</h6>
+                    <p class="text-muted small mb-0">
+                        <a href="tel:{{ site_settings.contact_phone }}" class="text-muted">{{ site_settings.contact_phone }}</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Message from {{ contact_message.name }}{% endblock %}
+{% block admin_heading %}Message Detail{% endblock %}
+
+{% block admin_content %}
+
+<div class="admin-card" style="max-width: 700px;">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h5 class="fw-bold mb-1">{{ contact_message.subject }}</h5>
+            <p class="text-muted small mb-0">
+                From <strong>{{ contact_message.name }}</strong>
+                (<a href="mailto:{{ contact_message.email }}">{{ contact_message.email }}</a>)
+            </p>
+            <p class="text-muted small mb-0">{{ contact_message.submitted_at|date:"d M Y, h:i A" }}</p>
+        </div>
+        {% if contact_message.is_read %}
+            <span class="badge bg-secondary">Read</span>
+        {% else %}
+            <span class="badge bg-success">New</span>
+        {% endif %}
+    </div>
+
+    <div class="p-3 bg-light rounded-3 mb-4" style="white-space: pre-line;">{{ contact_message.message }}</div>
+
+    <a href="mailto:{{ contact_message.email }}?subject=Re: {{ contact_message.subject }}" class="btn btn-primary">
+        <i class="bi bi-reply"></i> Reply by Email
+    </a>
+    <a href="{% url 'admin_contact_delete' contact_message.id %}" class="btn btn-outline-danger">
+        <i class="bi bi-trash"></i> Delete
+    </a>
+    <a href="{% url 'admin_contact_list' %}" class="btn btn-outline-secondary">Back to Messages</a>
+</div>
+
+{% endblock %}

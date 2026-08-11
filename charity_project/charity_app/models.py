@@ -186,6 +186,7 @@ class SiteSettings(models.Model):
     stat_lives_impacted = models.CharField(max_length=20, default="50,000+")
     stat_funds_raised = models.CharField(max_length=20, default="Rs. 2.5 Cr+")
     stat_donors = models.CharField(max_length=20, default="10,000+")
+    stat_partners_volunteers = models.CharField(max_length=20, default="250+")
 
     # ---------- Mission Section ----------
     mission_title = models.CharField(max_length=100, default="Our Mission")
@@ -195,6 +196,52 @@ class SiteSettings(models.Model):
                 "can bring hope and create lasting change."
     )
     mission_image = models.ImageField(upload_to='site/', blank=True, null=True)
+
+    # ---------- About Page ----------
+    about_heading = models.CharField(max_length=100, default="We stand with")
+    about_heading_highlight = models.CharField(max_length=100, default="people in need.")
+    about_text = models.TextField(
+        default="Founded with a simple belief -- that everyone deserves a fair chance at "
+                "a better life -- we have spent years working directly with communities on "
+                "education, healthcare, animal welfare, and disaster relief. Every rupee "
+                "donated here is tracked, and every campaign is reviewed by our team before "
+                "it goes live."
+    )
+    about_image = models.ImageField(upload_to='site/', blank=True, null=True)
+    about_video_url = models.URLField(
+        blank=True, default="",
+        help_text="Optional YouTube/Vimeo embed link for the 'Watch Our Story' button"
+    )
+    about_vision_text = models.TextField(
+        default="To create a future where every person has access to basic needs, education, "
+                "and opportunity -- no matter where they live. We envision a just and "
+                "compassionate world where communities thrive with dignity."
+    )
+    about_story_image = models.ImageField(upload_to='site/', blank=True, null=True)
+    about_story_quote = models.CharField(
+        max_length=150, default="You Can Be the Reason Someone Smiles Today.",
+        help_text="Short quote shown over the 'Our Story' photo"
+    )
+    registration_number = models.CharField(
+        max_length=100, blank=True, default="",
+        help_text="e.g. NGO Registration / 80G Number, shown on the About page"
+    )
+
+    # ---------- Team Section (About Page) ----------
+    team_section_title = models.CharField(max_length=100, default="Meet the Team")
+    team_section_subtitle = models.TextField(default="A dedicated mix of staff and volunteers driven by compassion and accountability.")
+    team_member_1_name = models.CharField(max_length=100, default="Founder")
+    team_member_1_role = models.CharField(max_length=100, default="Vision & Strategy")
+    team_member_1_photo = models.ImageField(upload_to='team/', blank=True, null=True)
+    team_member_2_name = models.CharField(max_length=100, default="Program Lead")
+    team_member_2_role = models.CharField(max_length=100, default="Program Design & Impact")
+    team_member_2_photo = models.ImageField(upload_to='team/', blank=True, null=True)
+    team_member_3_name = models.CharField(max_length=100, default="Operations")
+    team_member_3_role = models.CharField(max_length=100, default="Administration & Finance")
+    team_member_3_photo = models.ImageField(upload_to='team/', blank=True, null=True)
+    team_member_4_name = models.CharField(max_length=100, default="Volunteers")
+    team_member_4_role = models.CharField(max_length=100, default="Community Champions")
+    team_member_4_photo = models.ImageField(upload_to='team/', blank=True, null=True)
 
     # ---------- Footer / Contact Info ----------
     ngo_name = models.CharField(max_length=100, default="Helping Hands")
@@ -215,6 +262,17 @@ class SiteSettings(models.Model):
         self.pk = 1
         super().save(*args, **kwargs)
 
+    @property
+    def team_members(self):
+        members = []
+        for i in range(1, 5):
+            members.append({
+                'name': getattr(self, f'team_member_{i}_name'),
+                'role': getattr(self, f'team_member_{i}_role'),
+                'photo': getattr(self, f'team_member_{i}_photo'),
+            })
+        return members
+
     @classmethod
     def load(cls):
         """
@@ -230,18 +288,51 @@ class SiteSettings(models.Model):
 # ==========================================================
 class Testimonial(models.Model):
     """
-    Stores donor testimonials shown in the "What People Say" section
-    on the Home Page. Fully manageable (add/edit/delete/reorder) from
-    our custom admin panel.
+    Stores donor testimonials shown in the "Stories of Impact" section
+    on the Home Page. Public submissions are saved here first and then
+    staff review them in the admin panel and approve them before they are
+    allowed to appear on the public website.
     """
 
+    ROLE_CHOICES = [
+        ('Regular Donor', 'Regular Donor'),
+        ('Volunteer', 'Volunteer'),
+        ('Education Beneficiary', 'Education Beneficiary'),
+        ('Medical Help Beneficiary', 'Medical Help Beneficiary'),
+        ('Food & Shelter Beneficiary', 'Food & Shelter Beneficiary'),
+        ('Animal Rescue Beneficiary', 'Animal Rescue Beneficiary'),
+        ('Other', 'Other'),
+    ]
+
+    CATEGORY_CHOICES = [
+        ('general', 'General'),
+        ('education', 'Education'),
+        ('medical', 'Medical Help'),
+        ('animal', 'Animal Rescue'),
+        ('disaster', 'Disaster Relief'),
+        ('food_shelter', 'Food & Shelter'),
+    ]
+
     donor_name = models.CharField(max_length=100)
+    email = models.EmailField(blank=True, help_text="Not shown publicly -- used by staff to follow up if needed")
     donor_role = models.CharField(max_length=100, default="Regular Donor")
     message = models.TextField()
     rating = models.PositiveSmallIntegerField(default=5, help_text="A number from 1 to 5")
     photo = models.ImageField(upload_to='testimonials/', blank=True, null=True)
-    is_active = models.BooleanField(default=True, help_text="Only active testimonials are shown on the home page")
+
+    story_title = models.CharField(
+        max_length=150, blank=True,
+        help_text="Optional headline shown on the story card. Staff can add this while approving a submission."
+    )
+    category = models.CharField(
+        max_length=20, choices=CATEGORY_CHOICES, default='general', blank=True,
+        help_text="Controls the colored badge shown on the story card."
+    )
+
+    is_active = models.BooleanField(default=False, help_text="Only active testimonials are shown on the home page")
+    is_approved = models.BooleanField(default=False, help_text="Admin must approve a public testimonial before it can be published")
     display_order = models.PositiveIntegerField(default=0, help_text="Lower numbers show first")
+    submitted_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         ordering = ['display_order', 'id']
@@ -252,6 +343,15 @@ class Testimonial(models.Model):
     def star_range(self):
         """Helper used in templates to draw filled stars easily."""
         return range(self.rating)
+
+    def display_title(self):
+        """Falls back to the donor's role if staff haven't set a custom headline."""
+        return self.story_title or self.donor_role
+
+    def excerpt(self, length=140):
+        """Short preview of the story used on the grid cards."""
+        text = self.message.strip()
+        return text if len(text) <= length else text[:length].rsplit(' ', 1)[0] + '...'
 
 
 # ==========================================================
@@ -274,3 +374,113 @@ class PasswordResetOTP(models.Model):
 
     def __str__(self):
         return f"OTP for {self.email} - {'Used' if self.is_used else 'Active'}"
+
+
+# ==========================================================
+# 7. FAQ MODEL
+# ==========================================================
+class FAQ(models.Model):
+    """
+    Stores one Frequently Asked Question + Answer pair, shown on the
+    public FAQ page. Fully manageable (add/edit/delete/reorder) from
+    our custom admin panel, just like Testimonials.
+    """
+
+    question = models.CharField(max_length=255)
+    answer = models.TextField()
+    is_active = models.BooleanField(default=True, help_text="Only active FAQs are shown on the FAQ page")
+    display_order = models.PositiveIntegerField(default=0, help_text="Lower numbers show first")
+
+    class Meta:
+        ordering = ['display_order', 'id']
+        verbose_name = "FAQ"
+        verbose_name_plural = "FAQs"
+
+    def __str__(self):
+        return self.question
+
+
+# ==========================================================
+# 8. CONTACT MESSAGE MODEL
+# ==========================================================
+class ContactMessage(models.Model):
+    """
+    Stores every message submitted through the public Contact Us page,
+    so NGO staff can read and follow up on them from the admin panel.
+    """
+
+    name = models.CharField(max_length=150)
+    email = models.EmailField()
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.subject}"
+
+
+# ==========================================================
+# 9. HELP REQUEST MODEL
+# ==========================================================
+def help_request_document_path(instance, filename):
+    """Keeps uploaded medical/proof documents organised by submission date."""
+    from django.utils import timezone
+    ts = timezone.now().strftime('%Y%m%d%H%M%S')
+    return f"help_requests/{ts}_{filename}"
+
+
+class HelpRequest(models.Model):
+    """
+    Stores every submission from the public "We're Here To Support You"
+    form on the homepage (Get Help section). Patients/families fill in
+    their diagnosis, funding goal, treatment stage, and can attach a
+    supporting document (medical report, bill, ID, etc). NGO staff review
+    these from the admin panel and follow up / turn approved ones into a
+    Campaign.
+    """
+
+    STAGE_CHOICES = [
+        ('pre_op', 'Pre-op'),
+        ('active', 'Active'),
+        ('recovery', 'Recovery'),
+    ]
+
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('reviewing', 'Reviewing'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    full_name = models.CharField(max_length=150)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True)
+
+    diagnosis_condition = models.CharField(
+        max_length=200,
+        help_text="Typed in freely by the requester, e.g. 'Kidney Cancer'"
+    )
+    funding_goal = models.DecimalField(max_digits=12, decimal_places=2)
+    treatment_stage = models.CharField(max_length=10, choices=STAGE_CHOICES, default='active')
+
+    document = models.FileField(
+        upload_to=help_request_document_path,
+        blank=True,
+        null=True,
+        help_text="Supporting document -- medical report, bill, prescription, etc."
+    )
+
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='new')
+    admin_notes = models.TextField(blank=True, help_text="Internal notes, not shown to the requester")
+
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"{self.full_name} - {self.diagnosis_condition}"

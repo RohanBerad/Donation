@@ -215,4 +215,74 @@ document.addEventListener('DOMContentLoaded', function () {
             flipInner.classList.remove('is-flipped');
         });
     }
+
+    // 7. Story Detail Modal — populate from data attributes
+    const storyDetailModal = document.getElementById('storyDetailModal');
+    if (storyDetailModal) {
+        const storyImg = document.getElementById('storyDetailImg');
+        const storyImgError = document.getElementById('storyDetailImgError');
+        const storyAvatar = document.getElementById('storyDetailAvatar');
+
+        storyDetailModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const name = button.dataset.testimonialName || '';
+            const role = button.dataset.testimonialRole || '';
+            const title = button.dataset.testimonialTitle || '';
+            const message = button.dataset.testimonialMessage || '';
+            const rating = parseInt(button.dataset.testimonialRating) || 0;
+            const category = button.dataset.testimonialCategory || '';
+            const photoUrl = button.dataset.testimonialPhoto || '';
+            const hasPhoto = button.dataset.testimonialHasPhoto === 'true';
+
+            document.getElementById('storyDetailName').textContent = name;
+            document.getElementById('storyDetailRole').textContent = role;
+            document.getElementById('storyDetailTitle').textContent = title;
+            document.getElementById('storyDetailMessage').textContent = message;
+            document.getElementById('storyDetailCategory').textContent = category;
+
+            // Build rating stars
+            const ratingContainer = document.getElementById('storyDetailRating');
+            ratingContainer.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('i');
+                star.className = 'bi ' + (i <= rating ? 'bi-star-fill' : 'bi-star') + ' text-warning';
+                ratingContainer.appendChild(star);
+            }
+            const ratingSpan = document.createElement('span');
+            ratingSpan.className = 'text-muted small ms-1';
+            ratingSpan.textContent = rating + '.0';
+            ratingContainer.appendChild(ratingSpan);
+
+            // Set avatar
+            if (hasPhoto && photoUrl) {
+                storyAvatar.innerHTML = '<img src="' + photoUrl + '" alt="' + name + '">';
+            } else {
+                const avatarInitial = name ? name.charAt(0).toUpperCase() : '?';
+                storyAvatar.innerHTML = '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(avatarInitial) + '&background=26e07f&color=fff&size=96&bold=true" alt="' + name + '">';
+            }
+
+            // Handle photo
+            if (hasPhoto && photoUrl) {
+                storyImg.src = photoUrl;
+                storyImg.style.display = 'block';
+                storyImgError.classList.add('d-none');
+            } else {
+                storyImg.style.display = 'none';
+                storyImgError.classList.remove('d-none');
+            }
+        });
+
+        storyDetailModal.addEventListener('hidden.bs.modal', function () {
+            storyImg.style.display = 'block';
+            storyImgError.classList.add('d-none');
+            storyImg.src = '';
+            storyAvatar.innerHTML = '';
+        });
+
+        // Image error handler
+        storyImg.addEventListener('error', function () {
+            storyImg.style.display = 'none';
+            storyImgError.classList.remove('d-none');
+        });
+    }
 });

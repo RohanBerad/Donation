@@ -1,0 +1,79 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Help Requests{% endblock %}
+{% block admin_heading %}Help Requests{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <p class="text-muted mb-0">{{ help_requests|length }} request(s), submitted from the homepage "Get Help" form.</p>
+
+    <div>
+        <a href="{% url 'request' %}" class="btn btn-sm {% if not selected_status %}btn-dark{% else %}btn-outline-secondary{% endif %}">All</a>
+        {% for value, label in status_choices %}
+            <a href="?status={{ value }}" class="btn btn-sm {% if selected_status == value %}btn-dark{% else %}btn-outline-secondary{% endif %}">{{ label }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="admin-card">
+    {% if help_requests %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Requester</th>
+                    <th>Diagnosis / Condition</th>
+                    <th>Funding Goal</th>
+                    <th>Stage</th>
+                    <th>Document</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in help_requests %}
+                <tr>
+                    <td>{{ req.full_name }}<br><span class="small text-muted fw-normal">{{ req.email }}</span></td>
+                    <td>{{ req.diagnosis_condition }}</td>
+                    <td>₹{{ req.funding_goal }}</td>
+                    <td>{{ req.get_treatment_stage_display }}</td>
+                    <td>
+                        {% if req.document %}
+                            <a href="{{ req.document.url }}" target="_blank"><i class="bi bi-paperclip"></i> View</a>
+                        {% else %}
+                            <span class="text-muted small">None</span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted">{{ req.submitted_at|date:"d M Y, h:i A" }}</td>
+                    <td>
+                        {% if req.status == 'new' %}
+                            <span class="badge bg-success">New</span>
+                        {% elif req.status == 'reviewing' %}
+                            <span class="badge bg-warning text-dark">Reviewing</span>
+                        {% elif req.status == 'approved' %}
+                            <span class="badge bg-primary">Approved</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Rejected</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'admin_request_detail' req.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        <a href="{% url 'admin_request_delete' req.id %}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No requests yet. Submissions from the homepage "Get Help" form will show up here.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

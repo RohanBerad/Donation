@@ -1,0 +1,59 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}FAQs{% endblock %}
+{% block admin_heading %}Manage FAQs{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted mb-0">{{ faqs|length }} FAQ(s) total. Only "Active" ones show on the public FAQ page.</p>
+    <a href="{% url 'admin_faq_add' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add New FAQ
+    </a>
+</div>
+
+<div class="admin-card">
+    {% if faqs %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Answer</th>
+                    <th>Active?</th>
+                    <th>Order</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for faq in faqs %}
+                <tr>
+                    <td class="fw-semibold">{{ faq.question }}</td>
+                    <td class="small text-muted">{{ faq.answer|truncatewords:10 }}</td>
+                    <td>
+                        {% if faq.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Hidden</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ faq.display_order }}</td>
+                    <td>
+                        <a href="{% url 'admin_faq_edit' faq.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'admin_faq_delete' faq.id %}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No FAQs yet. Add one to show it on the public FAQ page.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

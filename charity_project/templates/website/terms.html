@@ -1,0 +1,56 @@
+{% extends 'website/base.html' %}
+
+{% block title %}Terms of Service | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block content %}
+<section class="hr-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="hr-badge-pill">Legal</span>
+            <h1 class="display-5 font-heading fw-bold mt-2">Terms of Service</h1>
+            <p class="text-muted">Last updated: 2026</p>
+        </div>
+
+        <div class="hr-card-white mx-auto" style="max-width: 820px;">
+            <h5 class="font-heading fw-bold mb-2">1. Acceptance of Terms</h5>
+            <p class="text-muted small">
+                By using this website and making a donation, you agree to these Terms of Service.
+                If you do not agree, please do not use the site.
+            </p>
+
+            <h5 class="font-heading fw-bold mb-2 mt-4">2. Donations</h5>
+            <p class="text-muted small">
+                All donations made through {{ site_settings.ngo_name }} are voluntary contributions
+                toward the campaign you select. Donation amounts are shown before you confirm payment,
+                and a receipt is generated for every successful donation, available from your donor
+                dashboard.
+            </p>
+
+            <h5 class="font-heading fw-bold mb-2 mt-4">3. Refunds</h5>
+            <p class="text-muted small">
+                Donations are generally non-refundable. If you believe a donation was made in error
+                or was affected by a technical issue, please contact us within 7 days so we can review it.
+            </p>
+
+            <h5 class="font-heading fw-bold mb-2 mt-4">4. Account Responsibility</h5>
+            <p class="text-muted small">
+                If you register for a donor account, you are responsible for keeping your login
+                credentials secure and for all activity that happens under your account.
+            </p>
+
+            <h5 class="font-heading fw-bold mb-2 mt-4">5. Use of the Website</h5>
+            <p class="text-muted small">
+                You agree not to misuse the site -- including attempting to disrupt its normal operation,
+                submitting false donation or contact information, or using it for any unlawful purpose.
+            </p>
+
+            <h5 class="font-heading fw-bold mb-2 mt-4">6. Changes to These Terms</h5>
+            <p class="text-muted small mb-0">
+                We may update these Terms from time to time. Continued use of the website after changes
+                are posted means you accept the updated Terms. For questions, visit our
+                <a href="{% url 'contact' %}">Contact page</a>.
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

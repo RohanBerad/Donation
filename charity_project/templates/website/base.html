@@ -33,11 +33,11 @@
 
             <div class="collapse navbar-collapse" id="navMenu">
                 <ul class="navbar-nav mx-auto align-items-lg-center">
-                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'home' %}">Who We Are</a></li>
+                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'home' %}">Home</a></li>
+                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'about' %}">About</a></li>
                     <li class="nav-item"><a class="hr-nav-link" href="{% url 'campaign_list' %}">What We Do</a></li>
-                                     <li class="nav-item"><a class="hr-nav-link" href="{% url 'home' %}#about">Get Involved</a></li>
-                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'home' %}#impact">News & Events</a></li>
-
+                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'faq' %}">FAQs</a></li>
+                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'contact' %}">Contact</a></li>
                 </ul>
 
                 <div class="d-flex align-items-center gap-3">
@@ -99,8 +99,10 @@
                 <div class="col-lg-3">
                     <h6 class="font-heading text-uppercase small fw-bold tracking-wider mb-3">Navigation</h6>
                     <ul class="list-unstyled d-flex flex-column gap-2 small text-muted">
-                        <li><a href="{% url 'home' %}" class="hover-text-dark">Who We Are</a></li>
+                        <li><a href="{% url 'about' %}" class="hover-text-dark">Who We Are</a></li>
                         <li><a href="{% url 'campaign_list' %}" class="hover-text-dark">What We Do</a></li>
+                        <li><a href="{% url 'faq' %}" class="hover-text-dark">FAQs</a></li>
+                        <li><a href="{% url 'contact' %}" class="hover-text-dark">Contact Us</a></li>
                         <li><a href="{% url 'register' %}" class="hover-text-dark">Become a Volunteer</a></li>
                         <li><a href="{% url 'login' %}" class="hover-text-dark">Donor Dashboard</a></li>
                     </ul>
@@ -117,6 +119,8 @@
             <div class="border-top border-dark border-opacity-10 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center text-muted small">
                 <p class="mb-0">&copy; 2026 {{ site_settings.ngo_name }}. HopeRise UI Design Replica.</p>
                 <div>
+                    <a href="{% url 'privacy_policy' %}" class="text-muted me-3">Privacy Policy</a>
+                    <a href="{% url 'terms' %}" class="text-muted me-3">Terms of Service</a>
                     <a href="{% url 'admin_login' %}" class="text-muted">Staff Login</a>
                 </div>
             </div>

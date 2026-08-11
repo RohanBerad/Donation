@@ -148,6 +148,12 @@ LOGIN_URL = 'login'                # where @login_required sends non-logged-in u
 LOGIN_REDIRECT_URL = 'dashboard'   # where users go after logging in
 LOGOUT_REDIRECT_URL = 'home'       # where users go after logging out
 
+# ---- Session Settings ----
+# Sessions expire after 10 minutes of inactivity.
+SESSION_COOKIE_AGE = 600  # 10 minutes in seconds
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 # ---- Email Configuration (Console backend for development) ----
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"

@@ -1,0 +1,28 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Delete Request{% endblock %}
+{% block admin_heading %}Delete Request{% endblock %}
+
+{% block admin_content %}
+
+<div class="admin-card" style="max-width: 600px;">
+    <div class="text-center mb-4">
+        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+        <h4 class="fw-bold mt-3">Are you sure?</h4>
+        <p class="text-muted">
+            You are about to permanently delete the help request from
+            <strong>"{{ help_request.full_name }}"</strong> ({{ help_request.diagnosis_condition }}),
+            including the attached document if any. This cannot be undone.
+        </p>
+    </div>
+
+    <form method="post" class="d-flex gap-2 justify-content-center">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Yes, Delete
+        </button>
+        <a href="{% url 'request' %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

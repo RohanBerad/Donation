@@ -1,0 +1,46 @@
+{% extends 'website/base.html' %}
+
+{% block title %}FAQs | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block content %}
+<section class="hr-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="hr-badge-pill">Need Help?</span>
+            <h1 class="display-5 font-heading fw-bold mt-2">Frequently Asked Questions</h1>
+            <p class="text-muted mx-auto" style="max-width: 550px;">
+                Answers to the questions we get asked the most about donating and how {{ site_settings.ngo_name }} works.
+            </p>
+        </div>
+
+        <div class="mx-auto" style="max-width: 800px;">
+            {% if faqs %}
+                <div class="accordion" id="faqAccordion">
+                    {% for faq in faqs %}
+                    <div class="hr-card-white mb-3 p-0 overflow-hidden">
+                        <h2 class="mb-0">
+                            <button class="btn w-100 text-start d-flex justify-content-between align-items-center px-4 py-3 fw-bold font-heading"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#faq{{ faq.id }}"
+                                    aria-expanded="false" aria-controls="faq{{ faq.id }}">
+                                {{ faq.question }}
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </h2>
+                        <div id="faq{{ faq.id }}" class="collapse" data-bs-parent="#faqAccordion">
+                            <div class="px-4 pb-4 text-muted small">{{ faq.answer }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted text-center">No FAQs have been added yet. Check back soon!</p>
+            {% endif %}
+
+            <div class="text-center mt-5">
+                <p class="text-muted mb-3">Still have a question?</p>
+                <a href="{% url 'contact' %}" class="btn-hr-pill-outline px-4 py-3">Contact Us</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

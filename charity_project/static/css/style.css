@@ -33,6 +33,10 @@ html {
     scroll-behavior: smooth;
 }
 
+.text-emerald {
+    color: var(--hr-green-hover) !important;
+}
+
 body {
     font-family: 'Plus Jakarta Sans', 'Outfit', 'Inter', -apple-system, sans-serif;
     background-color: var(--hr-bg);
@@ -1069,4 +1073,683 @@ a {
 
 .hr-testimonial-grid-message {
     line-height: 1.6;
+}
+
+/* ==========================================================
+   STORIES OF IMPACT SECTION (v2 redesign)
+   ========================================================== */
+
+/* ---- Featured testimonial slider ---- */
+.hr-impact-slider-card {
+    background: var(--hr-bg-card);
+    border-radius: var(--hr-radius-card);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+}
+
+.hr-impact-slider-img {
+    width: 42%;
+    min-height: 320px;
+    object-fit: cover;
+}
+
+.hr-impact-slider-body {
+    flex: 1;
+    padding: 2.5rem 2.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.hr-impact-quote-mark {
+    color: var(--hr-green);
+    font-size: 2.5rem;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.hr-impact-slider-nav {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--hr-border-dark);
+    background: var(--hr-bg-card);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--hr-text);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.hr-impact-slider-nav:hover {
+    background: var(--hr-green);
+    border-color: var(--hr-green);
+    color: #fff;
+}
+
+.hr-impact-slider-dots .carousel-indicators {
+    position: static;
+    margin: 1.25rem 0 0;
+}
+
+.hr-impact-slider-dots button {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50%;
+    background-color: var(--hr-border-dark) !important;
+    opacity: 1 !important;
+    border: none !important;
+}
+
+.hr-impact-slider-dots button.active {
+    background-color: var(--hr-green) !important;
+    width: 22px !important;
+    border-radius: 100px;
+}
+
+/* ---- Impact stat mini-cards ---- */
+.hr-impact-stat-card {
+    background: var(--hr-bg-card);
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+}
+
+.hr-impact-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--hr-green-light);
+    color: var(--hr-green-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+/* ---- Story grid cards ---- */
+.hr-story-grid-card-v2 {
+    background: var(--hr-bg-card);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    height: 100%;
+}
+
+.hr-story-grid-card-v2:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
+}
+
+.hr-story-grid-img-wrap {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.hr-story-grid-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hr-story-category-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: var(--hr-green);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    padding: 0.35rem 0.85rem;
+    border-radius: 100px;
+}
+
+.hr-story-grid-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* ---- Bottom CTA banner ---- */
+.hr-share-story-cta {
+    background: linear-gradient(120deg, var(--hr-green-light), rgba(38, 224, 127, 0.05));
+    border-radius: var(--hr-radius-card);
+    padding: 2.25rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+/* ==========================================================
+   SHARE YOUR STORY MODAL
+   ========================================================== */
+#shareStoryModal .modal-content {
+    border: none;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+#shareStoryModal .modal-body {
+    padding: 2.25rem 2.25rem 1.75rem;
+}
+
+.hr-story-modal-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--hr-green-light);
+    color: var(--hr-green-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 1rem;
+}
+
+.hr-story-input {
+    border-radius: 12px !important;
+    border: 1px solid var(--hr-border-dark) !important;
+    padding: 0.65rem 1rem !important;
+}
+
+.hr-story-input:focus {
+    border-color: var(--hr-green) !important;
+    box-shadow: 0 0 0 3px var(--hr-green-light) !important;
+}
+
+.hr-star-rating-input {
+    display: inline-flex;
+    gap: 0.25rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.hr-star-rating-input i {
+    color: var(--hr-border-dark);
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.hr-star-rating-input i.active {
+    color: #f5b301;
+}
+
+.hr-star-rating-input i:hover {
+    transform: scale(1.15);
+}
+
+.hr-upload-dropzone {
+    border: 2px dashed var(--hr-border-dark);
+    border-radius: 16px;
+    padding: 1.75rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.hr-upload-dropzone:hover,
+.hr-upload-dropzone.hr-has-file {
+    border-color: var(--hr-green);
+    background: var(--hr-green-light);
+}
+
+.hr-upload-dropzone-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--hr-green-light);
+    color: var(--hr-green-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .hr-impact-slider-card {
+        flex-direction: column;
+    }
+    .hr-impact-slider-img {
+        width: 100%;
+        min-height: 200px;
+    }
+    .hr-impact-slider-body {
+        padding: 1.75rem;
+    }
+    .hr-share-story-cta {
+        justify-content: center;
+        text-align: center;
+    }
+}
+
+/* ==========================================================
+   STORY DETAIL MODAL
+   ========================================================== */
+#storyDetailModal .modal-dialog {
+    max-width: 900px;
+}
+
+.hr-story-detail-img-wrap {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+    background: var(--hr-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.hr-story-detail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    min-height: 420px;
+}
+
+.hr-story-detail-img-error {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--hr-bg);
+    color: var(--hr-text-light);
+    text-align: center;
+    padding: 2rem;
+    gap: 1rem;
+}
+
+.hr-story-detail-img-error i {
+    font-size: 3rem;
+    opacity: 0.4;
+}
+
+.hr-story-detail-img-error p {
+    font-size: 0.85rem;
+    max-width: 280px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.hr-story-grid-avatar-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--hr-bg-beige);
+}
+
+.hr-story-grid-avatar-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 767.98px) {
+    .hr-story-detail-img-wrap {
+        min-height: 260px;
+    }
+    .hr-story-detail-img {
+        min-height: 260px;
+    }
+}
+
+/* ==========================================================
+   ABOUT PAGE (v2 redesign)
+   ========================================================== */
+
+/* ---- Hero ---- */
+.hr-about-hero {
+    position: relative;
+    min-height: 560px;
+    display: flex;
+    align-items: center;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.hr-about-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, rgba(10, 20, 15, 0.82) 0%, rgba(10, 20, 15, 0.55) 45%, rgba(10, 20, 15, 0.15) 100%);
+}
+
+.hr-about-hero-content {
+    position: relative;
+    z-index: 2;
+    color: #fff;
+}
+
+.hr-about-hero-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+}
+
+.hr-about-hero-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.9rem;
+}
+
+.hr-about-play-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--hr-green-hover);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.hr-about-play-btn:hover {
+    transform: scale(1.08);
+}
+
+.hr-about-play-label {
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.btn-hr-outline-white {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    color: #fff;
+    background: transparent;
+    padding: 0.75rem 1.5rem;
+    border-radius: 100px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-hr-outline-white:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+/* ---- Floating stats bar (overlaps hero bottom) ---- */
+.hr-about-stats-bar {
+    position: relative;
+    z-index: 3;
+    margin-top: -70px;
+    background: var(--hr-bg-card);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    padding: 1.75rem 1.5rem;
+}
+
+.hr-about-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.hr-about-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--hr-green-light);
+    color: var(--hr-green-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+/* ---- Our Purpose cards ---- */
+.hr-purpose-card {
+    border-radius: 20px;
+    padding: 2rem 1.75rem;
+    height: 100%;
+}
+
+.hr-purpose-card.hr-purpose-green { background: var(--hr-green-light); }
+.hr-purpose-card.hr-purpose-blue { background: rgba(59, 130, 246, 0.1); }
+.hr-purpose-card.hr-purpose-orange { background: rgba(249, 115, 22, 0.1); }
+
+.hr-purpose-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 1.1rem;
+}
+
+.hr-purpose-green .hr-purpose-icon { background: #fff; color: var(--hr-green-hover); }
+.hr-purpose-blue .hr-purpose-icon { background: #fff; color: #3b82f6; }
+.hr-purpose-orange .hr-purpose-icon { background: #fff; color: #f97316; }
+
+.hr-purpose-value-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    color: var(--hr-text);
+    margin-bottom: 0.5rem;
+}
+
+/* ---- Our Story photo with quote overlay ---- */
+.hr-story-photo-wrap {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    min-height: 320px;
+}
+
+.hr-story-photo-wrap img {
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    object-fit: cover;
+}
+
+.hr-story-quote-card {
+    position: absolute;
+    left: 1.25rem;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    background: #fff;
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* ---- Timeline ---- */
+.hr-timeline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    color: var(--hr-text-muted);
+    margin-bottom: 0.6rem;
+}
+
+.hr-timeline-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--hr-green);
+    margin-top: 0.4rem;
+    flex-shrink: 0;
+}
+
+/* ---- Donation donut chart (pure CSS conic-gradient) ---- */
+.hr-donut-chart {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.hr-donut-chart-inner {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: var(--hr-bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--hr-text);
+}
+
+.hr-donut-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+/* ---- Accountability banner ---- */
+.hr-accountability-banner {
+    background: var(--hr-bg-beige-card);
+    border-radius: 20px;
+    padding: 1.25rem 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* ---- Team carousel ---- */
+.hr-team-carousel-track {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.5rem;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hr-team-carousel-track::-webkit-scrollbar {
+    display: none;
+}
+
+.hr-team-card {
+    flex: 0 0 auto;
+    width: 294px;
+    scroll-snap-align: start;
+    background: var(--hr-bg-card);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.hr-team-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+}
+
+.hr-team-social-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--hr-bg-beige-card);
+    color: var(--hr-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.hr-team-social-icon:hover {
+    background: var(--hr-green);
+    color: #fff;
+}
+
+/* ---- Dark CTA banner ---- */
+.hr-about-cta-dark {
+    background: #0f2318;
+    border-radius: var(--hr-radius-card);
+    padding: 2.25rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.hr-about-cta-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+@media (max-width: 767.98px) {
+    .hr-about-hero {
+        min-height: 640px;
+        text-align: center;
+    }
+    .hr-about-stats-bar {
+        margin-top: 1.5rem;
+    }
+    .hr-purpose-card {
+        text-align: center;
+    }
+    .hr-about-cta-dark {
+        justify-content: center;
+        text-align: center;
+    }
 }

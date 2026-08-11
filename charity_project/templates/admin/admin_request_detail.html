@@ -1,0 +1,77 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Request from {{ help_request.full_name }}{% endblock %}
+{% block admin_heading %}Help Request Detail{% endblock %}
+
+{% block admin_content %}
+
+<div class="admin-card" style="max-width: 750px;">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h5 class="fw-bold mb-1">{{ help_request.diagnosis_condition }}</h5>
+            <p class="text-muted small mb-0">
+                From <strong>{{ help_request.full_name }}</strong>
+                (<a href="mailto:{{ help_request.email }}">{{ help_request.email }}</a>{% if help_request.phone %} · {{ help_request.phone }}{% endif %})
+            </p>
+            <p class="text-muted small mb-0">Submitted {{ help_request.submitted_at|date:"d M Y, h:i A" }}</p>
+        </div>
+        {% if help_request.status == 'new' %}
+            <span class="badge bg-success">New</span>
+        {% elif help_request.status == 'reviewing' %}
+            <span class="badge bg-warning text-dark">Reviewing</span>
+        {% elif help_request.status == 'approved' %}
+            <span class="badge bg-primary">Approved</span>
+        {% else %}
+            <span class="badge bg-secondary">Rejected</span>
+        {% endif %}
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <p class="small text-muted mb-1">Funding Goal</p>
+            <p class="fw-bold">₹{{ help_request.funding_goal }}</p>
+        </div>
+        <div class="col-md-6">
+            <p class="small text-muted mb-1">Treatment Stage</p>
+            <p class="fw-bold">{{ help_request.get_treatment_stage_display }}</p>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <p class="small text-muted mb-1">Attached Document</p>
+        {% if help_request.document %}
+            <a href="{{ help_request.document.url }}" target="_blank" class="btn btn-sm btn-outline-dark">
+                <i class="bi bi-paperclip"></i> Open Document
+            </a>
+        {% else %}
+            <p class="text-muted small mb-0">No document was attached.</p>
+        {% endif %}
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label small fw-bold">Status</label>
+            <select name="status" class="form-select">
+                <option value="new" {% if help_request.status == 'new' %}selected{% endif %}>New</option>
+                <option value="reviewing" {% if help_request.status == 'reviewing' %}selected{% endif %}>Reviewing</option>
+                <option value="approved" {% if help_request.status == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if help_request.status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-bold">Internal Notes</label>
+            <textarea name="admin_notes" class="form-control" rows="4" placeholder="Notes for the team (not shown to the requester)">{{ help_request.admin_notes }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="mailto:{{ help_request.email }}" class="btn btn-outline-secondary">
+            <i class="bi bi-reply"></i> Email Requester
+        </a>
+        <a href="{% url 'admin_request_delete' help_request.id %}" class="btn btn-outline-danger">
+            <i class="bi bi-trash"></i> Delete
+        </a>
+        <a href="{% url 'request' %}" class="btn btn-outline-secondary">Back to Requests</a>
+    </form>
+</div>
+
+{% endblock %}

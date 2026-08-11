@@ -54,6 +54,25 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {% if 'faq' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'admin_faq_list' %}">
+                        <i class="bi bi-question-circle-fill"></i> FAQs
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'contact' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'admin_contact_list' %}">
+                        <i class="bi bi-envelope-fill"></i> Messages
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'request' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'request' %}">
+                        <i class="bi bi-clipboard2-pulse-fill"></i> Help Requests
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link {% if request.resolver_match.url_name == 'admin_site_settings' %}active{% endif %}"
                        href="{% url 'admin_site_settings' %}">
                         <i class="bi bi-gear-fill"></i> Website Content

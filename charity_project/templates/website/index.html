@@ -158,7 +158,10 @@
             <div class="position-absolute inset-0 bg-dark bg-opacity-40"></div>
 
             <div class="position-relative z-1 w-100">
-                <div class="hr-gethelp-card">
+                <form method="post" enctype="multipart/form-data" class="hr-gethelp-card">
+                    {% csrf_token %}
+                    <input type="hidden" name="submit_help_request" value="1">
+
                     <div class="mb-3">
                         <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 small fw-bold">Get Help</span>
                     </div>
@@ -167,46 +170,92 @@
 
                     <h6 class="fw-bold mb-3">What's going on?</h6>
 
-                    <div class="mb-3">
+                    <div class="row g-3 mb-1">
+                        <div class="col-md-6">
+                            <label class="small text-white-50 d-block mb-1">Your Name</label>
+                            {{ help_request_form.full_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-white-50 d-block mb-1">Email</label>
+                            {{ help_request_form.email }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
                         <label class="small text-white-50 d-block mb-1">Diagnosis or condition</label>
-                        <select class="form-select hr-glass-input">
-                            <option>Kidney Cancer</option>
-                            <option>Leukemia & Blood Disorders</option>
-                            <option>Pediatric Care</option>
-                            <option>General Financial Assistance</option>
-                        </select>
+                        {{ help_request_form.diagnosis_condition }}
                     </div>
 
                     <div class="mb-3">
                         <label class="small text-white-50 d-block mb-1">Funding Goal</label>
                         <div class="position-relative">
-                            <input type="text" class="form-control hr-glass-input" value="56 000">
-                            <span class="position-absolute end-0 top-50 translate-middle-y me-3 fw-bold">$</span>
+                            {{ help_request_form.funding_goal }}
+                            <span class="position-absolute end-0 top-50 translate-middle-y me-3 fw-bold">₹</span>
                         </div>
                     </div>
 
                     <div class="mb-4">
                         <label class="small text-white-50 d-block mb-2">Treatment stage</label>
-                        <div class="d-flex gap-2">
-                            <span class="hr-stage-pill">Pre-op</span>
-                            <span class="hr-stage-pill active">Active</span>
-                            <span class="hr-stage-pill">Recovery</span>
+                        <div class="d-flex gap-2 hr-stage-pill-group">
+                            {% for radio in help_request_form.treatment_stage %}
+                                <label class="hr-stage-pill {% if radio.data.selected %}active{% endif %}">
+                                    {{ radio.tag }}
+                                    {{ radio.choice_label }}
+                                </label>
+                            {% endfor %}
                         </div>
                     </div>
 
-                    <div class="d-flex align-items-center gap-3">
-                        <button type="button" class="btn btn-link text-white text-uppercase font-heading fw-bold small p-0 text-decoration-none">
-                            ATTACH DOCUMENTS <i class="bi bi-upload ms-1"></i>
-                        </button>
-                        <a href="{% url 'donate_generic' %}" class="btn bg-white text-dark rounded-pill font-heading fw-bold text-uppercase px-4 py-2 small ms-auto">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <label for="id_document" class="btn btn-link text-white text-uppercase font-heading fw-bold small p-0 text-decoration-none mb-0" style="cursor: pointer;">
+                            <span id="attach-doc-label">ATTACH DOCUMENTS</span> <i class="bi bi-upload ms-1"></i>
+                        </label>
+                        {{ help_request_form.document }}
+                        <button type="submit" class="btn bg-white text-dark rounded-pill font-heading fw-bold text-uppercase px-4 py-2 small ms-auto">
                             REQUEST HELP
-                        </a>
+                        </button>
                     </div>
-                </div>
+
+                    {% if help_request_form.errors %}
+                        <div class="text-warning small mt-3">
+                            Please check: {{ help_request_form.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </form>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+    // Makes the "Attach Documents" label show the chosen filename,
+    // and syncs the visible treatment-stage pills with the hidden radio inputs.
+    document.addEventListener('DOMContentLoaded', function () {
+        var docInput = document.getElementById('id_document');
+        var docLabel = document.getElementById('attach-doc-label');
+        if (docInput) {
+            docInput.addEventListener('change', function () {
+                if (docInput.files && docInput.files.length > 0) {
+                    docLabel.textContent = docInput.files[0].name;
+                } else {
+                    docLabel.textContent = 'ATTACH DOCUMENTS';
+                }
+            });
+        }
+
+        var pillLabels = document.querySelectorAll('.hr-stage-pill-group .hr-stage-pill');
+        pillLabels.forEach(function (label) {
+            var input = label.querySelector('input[type="radio"]');
+            if (input && input.checked) {
+                label.classList.add('active');
+            }
+            label.addEventListener('click', function () {
+                pillLabels.forEach(function (l) { l.classList.remove('active'); });
+                label.classList.add('active');
+            });
+        });
+    });
+</script>
 
 <!-- ===================== 4. OUR IMPACT SECTION (Screenshot 3) ===================== -->
 <section class="hr-section text-center" id="impact">
@@ -243,236 +292,387 @@
 </section>
 
 <!-- ===================== 5. INSPIRING JOURNEYS / STORIES SECTION (Screenshot 4) ===================== -->
-<section class="hr-section">
+
+
+<!-- ===================== 6. STORIES OF IMPACT SECTION (v2 redesign) ===================== -->
+<section class="hr-section" id="testimonials">
     <div class="container">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 text-center text-md-start">
-            <div>
-                <span class="hr-badge-pill mb-2">Patient Stories</span>
-                <h2 class="display-5 font-heading fw-bold">Inspiring Journeys Of Strength And Hope</h2>
-            </div>
-            <div class="mt-3 mt-md-0">
-                <a href="{% url 'campaign_list' %}" class="d-inline-flex align-items-center gap-2 text-dark font-heading fw-bold text-uppercase small">
-                    SEE ALL STORIES
-                    <span class="hr-icon-circle-btn"><i class="bi bi-arrow-up-right"></i></span>
-                </a>
-            </div>
+
+        <div class="text-center mb-5">
+            <span class="hr-badge-pill mb-2"><i class="bi bi-heart-fill me-1"></i> Stories of Impact</span>
+            <h2 class="display-5 font-heading fw-bold mt-2 mb-2">Real Lives, <span class="text-emerald">Real Change</span></h2>
+            <p class="text-muted mx-auto" style="max-width: 620px;">
+                Heartfelt stories from our donors and beneficiaries who believe in our mission and help us create a better tomorrow.
+            </p>
         </div>
 
-        <div class="row g-4 align-items-center justify-content-center">
-            {% for campaign in featured_campaigns %}
-                {% if forloop.first %}
-                <!-- Center Featured Active Story Card -->
-                <div class="col-lg-5 col-md-8">
-                    <div class="hr-story-card active">
-                        <div class="position-relative">
-                            {% if campaign.campaign_image %}
-                                <img src="{{ campaign.campaign_image.url }}" class="hr-story-img" alt="{{ campaign.campaign_name }}">
-                            {% else %}
-                                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop" class="hr-story-img" alt="{{ campaign.campaign_name }}">
-                            {% endif %}
-                            
-                            <a href="{% url 'donate' campaign.id %}" class="btn-hr-green hr-story-overlay-btn py-3 px-4">
-                                DONATE <i class="bi bi-arrow-up-right ms-1"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="hr-story-info-card shadow-sm">
-                        <h5 class="font-heading fw-bold text-dark mb-1">{{ campaign.campaign_name }}</h5>
-                        <p class="text-muted small mb-3">{{ campaign.description|truncatewords:10 }}</p>
-                        
-                        <div class="hr-progress mb-2">
-                            <div class="hr-progress-bar" style="width: {{ campaign.progress_percentage }}%"></div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center small font-heading fw-bold">
-                            <span class="text-dark">Rs. {{ campaign.raised_amount }}</span>
-                            <span class="text-emerald">{{ campaign.progress_percentage }}%</span>
-                        </div>
-                    </div>
-                </div>
-                {% else %}
-                <!-- Side Grayscale Cards -->
-                <div class="col-lg-3 col-md-6 d-none d-lg-block">
-                    <div class="hr-story-card bw">
-                        {% if campaign.campaign_image %}
-                            <img src="{{ campaign.campaign_image.url }}" class="hr-story-img" alt="{{ campaign.campaign_name }}">
-                        {% else %}
-                            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=600&auto=format&fit=crop" class="hr-story-img" alt="{{ campaign.campaign_name }}">
-                        {% endif %}
-                    </div>
-                </div>
-                {% endif %}
-            {% empty %}
-                <div class="col-lg-5">
-                    <div class="hr-story-card active">
-                        <div class="position-relative">
-                            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop" class="hr-story-img" alt="John Smith">
-                            <a href="{% url 'donate_generic' %}" class="btn-hr-green hr-story-overlay-btn py-3 px-4">
-                                DONATE <i class="bi bi-arrow-up-right ms-1"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="hr-story-info-card shadow-sm">
-                        <h5 class="font-heading fw-bold text-dark mb-1">John Smith, 12</h5>
-                        <p class="text-muted small mb-3">Diagnosed with Stage 2 Health Condition</p>
-                        <div class="hr-progress mb-2">
-                            <div class="hr-progress-bar" style="width: 72%"></div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center small font-heading fw-bold">
-                            <span class="text-dark">Rs. 16,545</span>
-                            <span class="text-emerald">72%</span>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<!-- ===================== 6. WHAT PEOPLE SAY / TESTIMONIALS SECTION ===================== -->
-<section class="hr-section hr-testimonial-bg" id="testimonials">
-    <div class="container">
-        <div class="text-center mb-4">
-            <span class="hr-badge-pill">What People Say</span>
-        </div>
-
-        <h2 class="display-5 font-heading fw-bold text-center mb-2">Stories of Hope From Our Donors</h2>
-        <p class="text-center text-muted mb-5 mx-auto" style="max-width: 680px;">
-            Hear from the generous hearts whose support turns compassion into lasting impact.
-        </p>
-
-        <!-- Testimonial carousel (Bootstrap) -->
-        <div id="hrTestimonialCarousel" class="carousel slide" data-bs-ride="false">
-            <div class="carousel-inner">
-                {% if testimonials %}
-                    {% for testimonial in testimonials %}
-                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                            <div class="row justify-content-center">
-                                <div class="col-lg-8">
-                                    <div class="hr-testimonial-card">
-                                        <div class="hr-quote-mark">
-                                            <i class="bi bi-quote-quote align-middle"></i>
-                                        </div>
-
-                                        <p class="hr-testimonial-message text-dark mb-4">
-                                            "{{ testimonial.message }}"
-                                        </p>
-
-                                        <div class="d-flex align-items-center gap-3">
-                                            {% if testimonial.photo %}
-                                                <img src="{{ testimonial.photo.url }}"
-                                                     class="hr-testimonial-avatar"
-                                                     alt="{{ testimonial.donor_name }}">
-                                            {% else %}
-                                                <img src="https://ui-avatars.com/api/?name={{ testimonial.donor_name|urlencode }}&background=26e07f&color=fff&size=128&bold=true"
-                                                     class="hr-testimonial-avatar"
-                                                     alt="{{ testimonial.donor_name }}">
-                                            {% endif %}
-
-                                            <div class="d-flex flex-column">
-                                                <span class="font-heading fw-bold text-dark mb-1">{{ testimonial.donor_name }}</span>
-                                                <small class="text-muted">{{ testimonial.donor_role }}</small>
-                                                <div class="hr-testimonial-rating mt-1">
-                                                    {% for i in "12345"|make_list %}
-                                                        {% if forloop.counter <= testimonial.rating %}
-                                                            <i class="bi bi-star-fill text-warning"></i>
-                                                        {% else %}
-                                                            <i class="bi bi-star text-warning"></i>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </div>
+        <!-- ---- Featured testimonial slider ---- -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-10">
+                <div id="hrImpactSlider" class="carousel slide position-relative" data-bs-ride="false">
+                    <div class="carousel-inner">
+                        {% if testimonials %}
+                            {% for testimonial in testimonials %}
+                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                    <div class="hr-impact-slider-card">
+                                        {% if testimonial.photo %}
+                                            <img src="{{ testimonial.photo.url }}" class="hr-impact-slider-img" alt="{{ testimonial.donor_name }}">
+                                        {% else %}
+                                            <img src="https://ui-avatars.com/api/?name={{ testimonial.donor_name|urlencode }}&background=26e07f&color=fff&size=400&bold=true" class="hr-impact-slider-img" alt="{{ testimonial.donor_name }}">
+                                        {% endif %}
+                                        <div class="hr-impact-slider-body">
+                                            <div class="hr-impact-quote-mark"><i class="bi bi-quote"></i></div>
+                                            <p class="text-dark mb-4" style="font-size: 1.05rem; line-height: 1.7;">
+                                                 {{ testimonial.message|truncatechars:1 }}
+                                            </p>
+                                            <h6 class="font-heading fw-bold mb-0">{{ testimonial.donor_name }}</h6>
+                                            <small class="text-emerald fw-semibold d-block mb-2">{{ testimonial.donor_role }}</small>
+                                            <div class="hr-testimonial-rating">
+                                                {% for i in "12345"|make_list %}
+                                                    {% if forloop.counter <= testimonial.rating %}
+                                                        <i class="bi bi-star-fill text-warning"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star text-warning"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <span class="text-muted small ms-1">{{ testimonial.rating }}.0</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="carousel-item active">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-8">
-                                <div class="hr-testimonial-card">
-                                    <div class="hr-quote-mark"><i class="bi bi-quote-quote align-middle"></i></div>
-                                    <p class="text-dark mb-4 fst-italic text-center">
-                                        "HopeRise transformed my family's journey — their support gave us strength when we needed it most."
-                                    </p>
-                                    <div class="text-center">
-                                        <img src="{% static 'images/default_avatar.png' %}"
-                                             class="hr-testimonial-avatar mx-auto" alt="Default donor">
-                                        <div class="font-heading fw-bold">Maria Gomez</div>
-                                        <small class="text-muted d-block mb-2">Regular Donor</small>
-                                        <div class="hr-testimonial-rating justify-content-center">
+                            {% endfor %}
+                        {% else %}
+                            <div class="carousel-item active">
+                                <div class="hr-impact-slider-card">
+                                    <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop" class="hr-impact-slider-img" alt="Default story">
+                                    <div class="hr-impact-slider-body">
+                                        <div class="hr-impact-quote-mark"><i class="bi bi-quote"></i></div>
+                                        <p class="text-dark mb-4" style="font-size: 1.05rem; line-height: 1.7;">
+                                            Because of {{ settings.ngo_name }}, I got the support I always dreamed of. Today, I can stand on my own feet and inspire my family and community.
+                                        </p>
+                                        <h6 class="font-heading fw-bold mb-0">Anjali Sharma</h6>
+                                        <small class="text-emerald fw-semibold d-block mb-2">Education Beneficiary</small>
+                                        <div class="hr-testimonial-rating">
                                             <i class="bi bi-star-fill text-warning"></i>
                                             <i class="bi bi-star-fill text-warning"></i>
                                             <i class="bi bi-star-fill text-warning"></i>
                                             <i class="bi bi-star-fill text-warning"></i>
-                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <i class="bi bi-star-half text-warning"></i>
+                                            <span class="text-muted small ms-1">4.5</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        {% endif %}
                     </div>
-                {% endif %}
-            </div>
 
-            {% if testimonials|length > 1 %}
-                <!-- Navigation -->
-                <div class="carousel-control-prev hr-carousel-nav-prev" data-bs-target="#hrTestimonialCarousel" data-bs-slide="prev">
-                    <i class="bi bi-arrow-left"></i>
-                    <span class="visually-hidden">Previous</span>
-                </div>
-                <div class="carousel-control-next hr-carousel-nav-next" data-bs-target="#hrTestimonialCarousel" data-bs-slide="next">
-                    <i class="bi bi-arrow-right"></i>
-                    <span class="visually-hidden">Next</span>
-                </div>
-
-                <!-- Indicators -->
-                <div class="carousel-indicators hr-testimonial-indicators">
-                    {% for t in testimonials %}
-                        <button type="button" data-bs-target="#hrTestimonialCarousel"
-                                data-bs-slide-to="{{ forloop.counter0 }}"
-                                class="{% if forloop.first %}active{% endif %}"
-                                aria-current="{% if forloop.first %}true{% endif %}"
-                                aria-label="Slide {{ forloop.counter }}">
-                            <span></span>
+                    {% if testimonials|length > 1 %}
+                        <button class="hr-impact-slider-nav position-absolute top-50 start-0 translate-middle-y ms-n5 d-none d-lg-inline-flex" type="button" data-bs-target="#hrImpactSlider" data-bs-slide="prev">
+                            <i class="bi bi-chevron-left"></i>
                         </button>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
+                        <button class="hr-impact-slider-nav position-absolute top-50 end-0 translate-middle-y me-n5 d-none d-lg-inline-flex" type="button" data-bs-target="#hrImpactSlider" data-bs-slide="next">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
 
-        <!-- Static grid fallback (shows 3 testimonials on larger screens when JS is off / for visual richness) -->
-        <div class="row g-4 mt-2 d-none d-lg-grid hr-testimonial-grid">
-            {% for testimonial in testimonials|slice:":3" %}
-                <div class="col-md-4">
-                    <div class="hr-testimonial-grid-card h-100">
-                        <div class="hr-testimonial-grid-header d-flex align-items-center gap-3 pb-3 border-bottom">
-                             {% if testimonial.photo %}
-                                 <img src="{{ testimonial.photo.url }}" class="hr-grid-avatar" alt="{{ testimonial.donor_name }}">
-                             {% else %}
-                                 <img src="https://ui-avatars.com/api/?name={{ testimonial.donor_name|urlencode }}&background=26e07f&color=fff&size=96&bold=true" class="hr-grid-avatar" alt="{{ testimonial.donor_name }}">
-                             {% endif %}
-                            <div>
-                                <span class="d-block font-heading fw-bold text-dark">{{ testimonial.donor_name }}</span>
-                                <small class="text-muted">{{ testimonial.donor_role }}</small>
-                                <div class="hr-testimonial-rating">
-                                    {% for i in "12345"|make_list %}
-                                        {% if forloop.counter <= testimonial.rating %}<i class="bi bi-star-fill text-warning"></i>{% else %}<i class="bi bi-star text-warning"></i>{% endif %}
-                                    {% endfor %}
-                                </div>
+                        <div class="text-center hr-impact-slider-dots">
+                            <div class="carousel-indicators">
+                                {% for t in testimonials %}
+                                    <button type="button" data-bs-target="#hrImpactSlider" data-bs-slide-to="{{ forloop.counter0 }}"
+                                            class="{% if forloop.first %}active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+                                {% endfor %}
                             </div>
                         </div>
-                        <p class="hr-testimonial-grid-message text-muted small pt-3 mb-0">
-                            "{{ testimonial.message|truncatechars:160 }}"
-                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ---- 3 impact stat cards ---- -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="hr-impact-stat-card">
+                    <div class="hr-impact-stat-icon"><i class="bi bi-chat-heart-fill"></i></div>
+                    <div>
+                        <h4 class="font-heading fw-bold mb-0">{{ stories_shared_count }}+</h4>
+                        <p class="text-muted small mb-0">Stories Shared</p>
+                        <span class="text-muted" style="font-size: 0.75rem;">Real stories from real people</span>
                     </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="hr-impact-stat-card">
+                    <div class="hr-impact-stat-icon"><i class="bi bi-star-fill"></i></div>
+                    <div>
+                        <h4 class="font-heading fw-bold mb-0">{{ average_rating|floatformat:1 }}</h4>
+                        <p class="text-muted small mb-0">Average Rating</p>
+                        <span class="text-muted" style="font-size: 0.75rem;">From our amazing supporters</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="hr-impact-stat-card">
+                    <div class="hr-impact-stat-icon"><i class="bi bi-people-fill"></i></div>
+                    <div>
+                        <h4 class="font-heading fw-bold mb-0">{{ settings.stat_lives_impacted }}</h4>
+                        <p class="text-muted small mb-0">Lives Impacted</p>
+                        <span class="text-muted" style="font-size: 0.75rem;">Together we create brighter lives</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---- Story grid ---- -->
+        <div class="text-center mb-4">
+            <h5 class="font-heading fw-bold text-muted">
+                <span class="text-decoration-line-through text-muted opacity-25">—</span>
+                More Stories of Hope
+                <span class="text-decoration-line-through text-muted opacity-25">—</span>
+            </h5>
+        </div>
+
+        <div class="row g-4 mb-5">
+            {% for testimonial in testimonials|slice:":6" %}
+                <div class="col-md-4">
+                    <div class="hr-story-grid-card-v2">
+                        <div class="hr-story-grid-img-wrap">
+                            {% if testimonial.photo %}
+                                <img src="{{ testimonial.photo.url }}" alt="{{ testimonial.donor_name }}">
+                            {% else %}
+                                <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=500&auto=format&fit=crop" alt="{{ testimonial.donor_name }}">
+                            {% endif %}
+                            <span class="hr-story-category-badge">{{ testimonial.get_category_display }}</span>
+                        </div>
+                        <div class="p-4">
+                            <h6 class="font-heading fw-bold mb-2">{{ testimonial.display_title }}</h6>
+                            <p class="text-muted small mb-3"> {{ testimonial.message|truncatechars:10 }}</p>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if testimonial.photo %}
+                                        <img src="{{ testimonial.photo.url }}" class="hr-story-grid-avatar" alt="{{ testimonial.donor_name }}">
+                                    {% else %}
+                                        <img src="https://ui-avatars.com/api/?name={{ testimonial.donor_name|urlencode }}&background=26e07f&color=fff&size=64&bold=true" class="hr-story-grid-avatar" alt="{{ testimonial.donor_name }}">
+                                    {% endif %}
+                                    <div>
+                                        <span class="d-block small fw-bold text-dark">{{ testimonial.donor_name }}</span>
+                                        <span class="text-muted" style="font-size: 0.72rem;">{{ testimonial.donor_role }}</span>
+                                    </div>
+                                </div>
+                                <a href="#" class="d-inline-flex align-items-center gap-1 text-emerald fw-bold text-uppercase small text-decoration-none"
+                                   data-bs-toggle="modal" data-bs-target="#storyDetailModal"
+                                   data-testimonial-name="{{ testimonial.donor_name|escape }}"
+                                   data-testimonial-role="{{ testimonial.donor_role|escape }}"
+                                   data-testimonial-title="{{ testimonial.display_title|escape }}"
+                                   data-testimonial-message="{{ testimonial.message|escape }}"
+                                   data-testimonial-rating="{{ testimonial.rating }}"
+                                   data-testimonial-category="{{ testimonial.get_category_display|escape }}"
+                                   data-testimonial-photo="{% if testimonial.photo %}{{ testimonial.photo.url }}{% endif %}"
+                                   data-testimonial-has-photo="{% if testimonial.photo %}true{% else %}false{% endif %}">
+                                    Read More <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center text-muted">
+                    No approved stories yet -- be the first to share one below!
                 </div>
             {% endfor %}
         </div>
+
+        <!-- ---- Bottom CTA banner ---- -->
+        <div class="hr-share-story-cta">
+            <div class="d-flex align-items-center gap-3">
+                <div class="hr-impact-stat-icon"><i class="bi bi-pencil-square"></i></div>
+                <div>
+                    <h5 class="font-heading fw-bold mb-1">Your Story Can Inspire Others</h5>
+                    <p class="text-muted small mb-0">Every story has the power to create more impact and bring hope to those who need it.</p>
+                </div>
+            </div>
+            <div class="text-center">
+                <button type="button" class="btn-hr-green" data-bs-toggle="modal" data-bs-target="#shareStoryModal">
+                    Share Your Story <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+                <p class="text-muted mt-2 mb-0" style="font-size: 0.75rem;">
+                    <i class="bi bi-shield-check text-emerald"></i> Your information is safe and secure with us
+                </p>
+            </div>
+        </div>
     </div>
 </section>
+
+<!-- ===================== SHARE YOUR STORY MODAL ===================== -->
+<div class="modal fade" id="shareStoryModal" tabindex="-1" aria-labelledby="shareStoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-4" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="hr-story-modal-icon"><i class="bi bi-pencil-square"></i></div>
+                    <h4 class="font-heading fw-bold mb-1" id="shareStoryModalLabel">Share Your Story</h4>
+                    <p class="text-muted small mb-0">Your story can inspire thousands and bring hope to those who need it.</p>
+                </div>
+
+                {% if story_form.errors %}
+                    <div class="alert alert-danger small">
+                        Please fix the highlighted fields below and submit again.
+                    </div>
+                {% endif %}
+
+                <form method="post" enctype="multipart/form-data" id="shareStoryForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="submit_story" value="1">
+
+                    <div class="row g-3 mb-1">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            {{ story_form.donor_name }}
+                            {% for error in story_form.donor_name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Email Address</label>
+                            {{ story_form.email }}
+                            {% for error in story_form.email.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        <label class="form-label small fw-bold">Role</label>
+                        {{ story_form.donor_role }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold d-block">Rating</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="hr-star-rating-input" id="storyStarInput">
+                                <i class="bi bi-star-fill active" data-value="1"></i>
+                                <i class="bi bi-star-fill active" data-value="2"></i>
+                                <i class="bi bi-star-fill active" data-value="3"></i>
+                                <i class="bi bi-star-fill active" data-value="4"></i>
+                                <i class="bi bi-star-fill active" data-value="5"></i>
+                            </div>
+                            <span class="text-muted small" id="storyRatingLabel">Select your rating</span>
+                        </div>
+                        <input type="hidden" name="rating" id="id_story_rating" value="5">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Your Story</label>
+
+                        {{ story_form.message }}
+                        {% for error in story_form.message.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold d-block">Upload Image <span class="text-muted fw-normal">(Optional)</span></label>
+                        <label for="id_story_photo" class="hr-upload-dropzone d-block mb-0" id="storyUploadDropzone">
+                            <div class="hr-upload-dropzone-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                            <div class="fw-semibold small" id="storyUploadLabel">Click to upload image</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">JPG, PNG up to 5MB</div>
+                        </label>
+                        {{ story_form.photo }}
+                        {% for error in story_form.photo.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn-hr-green w-100 justify-content-center">
+                        Submit Your Story <i class="bi bi-send ms-1"></i>
+                    </button>
+                    <p class="text-center text-muted mt-3 mb-0" style="font-size: 0.75rem;">
+                        <i class="bi bi-shield-check text-emerald"></i> Your information is safe and secure with us
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== STORY DETAIL MODAL ===================== -->
+<div class="modal fade" id="storyDetailModal" tabindex="-1" aria-labelledby="storyDetailTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-4" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-body p-0">
+                <div class="row g-0">
+                    <div class="col-lg-5">
+                        <div class="hr-story-detail-img-wrap">
+                            <img src="" alt="Story Image" id="storyDetailImg" class="hr-story-detail-img">
+                            <div class="hr-story-detail-img-error d-none" id="storyDetailImgError">
+                                <i class="bi bi-image-slash"></i>
+                                <p class="mb-0">Cannot read &quot;image.png&quot; (this model does not support image input)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="p-4 p-lg-5 d-flex flex-column">
+                            <span class="hr-story-category-badge mb-3 align-self-start" id="storyDetailCategory">Category</span>
+                            <h4 class="font-heading fw-bold mb-3" id="storyDetailTitle">Story Title</h4>
+                            <div class="hr-testimonial-rating mb-3" id="storyDetailRating"></div>
+                            <p class="text-muted mb-4" id="storyDetailMessage" style="line-height: 1.8; flex-grow: 1;"></p>
+                            <div class="d-flex align-items-center gap-3 pt-3 border-top">
+                                <div class="hr-story-grid-avatar-wrap" id="storyDetailAvatar"></div>
+                                <div>
+                                    <span class="d-block fw-bold text-dark" id="storyDetailName">Name</span>
+                                    <span class="text-muted small" id="storyDetailRole">Role</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // ---- Star rating picker ----
+        var stars = document.querySelectorAll('#storyStarInput i');
+        var ratingInput = document.getElementById('id_story_rating');
+        var ratingLabel = document.getElementById('storyRatingLabel');
+
+        function paintStars(value) {
+            stars.forEach(function (star) {
+                var starValue = parseInt(star.getAttribute('data-value'), 10);
+                star.classList.toggle('active', starValue <= value);
+            });
+        }
+        paintStars(parseInt(ratingInput.value, 10));
+
+        stars.forEach(function (star) {
+            star.addEventListener('click', function () {
+                var value = parseInt(star.getAttribute('data-value'), 10);
+                ratingInput.value = value;
+                ratingLabel.textContent = value + ' out of 5 stars';
+                paintStars(value);
+            });
+        });
+
+        // ---- Upload dropzone filename preview ----
+        var photoInput = document.getElementById('id_story_photo');
+        var uploadLabel = document.getElementById('storyUploadLabel');
+        var dropzone = document.getElementById('storyUploadDropzone');
+        if (photoInput) {
+            photoInput.addEventListener('change', function () {
+                if (photoInput.files && photoInput.files.length > 0) {
+                    uploadLabel.textContent = photoInput.files[0].name;
+                    dropzone.classList.add('hr-has-file');
+                } else {
+                    uploadLabel.textContent = 'Click to upload image';
+                    dropzone.classList.remove('hr-has-file');
+                }
+            });
+        }
+
+        // ---- Auto-open the modal again if the story form was submitted with errors ----
+        {% if story_form.errors %}
+            var shareStoryModalEl = document.getElementById('shareStoryModal');
+            if (shareStoryModalEl && window.bootstrap) {
+                new bootstrap.Modal(shareStoryModalEl).show();
+            }
+        {% endif %}
+    });
+</script>
 
 <!-- ===================== 7. UPDATES FROM HOPERISE SECTION (Screenshot 6) ===================== -->
 <section class="hr-section">

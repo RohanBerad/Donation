@@ -5,133 +5,267 @@
 
 {% block admin_content %}
 
-<div class="row g-4 mb-4">
-    <div class="col-md-3 col-6">
-        <div class="admin-stat-card">
-            <i class="bi bi-flag-fill"></i>
-            <h3 class="fw-bold mt-2 mb-0">{{ total_campaigns }}</h3>
-            <p class="text-muted small mb-0">Total Campaigns</p>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="admin-stat-card">
-            <i class="bi bi-check-circle-fill"></i>
-            <h3 class="fw-bold mt-2 mb-0">{{ active_campaigns }}</h3>
-            <p class="text-muted small mb-0">Active Campaigns</p>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="admin-stat-card">
-            <i class="bi bi-cash-coin"></i>
-            <h3 class="fw-bold mt-2 mb-0">Rs. {{ total_raised }}</h3>
-            <p class="text-muted small mb-0">Total Raised</p>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="admin-stat-card">
-            <i class="bi bi-people-fill"></i>
-            <h3 class="fw-bold mt-2 mb-0">{{ total_donors }}</h3>
-            <p class="text-muted small mb-0">Unique Donors</p>
-        </div>
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Welcome back, {{ request.user.username|title }}! <span>👋</span></h4>
+        <p class="text-muted mb-0">Here's what's happening with {{ site_settings.ngo_name }} today.</p>
     </div>
 </div>
 
+<!-- ===================== STAT CARDS ===================== -->
 <div class="row g-4 mb-4">
-    <div class="col-md-3 col-6">
-        <a href="{% url 'admin_contact_list' %}" class="text-decoration-none text-reset">
+    <div class="col-md-4 col-sm-6">
+        <a href="{% url 'admin_campaign_list' %}" class="text-decoration-none text-reset">
             <div class="admin-stat-card">
-                <i class="bi bi-envelope-fill"></i>
-                <h3 class="fw-bold mt-2 mb-0">{{ unread_messages }}</h3>
-                <p class="text-muted small mb-0">Unread Messages</p>
+                <div class="admin-stat-icon bg-tint-green"><i class="bi bi-flag-fill"></i></div>
+                <div>
+                    <p class="text-muted small mb-1">Total Campaigns</p>
+                    <h3 class="fw-bold mb-0">{{ total_campaigns }}</h3>
+                    <span class="admin-stat-trend up"><i class="bi bi-arrow-up-short"></i>{{ active_campaigns }} active now</span>
+                </div>
             </div>
         </a>
     </div>
-    <div class="col-md-3 col-6">
+    <div class="col-md-4 col-sm-6">
+        <a href="{% url 'admin_donor_list' %}" class="text-decoration-none text-reset">
+            <div class="admin-stat-card">
+                <div class="admin-stat-icon bg-tint-purple"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <p class="text-muted small mb-1">Total Donors</p>
+                    <h3 class="fw-bold mb-0">{{ total_donors }}</h3>
+                    <span class="admin-stat-trend up"><i class="bi bi-arrow-up-short"></i>{{ total_donations }} donations</span>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 col-sm-6">
+        <a href="{% url 'admin_testimonial_list' %}" class="text-decoration-none text-reset">
+            <div class="admin-stat-card">
+                <div class="admin-stat-icon bg-tint-pink"><i class="bi bi-chat-heart-fill"></i></div>
+                <div>
+                    <p class="text-muted small mb-1">Total Stories</p>
+                    <h3 class="fw-bold mb-0">{{ total_testimonials }}</h3>
+                    <span class="admin-stat-trend up"><i class="bi bi-arrow-up-short"></i>{{ approved_testimonials }} approved</span>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4 col-sm-6">
         <a href="{% url 'request' %}" class="text-decoration-none text-reset">
             <div class="admin-stat-card">
-                <i class="bi bi-clipboard2-pulse-fill"></i>
-                <h3 class="fw-bold mt-2 mb-0">{{ new_help_requests }}</h3>
-                <p class="text-muted small mb-0">New Help Requests</p>
+                <div class="admin-stat-icon bg-tint-blue"><i class="bi bi-clipboard2-pulse-fill"></i></div>
+                <div>
+                    <p class="text-muted small mb-1">New Help Requests</p>
+                    <h3 class="fw-bold mb-0">{{ new_help_requests }}</h3>
+                    <span class="text-muted small">Awaiting review</span>
+                </div>
             </div>
         </a>
     </div>
-    <div class="col-md-3 col-6">
-        <a href="{% url 'admin_testimonial_list' %}" class="text-decoration-none text-reset">
+    <div class="col-md-4 col-sm-6">
+        <a href="{% url 'admin_contact_list' %}" class="text-decoration-none text-reset">
             <div class="admin-stat-card">
-                <i class="bi bi-chat-quote-fill"></i>
-                <h3 class="fw-bold mt-2 mb-0">{{ total_testimonials }}</h3>
-                <p class="text-muted small mb-0">Total Testimonials</p>
+                <div class="admin-stat-icon bg-tint-orange"><i class="bi bi-envelope-fill"></i></div>
+                <div>
+                    <p class="text-muted small mb-1">Unread Messages</p>
+                    <h3 class="fw-bold mb-0">{{ unread_messages }}</h3>
+                    <span class="text-muted small">From the contact form</span>
+                </div>
             </div>
         </a>
     </div>
-    <div class="col-md-3 col-6">
-        <a href="{% url 'admin_testimonial_list' %}" class="text-decoration-none text-reset">
-            <div class="admin-stat-card">
-                <i class="bi bi-check2-circle"></i>
-                <h3 class="fw-bold mt-2 mb-0">{{ active_testimonials }}</h3>
-                <p class="text-muted small mb-0">Active Stories</p>
+    <div class="col-md-4 col-sm-6">
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon bg-tint-green"><i class="bi bi-cash-coin"></i></div>
+            <div>
+                <p class="text-muted small mb-1">Total Raised</p>
+                <h3 class="fw-bold mb-0">Rs. {{ total_raised }}</h3>
+                <span class="text-muted small">All-time</span>
             </div>
-        </a>
+        </div>
     </div>
 </div>
 
+<!-- ===================== CHART + RECENT DONATIONS ===================== -->
 <div class="row g-4 mb-4">
-    <div class="col-md-3 col-6">
-        <div class="admin-stat-card">
-            <i class="bi bi-shield-check"></i>
-            <h3 class="fw-bold mt-2 mb-0">{{ approved_testimonials }}</h3>
-            <p class="text-muted small mb-0">Approved Stories</p>
+    <div class="col-lg-7">
+        <div class="admin-card h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                <div>
+                    <h5 class="fw-bold mb-0">Donation Overview <span class="text-muted fw-normal small">({{ donation_period_label }})</span></h5>
+                    <h3 class="fw-bold mt-2 mb-0">Rs. {{ week_total|floatformat:0 }}</h3>
+                    <span class="text-muted small">Total donations {{ donation_period_label|lower }}</span>
+                </div>
+                <div class="btn-group btn-group-sm" role="group">
+                    <a href="?period=7d" class="btn btn-outline-success {% if donation_period == '7d' %}active{% endif %}">7 Days</a>
+                    <a href="?period=30d" class="btn btn-outline-success {% if donation_period == '30d' %}active{% endif %}">30 Days</a>
+                    <a href="?period=month" class="btn btn-outline-success {% if donation_period == 'month' %}active{% endif %}">Month</a>
+                    <a href="?period=year" class="btn btn-outline-success {% if donation_period == 'year' %}active{% endif %}">Year</a>
+                </div>
+            </div>
+            <canvas id="donationChart" height="110"></canvas>
         </div>
     </div>
-    <div class="col-md-3 col-6">
-        <div class="admin-stat-card">
-            <i class="bi bi-hourglass-split"></i>
-            <h3 class="fw-bold mt-2 mb-0">{{ pending_testimonials }}</h3>
-            <p class="text-muted small mb-0">Pending Stories</p>
-        </div>
-    </div>
-</div>
 
-<div class="admin-card">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold mb-0">Recent Donations</h5>
-        <a href="{% url 'admin_donation_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
-    </div>
+    <div class="col-lg-5">
+        <div class="admin-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Recent Donations</h5>
+                <a href="{% url 'admin_donation_list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
 
-    {% if recent_donations %}
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Donor</th>
-                    <th>Campaign</th>
-                    <th>Amount</th>
-                    <th>Transaction ID</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
+            {% if recent_donations %}
                 {% for donation in recent_donations %}
-                <tr>
-                    <td>{{ donation.donor_name }}</td>
-                    <td>{{ donation.campaign.campaign_name }}</td>
-                    <td>Rs. {{ donation.amount }}</td>
-                    <td><span class="badge bg-primary">{{ donation.transaction_id }}</span></td>
-                    <td>{{ donation.donation_date|date:"d M Y, h:i A" }}</td>
-                </tr>
+                    <div class="d-flex align-items-center gap-3 py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div class="admin-donor-avatar" style="background: hsl({{ forloop.counter0|add:2 }}00, 55%, 45%);">
+                            {{ donation.donor_name|slice:":1"|upper }}
+                        </div>
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="fw-semibold small text-truncate">{{ donation.donor_name }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">{{ donation.campaign.campaign_name|default:"General Donation" }}</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold small">Rs. {{ donation.amount }}</div>
+                            <span class="admin-payment-pill pm-{{ donation.payment_method }}">{{ donation.get_payment_method_display }}</span>
+                        </div>
+                    </div>
                 {% endfor %}
-            </tbody>
-        </table>
+            {% else %}
+                <p class="text-muted mb-0">No donations yet.</p>
+            {% endif %}
+        </div>
     </div>
-    {% else %}
-    <p class="text-muted mb-0">No donations yet.</p>
-    {% endif %}
 </div>
 
-<div class="mt-4">
-    <a href="{% url 'admin_campaign_add' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Add New Campaign
-    </a>
+<!-- ===================== CAMPAIGN STATUS + QUICK ACTIONS ===================== -->
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="admin-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-bold mb-0">Campaign Status</h5>
+                <a href="{% url 'admin_campaign_list' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+
+            {% if campaign_status_list %}
+                {% for campaign in campaign_status_list %}
+                    {% widthratio campaign.raised_amount campaign.goal_amount 100 as progress_pct %}
+                    <div class="admin-campaign-row">
+                        {% if campaign.campaign_image %}
+                            <img src="{{ campaign.campaign_image.url }}" class="admin-campaign-thumb" alt="{{ campaign.campaign_name }}">
+                        {% else %}
+                            <div class="admin-campaign-thumb bg-light d-flex align-items-center justify-content-center">
+                                <i class="bi bi-flag-fill text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="fw-semibold small">{{ campaign.campaign_name }}</span>
+                                {% if campaign.status == 'active' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                                {% elif campaign.status == 'upcoming' %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Upcoming</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary border">{{ campaign.get_status_display }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Rs. {{ campaign.raised_amount|floatformat:0 }} / Rs. {{ campaign.goal_amount|floatformat:0 }}</div>
+                            <div class="admin-progress-track mt-1">
+                                <div class="admin-progress-fill" style="width: {{ progress_pct }}%;"></div>
+                            </div>
+                        </div>
+                        <div class="fw-bold small">{{ progress_pct }}%</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">No campaigns yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="admin-card h-100">
+            <h5 class="fw-bold mb-3">Quick Actions</h5>
+            <div class="row g-3">
+                <div class="col-6">
+                    <a href="{% url 'admin_campaign_add' %}" class="admin-quick-tile tile-green w-100">
+                        <div class="admin-quick-tile-icon"><i class="bi bi-flag-fill"></i></div>
+                        Add Campaign
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="{% url 'admin_donation_list' %}" class="admin-quick-tile tile-blue w-100">
+                        <div class="admin-quick-tile-icon"><i class="bi bi-cash-coin"></i></div>
+                        View Donations
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="{% url 'admin_testimonial_list' %}" class="admin-quick-tile tile-purple w-100">
+                        <div class="admin-quick-tile-icon"><i class="bi bi-chat-heart-fill"></i></div>
+                        Review Stories
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="{% url 'request' %}" class="admin-quick-tile tile-orange w-100">
+                        <div class="admin-quick-tile-icon"><i class="bi bi-clipboard2-pulse-fill"></i></div>
+                        Help Requests
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="{% url 'admin_faq_add' %}" class="admin-quick-tile tile-yellow w-100">
+                        <div class="admin-quick-tile-icon"><i class="bi bi-question-circle-fill"></i></div>
+                        Add FAQ
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="{% url 'admin_contact_list' %}" class="admin-quick-tile tile-teal w-100">
+                        <div class="admin-quick-tile-icon"><i class="bi bi-envelope-fill"></i></div>
+                        Messages
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    (function () {
+        var ctx = document.getElementById('donationChart');
+        if (!ctx) return;
+
+        var labels = {{ chart_labels|safe }};
+        var values = {{ chart_values|safe }};
+
+        var gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 220);
+        gradient.addColorStop(0, 'rgba(31, 122, 77, 0.35)');
+        gradient.addColorStop(1, 'rgba(31, 122, 77, 0.02)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Donations (Rs.)',
+                    data: values,
+                    borderColor: '#1f7a4d',
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#1f7a4d',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    })();
+</script>
 
 {% endblock %}

@@ -18,13 +18,14 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.core.mail import send_mail
 from django.db.models import Sum, Avg
+from django.core.paginator import Paginator
 from decimal import Decimal
 import random
 
 import razorpay
 from django.conf import settings
 from django.contrib.auth.models import User
-from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile, PasswordResetOTP, FAQ, ContactMessage, HelpRequest
+from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile, PasswordResetOTP, FAQ, ContactMessage, HelpRequest, Notification
 from .forms import (
     DonationForm, RegisterForm, CampaignForm, AdminLoginForm,
     SiteSettingsForm, TestimonialForm, TestimonialSubmissionForm, ProfileForm, EmailLoginForm,
@@ -86,6 +87,12 @@ def home(request):
             testimonial.is_active = False
             testimonial.is_approved = False
             testimonial.save()
+            Notification.objects.create(
+                notification_type='story_submission',
+                title='New Story Submission',
+                message=f"{testimonial.donor_name} shared a story: {testimonial.story_title or testimonial.donor_role}",
+                url='/myadmin/testimonials/',
+            )
             messages.success(
                 request,
                 "Thank you for sharing your message. Our team will review it and decide whether to publish it on the website."
@@ -97,7 +104,13 @@ def home(request):
         help_request_form = HelpRequestForm(request.POST, request.FILES)
 
         if help_request_form.is_valid():
-            help_request_form.save()
+            help_request = help_request_form.save()
+            Notification.objects.create(
+                notification_type='help_request',
+                title='New Help Request',
+                message=f"{help_request.full_name} needs help with {help_request.diagnosis_condition}",
+                url='/myadmin/requests/',
+            )
             messages.success(
                 request,
                 "Your request has been submitted. Our team will review it and reach out to you soon."
@@ -189,6 +202,12 @@ def about_view(request):
             testimonial.is_active = False
             testimonial.is_approved = False
             testimonial.save()
+            Notification.objects.create(
+                notification_type='story_submission',
+                title='New Story Submission',
+                message=f"{testimonial.donor_name} shared a story: {testimonial.story_title or testimonial.donor_role}",
+                url='/myadmin/testimonials/',
+            )
             messages.success(request, "Thank you for sharing. The story is waiting for admin approval.")
             return redirect('about')
         else:
@@ -210,7 +229,13 @@ def contact_view(request):
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
-            form.save()
+            contact = form.save()
+            Notification.objects.create(
+                notification_type='contact_message',
+                title='New Contact Message',
+                message=f"{contact.name} sent: {contact.subject}",
+                url='/myadmin/messages/',
+            )
             messages.success(request, "Thanks for reaching out! We'll get back to you soon.")
             return redirect('contact')
     else:
@@ -383,8 +408,12 @@ def payment_success(request):
     donation.razorpay_payment_id = payment_id
     donation.save()
 
-    campaign.raised_amount += donation.amount
-    campaign.save()
+    Notification.objects.create(
+        notification_type='donation',
+        title='New Donation Received',
+        message=f"{donation.donor_name} donated Rs. {donation.amount} to {campaign.campaign_name}",
+        url='/myadmin/donations/',
+    )
 
     del request.session['pending_donation']
     return redirect(
@@ -805,30 +834,151 @@ def admin_logout_view(request):
 def admin_dashboard(request):
     """
     The main landing page of our custom admin panel.
-    Shows quick stats and the most recent donations.
+    Shows quick stats, a 7-day donations chart, recent donations,
+    campaign funding progress, and quick-action shortcuts.
     """
+    from datetime import timedelta
+    from django.utils import timezone
+
+    today = timezone.localdate()
+    period = request.GET.get('period', '7d')
+
+    if period == '30d':
+        days_back = 30
+        chart_labels = []
+        chart_values = []
+        for i in range(29, -1, -1):
+            day = today - timedelta(days=i)
+            day_total = Donation.objects.filter(donation_date__date=day).aggregate(total=Sum('amount'))['total'] or 0
+            chart_labels.append(day.strftime('%d %b'))
+            chart_values.append(float(day_total))
+        period_total = sum(chart_values)
+        period_label = 'Last 30 Days'
+    elif period == 'month':
+        from calendar import monthrange
+        first_of_month = today.replace(day=1)
+        last_day = monthrange(today.year, today.month)[1]
+        chart_labels = []
+        chart_values = []
+        for day_num in range(1, last_day + 1):
+            day = first_of_month.replace(day=day_num)
+            if day > today:
+                break
+            day_total = Donation.objects.filter(donation_date__date=day).aggregate(total=Sum('amount'))['total'] or 0
+            chart_labels.append(day.strftime('%d %b'))
+            chart_values.append(float(day_total))
+        period_total = sum(chart_values)
+        period_label = 'This Month'
+    elif period == 'year':
+        chart_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        chart_values = []
+        for month in range(1, 13):
+            month_total = Donation.objects.filter(
+                donation_date__year=today.year,
+                donation_date__month=month
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            chart_values.append(float(month_total))
+        period_total = sum(chart_values)
+        period_label = 'This Year'
+    else:
+        chart_labels = []
+        chart_values = []
+        for i in range(6, -1, -1):
+            day = today - timedelta(days=i)
+            day_total = Donation.objects.filter(donation_date__date=day).aggregate(total=Sum('amount'))['total'] or 0
+            chart_labels.append(day.strftime('%d %b'))
+            chart_values.append(float(day_total))
+        period_total = sum(chart_values)
+        period_label = 'Last 7 Days'
+
     context = {
         'total_campaigns': Campaign.objects.count(),
         'active_campaigns': Campaign.objects.filter(status='active').count(),
         'total_donations': Donation.objects.count(),
         'total_raised': Donation.objects.aggregate(total=Sum('amount'))['total'] or 0,
         'total_donors': Donation.objects.values('email').distinct().count(),
-        'recent_donations': Donation.objects.order_by('-donation_date')[:5],
+        'recent_donations': Donation.objects.select_related('campaign').order_by('-donation_date')[:5],
         'unread_messages': ContactMessage.objects.filter(is_read=False).count(),
         'new_help_requests': HelpRequest.objects.filter(status='new').count(),
         'total_testimonials': Testimonial.objects.count(),
         'active_testimonials': Testimonial.objects.filter(is_active=True).count(),
         'approved_testimonials': Testimonial.objects.filter(is_approved=True).count(),
         'pending_testimonials': Testimonial.objects.filter(is_approved=False).count(),
+        'campaign_status_list': Campaign.objects.all().order_by('-created_at')[:4],
+        'chart_labels': chart_labels,
+        'chart_values': chart_values,
+        'week_total': period_total,
+        'donation_period': period,
+        'donation_period_label': period_label,
     }
     return render(request, 'admin/admin_dashboard.html', context)
 
 
 @admin_required
+def admin_reports(request):
+    """
+    A simple Reports & Analytics page: top campaigns by amount raised,
+    donations broken down by payment method, and a monthly totals table
+    for the current year. All computed live from real data.
+    """
+    from django.db.models import Count
+    from django.utils import timezone
+
+    top_campaigns = Campaign.objects.order_by('-raised_amount')[:5]
+
+    payment_breakdown = (
+        Donation.objects.values('payment_method')
+        .annotate(total=Sum('amount'), count=Count('id'))
+        .order_by('-total')
+    )
+
+    current_year = timezone.now().year
+    monthly_totals = []
+    for month in range(1, 13):
+        total = Donation.objects.filter(
+            donation_date__year=current_year, donation_date__month=month
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        monthly_totals.append({'month': month, 'total': total})
+
+    context = {
+        'top_campaigns': top_campaigns,
+        'payment_breakdown': payment_breakdown,
+        'monthly_totals': monthly_totals,
+        'monthly_totals_values': [float(m['total']) for m in monthly_totals],
+        'current_year': current_year,
+        'total_raised': Donation.objects.aggregate(total=Sum('amount'))['total'] or 0,
+        'total_donations': Donation.objects.count(),
+    }
+    return render(request, 'admin/admin_reports.html', context)
+
+
+@admin_required
+def admin_account_settings(request):
+    """Lets the logged-in staff member update their own admin account password."""
+    if request.method == 'POST':
+        password_form = PasswordChangeForm(request.user, request.POST)
+        if password_form.is_valid():
+            user = password_form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your admin password was updated successfully.')
+            return redirect('admin_account_settings')
+    else:
+        password_form = PasswordChangeForm(request.user)
+
+    for field in password_form.fields.values():
+        field.widget.attrs.update({'class': 'form-control'})
+
+    return render(request, 'admin/admin_account_settings.html', {'password_form': password_form})
+
+
+@admin_required
 def admin_campaign_list(request):
     """Shows every campaign with quick Edit / Delete actions."""
-    campaigns = Campaign.objects.all().order_by('-created_at')
-    return render(request, 'admin/admin_campaign_list.html', {'campaigns': campaigns})
+    campaign_list = Campaign.objects.all().order_by('-created_at')
+    paginator = Paginator(campaign_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'admin/admin_campaign_list.html', {'page_obj': page_obj})
 
 
 @admin_required
@@ -884,8 +1034,11 @@ def admin_campaign_delete(request, campaign_id):
 @admin_required
 def admin_donation_list(request):
     """Shows every donation made on the platform, with the newest first."""
-    donations = Donation.objects.select_related('campaign').order_by('-donation_date')
-    return render(request, 'admin/admin_donation_list.html', {'donations': donations})
+    donation_list = Donation.objects.select_related('campaign').order_by('-donation_date')
+    paginator = Paginator(donation_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'admin/admin_donation_list.html', {'page_obj': page_obj})
 
 
 @admin_required
@@ -910,7 +1063,10 @@ def admin_donor_list(request):
 
     donor_list.sort(key=lambda d: d['total_given'], reverse=True)
 
-    return render(request, 'admin/admin_donor_list.html', {'donors': donor_list})
+    paginator = Paginator(donor_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'admin/admin_donor_list.html', {'page_obj': page_obj})
 
 
 @admin_required
@@ -937,8 +1093,11 @@ def admin_site_settings(request):
 @admin_required
 def admin_testimonial_list(request):
     """Shows every testimonial with quick Edit / Delete actions."""
-    testimonials = Testimonial.objects.all()
-    return render(request, 'admin/admin_testimonial_list.html', {'testimonials': testimonials})
+    testimonial_list = Testimonial.objects.all()
+    paginator = Paginator(testimonial_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'admin/admin_testimonial_list.html', {'page_obj': page_obj})
 
 
 @admin_required
@@ -979,8 +1138,11 @@ def admin_testimonial_delete(request, testimonial_id):
 @admin_required
 def admin_faq_list(request):
     """Shows every FAQ with quick Edit / Delete actions."""
-    faqs = FAQ.objects.all()
-    return render(request, 'admin/admin_faq_list.html', {'faqs': faqs})
+    faq_list = FAQ.objects.all()
+    paginator = Paginator(faq_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'admin/admin_faq_list.html', {'page_obj': page_obj})
 
 
 @admin_required
@@ -1038,8 +1200,11 @@ def admin_faq_delete(request, faq_id):
 @admin_required
 def admin_contact_list(request):
     """Shows every message submitted through the public Contact Us page."""
-    contact_messages = ContactMessage.objects.all()
-    return render(request, 'admin/admin_contact_list.html', {'contact_messages': contact_messages})
+    contact_list = ContactMessage.objects.all()
+    paginator = Paginator(contact_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'admin/admin_contact_list.html', {'page_obj': page_obj})
 
 
 @admin_required
@@ -1072,8 +1237,12 @@ def admin_request_list(request):
     if status_filter:
         help_requests = help_requests.filter(status=status_filter)
 
+    paginator = Paginator(help_requests, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        'help_requests': help_requests,
+        'page_obj': page_obj,
         'status_choices': HelpRequest.STATUS_CHOICES,
         'selected_status': status_filter,
     }
@@ -1114,3 +1283,33 @@ def admin_request_delete(request, request_id):
         return redirect('admin_request_list')
 
     return render(request, 'admin/admin_request_delete.html', {'help_request': help_request})
+
+
+# ==========================================================
+# ADMIN: NOTIFICATIONS
+# ==========================================================
+@admin_required
+def admin_notifications_list(request):
+    """Shows all notifications for the admin."""
+    notification_list = Notification.objects.all()
+    paginator = Paginator(notification_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'admin/admin_notifications_list.html', {'page_obj': page_obj})
+
+
+@admin_required
+def admin_notification_mark_read(request, notification_id):
+    """Marks a single notification as read and redirects to its URL."""
+    notification = get_object_or_404(Notification, id=notification_id)
+    notification.is_read = True
+    notification.save()
+    return redirect(notification.url)
+
+
+@admin_required
+def admin_notifications_mark_all_read(request):
+    """Marks all notifications as read and redirects back."""
+    Notification.objects.filter(is_read=False).update(is_read=True)
+    messages.success(request, 'All notifications marked as read.')
+    return redirect('admin_notifications_list')

@@ -72,6 +72,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'charity_app.context_processors.site_settings',
                 'charity_app.context_processors.user_profile',
+                'charity_app.context_processors.admin_alerts',
             ],
         },
     },

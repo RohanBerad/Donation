@@ -484,3 +484,84 @@ class HelpRequest(models.Model):
 
     def __str__(self):
         return f"{self.full_name} - {self.diagnosis_condition}"
+
+
+# ==========================================================
+# 10. NOTIFICATION MODEL
+# ==========================================================
+class Notification(models.Model):
+    """
+    Stores notifications for the admin panel when new items are submitted
+    through the public website (contact messages, donations, help requests,
+    story submissions).
+    """
+
+    NOTIFICATION_TYPES = [
+        ('contact_message', 'New Contact Message'),
+        ('donation', 'New Donation'),
+        ('help_request', 'New Help Request'),
+        ('story_submission', 'New Story Submission'),
+    ]
+
+    notification_type = models.CharField(max_length=30, choices=NOTIFICATION_TYPES)
+    title = models.CharField(max_length=200)
+    message = models.CharField(max_length=500)
+    url = models.CharField(max_length=200, help_text="Admin page to redirect to when clicked")
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.get_notification_type_display()} - {self.title}"
+
+    def time_ago(self):
+        """
+        Returns a human-readable string like '2 mins ago', '1 hour ago', etc.
+        """
+        from django.utils import timezone
+        now = timezone.now()
+        diff = now - self.created_at
+
+        seconds = diff.total_seconds()
+        if seconds < 60:
+            return 'Just now'
+        minutes = int(seconds // 60)
+        if minutes < 60:
+            return f"{minutes} min{'s' if minutes != 1 else ''} ago"
+        hours = int(seconds // 3600)
+        if hours < 24:
+            return f"{hours} hour{'s' if hours != 1 else ''} ago"
+        days = int(seconds // 86400)
+        if days < 30:
+            return f"{days} day{'s' if days != 1 else ''} ago"
+        months = int(seconds // 2592000)
+        if months < 12:
+            return f"{months} month{'s' if months != 1 else ''} ago"
+        years = int(seconds // 31536000)
+        return f"{years} year{'s' if years != 1 else ''} ago"
+
+
+# ==========================================================
+# SIGNALS: Keep Campaign.raised_amount in sync with Donations
+# ==========================================================
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.db.models import Sum
+
+
+@receiver(post_save, sender=Donation)
+@receiver(post_delete, sender=Donation)
+def sync_campaign_raised_amount(sender, instance, **kwargs):
+    """
+    Whenever a Donation is created, updated, or deleted, recalculate
+    the linked Campaign's raised_amount from ALL actual donations.
+    This makes the stored field a cache that is always correct,
+    eliminating race conditions and the need for manual fixes.
+    """
+    if instance.campaign_id:
+        total = Donation.objects.filter(
+            campaign_id=instance.campaign_id
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        Campaign.objects.filter(pk=instance.campaign_id).update(raised_amount=total)

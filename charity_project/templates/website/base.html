@@ -17,50 +17,79 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <!-- HopeRise Exact Design CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 <body>
 
     <!-- ===================== NAVBAR (HopeRise Header) ===================== -->
-    <nav class="navbar navbar-expand-lg sticky-top hr-navbar">
-        <div class="container">
+    <nav class="navbar navbar-expand-lg sticky-top hr-navbar" id="mainNavbar">
+        <div class="container-fluid px-lg-4">
             <a class="navbar-brand hr-logo" href="{% url 'home' %}">
-                <span class="hr-logo-icon"><i class="bi bi-grid-fill"></i></span>
-                {{ site_settings.ngo_name }}
+                <span class="hr-logo-icon"><i class="bi bi-heart-fill"></i></span>
+                <span class="d-none d-lg-inline">{{ site_settings.ngo_name }}</span>
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <button class="navbar-toggler hr-navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav mx-auto align-items-lg-center">
-                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'home' %}">Home</a></li>
-                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'about' %}">About</a></li>
-                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'campaign_list' %}">What We Do</a></li>
-                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'faq' %}">FAQs</a></li>
-                    <li class="nav-item"><a class="hr-nav-link" href="{% url 'contact' %}">Contact</a></li>
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-2">
+                    <li class="nav-item">
+                        <a class="nav-link hr-nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="fa-solid fa-house"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link hr-nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"  href="{% url 'about' %}">
+                            <i class="fa-solid fa-circle-info"></i> About
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link hr-nav-link {% if request.resolver_match.url_name == 'campaign_list' %}active{% endif %}" href="{% url 'campaign_list' %}">
+                            <i class="fa-solid fa-hand-holding-heart"></i> Campaigns
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link hr-nav-link {% if request.resolver_match.url_name == 'faq' %}active{% endif %}"   href="{% url 'faq' %}">
+                            <i class="fa-solid fa-circle-question"></i> FAQs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link hr-nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" href="{% url 'contact' %}">
+                            <i class="fa-solid fa-paper-plane"></i> Contact
+                        </a>
+                    </li>
                 </ul>
 
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2 ms-lg-3 mt-3 mt-lg-0 flex-wrap">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'dashboard' %}" class="hr-nav-link d-flex align-items-center">
-                            {% if nav_user_profile.profile_picture %}
-                                <img src="{{ nav_user_profile.profile_picture.url }}" alt="{{ user.username }}"
-                                     class="rounded-circle me-1" style="width: 26px; height: 26px; object-fit: cover;">
-                            {% else %}
-                                <i class="bi bi-person-circle fs-6 me-1"></i>
-                            {% endif %}
-                            {{ user.username }}
-                        </a>
-                        <a href="{% url 'logout' %}" class="hr-nav-link text-danger">Logout</a>
+                        <div class="dropdown">
+                            <a class="nav-link hr-nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if nav_user_profile.profile_picture %}
+                                    <img src="{{ nav_user_profile.profile_picture.url }}" alt="{{ user.username }}"
+                                         class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover;">
+                                {% else %}
+                                    <i class="bi bi-person-circle me-2"></i>
+                                {% endif %}
+                                <span class="d-none d-lg-inline">{{ user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end hr-dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'dashboard_profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'dashboard_donations' %}"><i class="bi bi-heart"></i> My Donations</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                            </ul>
+                        </div>
                     {% else %}
-                        <a href="{% url 'login' %}" class="hr-nav-link">Sign In</a>
+                        <a href="{% url 'login' %}" class="nav-link hr-nav-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}"  ">
+                            <i class="bi bi-box-arrow-in-right"></i> Sign In
+                        </a>
                     {% endif %}
-
-                    <a href="tel:{{ site_settings.contact_phone }}" class="hr-icon-circle-btn" title="Call Us">
-                        <i class="bi bi-telephone"></i>
-                    </a>
                     
-                    <a class="btn-hr-pill-outline hr-pulse" href="{% url 'donate_generic' %}" data-bs-toggle="modal" data-bs-target="#quickDonateModal">Donate</a>
+                    <a class="btn-hr-pill hr-donate-btn" href="{% url 'campaign_list' %}" data-bs-toggle="modal" data-bs-target="#quickDonateModal">
+                        <i class="bi bi-heart-fill"></i> Donate
+                    </a>
                 </div>
             </div>
         </div>
@@ -157,7 +186,6 @@
                                 <input type="number" id="donateAmountInput" class="hr-amount-input" value="500" min="1">
                                 <select class="hr-currency-select" id="donateCurrency">
                                     <option value="Rs." selected>Rs.</option>
-                                    <option value="USD">USD</option>
                                 </select>
                             </div>
 
@@ -182,9 +210,7 @@
 
                             <div class="d-flex gap-2">
                                 <button type="button" id="donateSubmitBtn" class="btn-hr-green flex-grow-1" disabled>DONATE</button>
-                                <button type="button" id="useQrBtn" class="btn-hr-qr-outline flex-grow-1">
-                                    <i class="bi bi-qr-code me-1"></i> USE QR CODE
-                                </button>
+
                             </div>
                         </div>
 

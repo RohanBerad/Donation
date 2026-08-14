@@ -1,0 +1,52 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Account Settings{% endblock %}
+{% block admin_heading %}Settings{% endblock %}
+
+{% block admin_content %}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="admin-card">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="admin-sidebar-profile-avatar" style="background: var(--admin-green); width: 52px; height: 52px; font-size: 1.2rem;">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0">{{ request.user.username }}</h5>
+                    <p class="text-muted small mb-0">{{ request.user.email|default:"No email on file" }}</p>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">Super Administrator</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="admin-card">
+            <h5 class="fw-bold mb-3">Change Password</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">{{ password_form.old_password.label }}</label>
+                    {{ password_form.old_password }}
+                    {% for error in password_form.old_password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">{{ password_form.new_password1.label }}</label>
+                    {{ password_form.new_password1 }}
+                    {% for error in password_form.new_password1.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">{{ password_form.new_password2.label }}</label>
+                    {{ password_form.new_password2 }}
+                    {% for error in password_form.new_password2.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-key-fill"></i> Update Password
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

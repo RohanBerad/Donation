@@ -6,14 +6,14 @@
 {% block admin_content %}
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <p class="text-muted mb-0">{{ faqs|length }} FAQ(s) total. Only "Active" ones show on the public FAQ page.</p>
+    <p class="text-muted mb-0">{{ page_obj.paginator.count }} FAQ(s) total. Only "Active" ones show on the public FAQ page.</p>
     <a href="{% url 'admin_faq_add' %}" class="btn btn-primary">
         <i class="bi bi-plus-circle"></i> Add New FAQ
     </a>
 </div>
 
 <div class="admin-card">
-    {% if faqs %}
+    {% if page_obj %}
     <div class="table-responsive">
         <table class="table align-middle">
             <thead>
@@ -26,7 +26,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for faq in faqs %}
+                {% for faq in page_obj %}
                 <tr>
                     <td class="fw-semibold">{{ faq.question }}</td>
                     <td class="small text-muted">{{ faq.answer|truncatewords:10 }}</td>
@@ -55,5 +55,31 @@
     <p class="text-muted mb-0">No FAQs yet. Add one to show it on the public FAQ page.</p>
     {% endif %}
 </div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Page navigation" class="mt-3">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo; Previous</a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 
 {% endblock %}

@@ -1,4 +1,3 @@
-
 .env
 db.sqlite3
 media/
@@ -7,3 +6,6 @@ env/
 __pycache__/
 *.py[cod]
 *$py.class
+charity_project.zip
+__pycache__/
+*.pyc

@@ -6,7 +6,7 @@
 {% block admin_content %}
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <p class="text-muted mb-0">{{ help_requests|length }} request(s), submitted from the homepage "Get Help" form.</p>
+    <p class="text-muted mb-0">{{ page_obj.paginator.count }} request(s), submitted from the homepage "Get Help" form.</p>
 
     <div>
         <a href="{% url 'request' %}" class="btn btn-sm {% if not selected_status %}btn-dark{% else %}btn-outline-secondary{% endif %}">All</a>
@@ -17,7 +17,7 @@
 </div>
 
 <div class="admin-card">
-    {% if help_requests %}
+    {% if page_obj %}
     <div class="table-responsive">
         <table class="table align-middle">
             <thead>
@@ -33,7 +33,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for req in help_requests %}
+                {% for req in page_obj %}
                 <tr>
                     <td>{{ req.full_name }}<br><span class="small text-muted fw-normal">{{ req.email }}</span></td>
                     <td>{{ req.diagnosis_condition }}</td>
@@ -63,7 +63,7 @@
                             <i class="bi bi-eye"></i> View
                         </a>
                         <a href="{% url 'admin_request_delete' req.id %}" class="btn btn-sm btn-outline-danger">
-                            <i class="bi bi-trash"></i>
+                            <i class="bi bi-trash"></i> Delete
                         </a>
                     </td>
                 </tr>
@@ -75,5 +75,31 @@
     <p class="text-muted mb-0">No requests yet. Submissions from the homepage "Get Help" form will show up here.</p>
     {% endif %}
 </div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Page navigation" class="mt-3">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}">&laquo; Previous</a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item"><a class="page-link" href="?page={{ num }}{% if selected_status %}&status={{ selected_status }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}">Next &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 
 {% endblock %}

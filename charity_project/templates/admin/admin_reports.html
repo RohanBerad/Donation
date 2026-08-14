@@ -1,0 +1,129 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Reports & Analytics{% endblock %}
+{% block admin_heading %}Reports & Analytics{% endblock %}
+
+{% block admin_content %}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon bg-tint-green"><i class="bi bi-cash-coin"></i></div>
+            <div>
+                <p class="text-muted small mb-1">Total Raised (All Time)</p>
+                <h3 class="fw-bold mb-0">Rs. {{ total_raised }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon bg-tint-blue"><i class="bi bi-receipt"></i></div>
+            <div>
+                <p class="text-muted small mb-1">Total Donations Made</p>
+                <h3 class="fw-bold mb-0">{{ total_donations }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="admin-card h-100">
+            <h5 class="fw-bold mb-3">Monthly Donations -- {{ current_year }}</h5>
+            <canvas id="monthlyChart" height="130"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="admin-card h-100">
+            <h5 class="fw-bold mb-3">By Payment Method</h5>
+            {% if payment_breakdown %}
+                {% for row in payment_breakdown %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="admin-payment-pill pm-{{ row.payment_method }}">
+                            {% if row.payment_method == 'upi' %}UPI
+                            {% elif row.payment_method == 'credit_card' %}Credit Card
+                            {% elif row.payment_method == 'debit_card' %}Debit Card
+                            {% else %}Net Banking{% endif %}
+                        </span>
+                        <span class="text-muted small">{{ row.count }} donation{{ row.count|pluralize }}</span>
+                        <span class="fw-bold small">Rs. {{ row.total|floatformat:0 }}</span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">No donations yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <h5 class="fw-bold mb-3">Top Campaigns by Amount Raised</h5>
+    {% if top_campaigns %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Category</th>
+                        <th>Raised</th>
+                        <th>Goal</th>
+                        <th>Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for campaign in top_campaigns %}
+                        {% widthratio campaign.raised_amount campaign.goal_amount 100 as progress_pct %}
+                        <tr>
+                            <td class="fw-semibold">{{ campaign.campaign_name }}</td>
+                            <td>{{ campaign.get_category_display }}</td>
+                            <td>Rs. {{ campaign.raised_amount|floatformat:0 }}</td>
+                            <td>Rs. {{ campaign.goal_amount|floatformat:0 }}</td>
+                            <td style="min-width: 140px;">
+                                <div class="admin-progress-track">
+                                    <div class="admin-progress-fill" style="width: {{ progress_pct }}%;"></div>
+                                </div>
+                                <span class="small text-muted">{{ progress_pct }}%</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted mb-0">No campaigns yet.</p>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    (function () {
+        var ctx = document.getElementById('monthlyChart');
+        if (!ctx) return;
+
+        var monthLabels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var values = {{ monthly_totals_values|safe }};
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'Donations (Rs.)',
+                    data: values,
+                    backgroundColor: '#1f7a4d',
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    })();
+</script>
+
+{% endblock %}

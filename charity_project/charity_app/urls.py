@@ -51,6 +51,8 @@ urlpatterns = [
     path('myadmin/login/', views.admin_login_view, name='admin_login'),
     path('myadmin/logout/', views.admin_logout_view, name='admin_logout'),
     path('myadmin/', views.admin_dashboard, name='admin_dashboard'),
+    path('myadmin/reports/', views.admin_reports, name='admin_reports'),
+    path('myadmin/account-settings/', views.admin_account_settings, name='admin_account_settings'),
 
     path('myadmin/campaigns/', views.admin_campaign_list, name='admin_campaign_list'),
     path('myadmin/campaigns/add/', views.admin_campaign_add, name='admin_campaign_add'),
@@ -79,4 +81,9 @@ urlpatterns = [
     path('myadmin/requests/', views.admin_request_list, name='request'),
     path('myadmin/requests/<int:request_id>/', views.admin_request_detail, name='admin_request_detail'),
     path('myadmin/requests/<int:request_id>/delete/', views.admin_request_delete, name='admin_request_delete'),
+
+    # Notifications
+    path('myadmin/notifications/', views.admin_notifications_list, name='admin_notifications_list'),
+    path('myadmin/notifications/<int:notification_id>/read/', views.admin_notification_mark_read, name='admin_notification_mark_read'),
+    path('myadmin/notifications/mark-all-read/', views.admin_notifications_mark_all_read, name='admin_notifications_mark_all_read'),
 ]

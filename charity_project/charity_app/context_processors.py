@@ -37,3 +37,29 @@ def user_profile(request):
                 # missing migration is applied.
             return {'nav_user_profile': None}
     return {'nav_user_profile': None}
+
+
+def admin_alerts(request):
+    """
+    Makes unread-message / new-help-request badge counts AND latest notifications
+    available on every admin page (sidebar + topbar bell), not just the dashboard.
+    Only runs the queries for logged-in staff, to avoid extra DB work
+    on the public site.
+    """
+    if request.path.startswith('/myadmin/') and request.user.is_authenticated and request.user.is_staff:
+        try:
+            from .models import ContactMessage, HelpRequest, Notification
+            unread = ContactMessage.objects.filter(is_read=False).count()
+            new_requests = HelpRequest.objects.filter(status='new').count()
+            latest_notifications = Notification.objects.all()[:5]
+            unread_notifications_count = Notification.objects.filter(is_read=False).count()
+            return {
+                'unread_messages_badge': unread,
+                'new_help_requests_badge': new_requests,
+                'total_alerts_badge': unread + new_requests,
+                'latest_notifications': latest_notifications,
+                'unread_notifications_count': unread_notifications_count,
+            }
+        except (OperationalError, ProgrammingError):
+            pass
+    return {}

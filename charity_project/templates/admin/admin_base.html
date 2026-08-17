@@ -77,6 +77,7 @@
                     </a>
                 </li>
 
+
                 <li class="admin-sidebar-divider"></li>
 
                 <li class="nav-item">
@@ -95,6 +96,12 @@
                     <a class="nav-link {% if request.resolver_match.url_name == 'admin_account_settings' %}active{% endif %}"
                        href="{% url 'admin_account_settings' %}">
                         <i class="bi bi-gear-fill"></i> Settings
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'admin_profile' %}active{% endif %}"
+                       href="{% url 'admin_profile' %}">
+                        <i class="bi bi-person-fill"></i> My Profile
                     </a>
                 </li>
 
@@ -147,14 +154,20 @@
                         <div class="dropdown-menu dropdown-menu-end admin-notification-dropdown-menu p-0" aria-labelledby="adminNotificationBtn">
                             <div class="admin-notification-header d-flex justify-content-between align-items-center p-3">
                                 <h6 class="mb-0 fw-bold">Notifications</h6>
-                                <a href="{% url 'admin_notifications_list' %}" class="btn btn-sm btn-link text-decoration-none p-0">View All</a>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-success d-none d-sm-inline-flex" id="adminMarkAllReadBtn" data-mark-all-read-url="{% url 'admin_notifications_mark_all_read_ajax' %}">
+                                        Mark all read
+                                    </button>
+                                    <a href="{% url 'admin_notifications_list' %}" class="btn btn-sm btn-link text-decoration-none p-0">View All</a>
+                                </div>
                             </div>
                             <div class="admin-notification-list">
                                 {% if latest_notifications %}
                                     {% for notification in latest_notifications %}
-                                    <a href="{% url 'admin_notification_mark_read' notification.id %}" 
+                                    <a href="{{ notification.url }}"
                                        class="admin-notification-item {% if not notification.is_read %}admin-notification-unread{% endif %} d-flex gap-3 p-3 text-decoration-none"
-                                       data-notification-id="{{ notification.id }}">
+                                       data-notification-id="{{ notification.id }}"
+                                       data-mark-read-url="{% url 'admin_notification_mark_read_ajax' notification.id %}">
                                         <div class="admin-notification-icon flex-shrink-0">
                                             {% if notification.notification_type == 'contact_message' %}
                                                 <div class="admin-notification-icon-circle bg-info text-dark"><i class="bi bi-envelope-fill"></i></div>
@@ -201,6 +214,7 @@
                             <span class="fw-semibold d-none d-sm-inline">{{ request.user.username|title }}</span>
                         </div>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'admin_profile' %}"><i class="bi bi-person me-2"></i>My Profile</a></li>
                             <li><a class="dropdown-item" href="{% url 'admin_account_settings' %}"><i class="bi bi-gear me-2"></i>Account Settings</a></li>
                             <li><a class="dropdown-item" href="{% url 'home' %}" target="_blank"><i class="bi bi-box-arrow-up-right me-2"></i>View Website</a></li>
                             <li><hr class="dropdown-divider"></li>
@@ -262,6 +276,125 @@
             }
         })();
 
+        // ---- Notification dropdown: auto-mark as read via AJAX ----
+        (function () {
+            var dropdown = document.getElementById('adminNotificationDropdown');
+            var notificationBtn = document.getElementById('adminNotificationBtn');
+            var markAllBtn = document.getElementById('adminMarkAllReadBtn');
+            var unreadBadge = document.querySelector('.admin-notification-badge');
+
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            var csrftoken = getCookie('csrftoken');
+
+            function updateUnreadCount(count) {
+                if (!unreadBadge) return;
+                if (count > 0) {
+                    unreadBadge.textContent = count;
+                    unreadBadge.style.display = '';
+                } else {
+                    unreadBadge.style.display = 'none';
+                }
+            }
+
+            function markAsRead(notificationId, markReadUrl, targetUrl) {
+                fetch(markReadUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin',
+                })
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        updateUnreadCount(data.unread_count);
+                        var item = document.querySelector('.admin-notification-item[data-notification-id="' + notificationId + '"]');
+                        if (item) {
+                            var dot = item.querySelector('.admin-notification-dot');
+                            if (dot) dot.remove();
+                            item.classList.remove('admin-notification-unread');
+                        }
+                        if (targetUrl) {
+                            window.location.href = targetUrl;
+                        }
+                    }
+                })
+                .catch(function () {
+                    if (targetUrl) {
+                        window.location.href = targetUrl;
+                    }
+                });
+            }
+
+            function markAllAsRead() {
+                var markAllUrl = markAllBtn ? markAllBtn.getAttribute('data-mark-all-read-url') : '';
+                if (!markAllUrl) return;
+
+                fetch(markAllUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin',
+                })
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        updateUnreadCount(data.unread_count);
+                        var items = document.querySelectorAll('.admin-notification-item');
+                        items.forEach(function (item) {
+                            var dot = item.querySelector('.admin-notification-dot');
+                            if (dot) dot.remove();
+                            item.classList.remove('admin-notification-unread');
+                        });
+                    }
+                })
+                .catch(function () {
+                    // Silently fail - user can still use the full notifications page
+                });
+            }
+
+            // Click handler for individual notifications
+            var notificationItems = document.querySelectorAll('.admin-notification-item');
+            notificationItems.forEach(function (item) {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var notificationId = item.getAttribute('data-notification-id');
+                    var markReadUrl = item.getAttribute('data-mark-read-url');
+                    var targetUrl = item.getAttribute('href');
+                    if (notificationId && markReadUrl) {
+                        markAsRead(notificationId, markReadUrl, targetUrl);
+                    } else if (targetUrl) {
+                        window.location.href = targetUrl;
+                    }
+                });
+            });
+
+            // Click handler for "Mark all as read" button in dropdown
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    markAllAsRead();
+                });
+            }
+        })();
+
         // ---- Notification dropdown: close on outside click ----
         (function () {
             var dropdown = document.getElementById('adminNotificationDropdown');
@@ -277,20 +410,6 @@
                         }
                     }
                 }
-            });
-        })();
-
-        // ---- Notification dropdown: remove unread dot after clicking ----
-        (function () {
-            var items = document.querySelectorAll('.admin-notification-item');
-            items.forEach(function (item) {
-                item.addEventListener('click', function () {
-                    var dot = item.querySelector('.admin-notification-dot');
-                    if (dot) {
-                        dot.remove();
-                    }
-                    item.classList.remove('admin-notification-unread');
-                });
             });
         })();
     </script>

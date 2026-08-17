@@ -1,0 +1,124 @@
+{% extends 'website/base.html' %}
+
+{% block title %}Get Support | {{ site_settings.ngo_name }}{% endblock %}
+
+{% block content %}
+<section class="hr-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="hr-badge-pill">Get Support</span>
+            <h1 class="display-5 font-heading fw-bold mt-2">How To Get Help</h1>
+            <p class="text-muted mx-auto" style="max-width: 650px;">
+                If you or someone you know is facing a medical emergency, treatment cost, or crisis,
+                we are here to help. Follow the steps below to submit a request and our team will
+                review it within 48 hours.
+            </p>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="hr-card-white h-100 text-center p-4">
+                    <div class="hr-card-icon-wrap mx-auto mb-3"><i class="bi bi-file-earmark-medical text-dark"></i></div>
+                    <h5 class="font-heading fw-bold mb-2">Step 1</h5>
+                    <p class="text-muted small mb-0">Prepare your documents and fill out the help request form on our homepage.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="hr-card-white h-100 text-center p-4">
+                    <div class="hr-card-icon-wrap mx-auto mb-3"><i class="bi bi-shield-check text-dark"></i></div>
+                    <h5 class="font-heading fw-bold mb-2">Step 2</h5>
+                    <p class="text-muted small mb-0">Our team verifies your details and reviews the submitted documents.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="hr-card-white h-100 text-center p-4">
+                    <div class="hr-card-icon-wrap mx-auto mb-3"><i class="bi bi-heart-pulse text-dark"></i></div>
+                    <h5 class="font-heading fw-bold mb-2">Step 3</h5>
+                    <p class="text-muted small mb-0">Once approved, we publish the campaign and start raising funds for you.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-lg-6">
+                <div class="hr-form-card">
+                    <h4 class="font-heading fw-bold mb-3">Required Documents</h4>
+                    <p class="text-muted small mb-4">
+                        To help us verify your request quickly, please prepare the following documents.
+                        You can upload them directly through the help request form on the homepage.
+                    </p>
+                    <ul class="list-unstyled d-flex flex-column gap-3">
+                        <li class="d-flex align-items-start gap-3">
+                            <span class="badge bg-emerald text-dark fw-bold rounded-pill mt-1">1</span>
+                            <div>
+                                <h6 class="fw-bold mb-1">Medical Report / Diagnosis</h6>
+                                <p class="text-muted small mb-0">Doctor's letter, hospital discharge summary, or pathology report confirming the condition.</p>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start gap-3">
+                            <span class="badge bg-emerald text-dark fw-bold rounded-pill mt-1">2</span>
+                            <div>
+                                <h6 class="fw-bold mb-1">Treatment Cost Estimate</h6>
+                                <p class="text-muted small mb-0">An official estimate or invoice from the hospital/clinic showing the required amount.</p>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start gap-3">
+                            <span class="badge bg-emerald text-dark fw-bold rounded-pill mt-1">3</span>
+                            <div>
+                                <h6 class="fw-bold mb-1">Government-issued ID</h6>
+                                <p class="text-muted small mb-0">Aadhaar card, passport, or any valid photo ID to confirm identity.</p>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start gap-3">
+                            <span class="badge bg-emerald text-dark fw-bold rounded-pill mt-1">4</span>
+                            <div>
+                                <h6 class="fw-bold mb-1">Address Proof</h6>
+                                <p class="text-muted small mb-0">Utility bill, ration card, or any document showing your current residence.</p>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-start gap-3">
+                            <span class="badge bg-emerald text-dark fw-bold rounded-pill mt-1">5</span>
+                            <div>
+                                <h6 class="fw-bold mb-1">Bank Account Details</h6>
+                                <p class="text-muted small mb-0">A cancelled cheque or bank passbook copy so funds can be transferred directly to the treatment account.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hr-card-white h-100 p-4">
+                    <h4 class="font-heading fw-bold mb-3">What Happens Next?</h4>
+                    <div class="d-flex flex-column gap-4">
+                        <div>
+                            <h6 class="fw-bold mb-1">Review Timeline</h6>
+                            <p class="text-muted small mb-0">We review every submission within 48 hours. You will receive an email update once your request is approved or if we need more information.</p>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Campaign Creation</h6>
+                            <p class="text-muted small mb-0">Approved requests are turned into live campaigns on our website. Donors can then contribute directly to your funding goal.</p>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Fund Disbursement</h6>
+                            <p class="text-muted small mb-0">Funds are paid directly to the hospital or treatment provider. We do not transfer cash to individuals to ensure transparency.</p>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Updates & Follow-up</h6>
+                            <p class="text-muted small mb-0">Our team stays in touch to track treatment progress and share updates with donors who supported the campaign.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a href="{% url 'home' %}#get-help" class="btn-hr-green py-3 px-5 fs-6">
+                Submit A Help Request <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+            <p class="text-muted mt-3 small">
+                Need to talk first? <a href="{% url 'contact' %}" class="text-decoration-underline">Contact our support team</a>.
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -51,7 +51,7 @@ def admin_alerts(request):
             from .models import ContactMessage, HelpRequest, Notification
             unread = ContactMessage.objects.filter(is_read=False).count()
             new_requests = HelpRequest.objects.filter(status='new').count()
-            latest_notifications = Notification.objects.all()[:5]
+            latest_notifications = Notification.objects.order_by('is_read', '-created_at')[:5]
             unread_notifications_count = Notification.objects.filter(is_read=False).count()
             return {
                 'unread_messages_badge': unread,

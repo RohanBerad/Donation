@@ -14,6 +14,7 @@ Django ORM automatically converts these Python classes into database tables.
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.utils import timezone
 import random
 import string
 from datetime import timedelta
@@ -153,6 +154,7 @@ class UserProfile(models.Model):
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     phone_number = models.CharField(max_length=15, blank=True)
     address = models.TextField(blank=True)
+    bio = models.TextField(blank=True, help_text="Short bio about the user")
     profile_created_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -541,6 +543,31 @@ class Notification(models.Model):
             return f"{months} month{'s' if months != 1 else ''} ago"
         years = int(seconds // 31536000)
         return f"{years} year{'s' if years != 1 else ''} ago"
+
+
+class Update(models.Model):
+    """
+    Powers the "Updates From [NGO Name]" cards on the homepage.
+    Staff can add/edit/delete these from the admin panel instead of
+    the cards being hardcoded in the template.
+    """
+
+    title = models.CharField(max_length=200)
+    image = models.ImageField(upload_to='updates/', blank=True, null=True)
+    publish_date = models.DateField(default=timezone.localdate, help_text="Shown on the card, e.g. 'June 12, 2025'")
+    link_url = models.CharField(
+        max_length=300, blank=True,
+        help_text="Optional -- where the card links to. Leave blank if it's just a headline."
+    )
+    is_active = models.BooleanField(default=True, help_text="Only active updates are shown on the home page")
+    display_order = models.PositiveIntegerField(default=0, help_text="Lower numbers show first")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['display_order', '-publish_date']
+
+    def __str__(self):
+        return self.title
 
 
 # ==========================================================

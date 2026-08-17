@@ -151,7 +151,7 @@ LOGOUT_REDIRECT_URL = 'home'       # where users go after logging out
 
 # ---- Session Settings ----
 # Sessions expire after 10 minutes of inactivity.
-SESSION_COOKIE_AGE = 600  # 10 minutes in seconds
+SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 

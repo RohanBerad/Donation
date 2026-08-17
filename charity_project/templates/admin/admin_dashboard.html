@@ -148,7 +148,7 @@
 
             {% if campaign_status_list %}
                 {% for campaign in campaign_status_list %}
-                    {% widthratio campaign.raised_amount campaign.goal_amount 100 as progress_pct %}
+                    {% with progress_pct=campaign.progress_percentage %}
                     <div class="admin-campaign-row">
                         {% if campaign.campaign_image %}
                             <img src="{{ campaign.campaign_image.url }}" class="admin-campaign-thumb" alt="{{ campaign.campaign_name }}">
@@ -168,13 +168,14 @@
                                     <span class="badge bg-secondary-subtle text-secondary border">{{ campaign.get_status_display }}</span>
                                 {% endif %}
                             </div>
-                            <div class="text-muted" style="font-size: 0.75rem;">Rs. {{ campaign.raised_amount|floatformat:0 }} / Rs. {{ campaign.goal_amount|floatformat:0 }}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Rs. {{ campaign.raised_amount}} / Rs. {{ campaign.goal_amount|floatformat:0 }}</div>
                             <div class="admin-progress-track mt-1">
                                 <div class="admin-progress-fill" style="width: {{ progress_pct }}%;"></div>
                             </div>
                         </div>
                         <div class="fw-bold small">{{ progress_pct }}%</div>
                     </div>
+                    {% endwith %}
                 {% endfor %}
             {% else %}
                 <p class="text-muted mb-0">No campaigns yet.</p>

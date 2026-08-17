@@ -1,0 +1,60 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}{{ page_title }}{% endblock %}
+{% block admin_heading %}{{ page_title }}{% endblock %}
+
+{% block admin_content %}
+
+<div class="admin-card" style="max-width: 650px;">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% for error in form.title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.image.label }}</label>
+            {{ form.image }}
+            {% for error in form.image.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            {% if form.instance.image %}
+                <img src="{{ form.instance.image.url }}" class="d-block mt-2 rounded" style="max-height: 100px;">
+            {% endif %}
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.publish_date.label }}</label>
+                {{ form.publish_date }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.link_url.label }}</label>
+                {{ form.link_url }}
+                <small class="text-muted">{{ form.link_url.help_text }}</small>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">{{ form.display_order.label }}</label>
+                {{ form.display_order }}
+                <small class="text-muted">Lower shows first</small>
+            </div>
+            <div class="col-md-6 mb-3 d-flex align-items-end">
+                <div class="form-check">
+                    {{ form.is_active }}
+                    <label class="form-check-label ms-1">{{ form.is_active.label }}</label>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Save Update
+        </button>
+        <a href="{% url 'admin_update_list' %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

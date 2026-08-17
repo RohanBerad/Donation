@@ -15,7 +15,7 @@ from django.contrib.auth import login, logout, authenticate, update_session_auth
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm, SetPasswordForm
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.core.mail import send_mail
 from django.db.models import Sum, Avg
 from django.core.paginator import Paginator
@@ -25,11 +25,11 @@ import random
 import razorpay
 from django.conf import settings
 from django.contrib.auth.models import User
-from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile, PasswordResetOTP, FAQ, ContactMessage, HelpRequest, Notification
+from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile, PasswordResetOTP, FAQ, ContactMessage, HelpRequest, Notification, Update
 from .forms import (
     DonationForm, RegisterForm, CampaignForm, AdminLoginForm,
     SiteSettingsForm, TestimonialForm, TestimonialSubmissionForm, ProfileForm, EmailLoginForm,
-    FAQForm, ContactForm, HelpRequestForm,
+    FAQForm, ContactForm, HelpRequestForm, UpdateForm,
 )
 
 
@@ -134,6 +134,9 @@ def home(request):
     stories_shared_count = testimonials.count()
     average_rating = testimonials.aggregate(avg=Avg('rating'))['avg'] or 0
 
+    # "Updates From [NGO Name]" cards -- managed from the admin panel
+    updates = Update.objects.filter(is_active=True)[:12]
+
     context = {
         'settings': site_settings,
         'featured_campaigns': featured_campaigns,
@@ -143,6 +146,7 @@ def home(request):
         'story_form': story_form,
         'stories_shared_count': stories_shared_count,
         'average_rating': average_rating,
+        'updates': updates,
     }
     return render(request, 'website/index.html', context)
 
@@ -219,6 +223,20 @@ def about_view(request):
         'story_form': story_form,
     }
     return render(request, 'website/about.html', context)
+
+
+def get_support_view(request):
+    """
+    Public "Get Support" page. Explains how to request help, what documents
+    to prepare, and the review process. The actual HelpRequest form remains
+    on the home page (#get-help), but this page gives detailed guidance so
+    beneficiaries know exactly what to expect and what to upload.
+    """
+    site_settings = SiteSettings.load()
+    context = {
+        'site_settings': site_settings,
+    }
+    return render(request, 'website/get_support.html', context)
 
 
 def contact_view(request):
@@ -972,6 +990,45 @@ def admin_account_settings(request):
 
 
 @admin_required
+def admin_profile(request):
+    """Lets the logged-in admin view and update their own profile information."""
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=profile, current_user=request.user)
+        if form.is_valid():
+            form.save()
+            request.user.username = form.cleaned_data['username']
+            request.user.email = form.cleaned_data['email']
+            request.user.save()
+            update_session_auth_hash(request, request.user)
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('admin_profile')
+    else:
+        form = ProfileForm(instance=profile, current_user=request.user)
+
+    profile_fields_filled = 0
+    total_profile_fields = 4
+    if profile.profile_picture:
+        profile_fields_filled += 1
+    if profile.phone_number:
+        profile_fields_filled += 1
+    if profile.bio:
+        profile_fields_filled += 1
+    if profile.address:
+        profile_fields_filled += 1
+    profile_completion = int((profile_fields_filled / total_profile_fields) * 100)
+
+    context = {
+        'form': form,
+        'profile_completion': profile_completion,
+        'profile_fields_filled': profile_fields_filled,
+        'total_profile_fields': total_profile_fields,
+    }
+    return render(request, 'admin/admin_profile.html', context)
+
+
+@admin_required
 def admin_campaign_list(request):
     """Shows every campaign with quick Edit / Delete actions."""
     campaign_list = Campaign.objects.all().order_by('-created_at')
@@ -1077,17 +1134,19 @@ def admin_site_settings(request):
     info. This is what makes the public website's content fully dynamic.
     """
     site_settings = SiteSettings.load()
+    updates = Update.objects.all().order_by('-publish_date')
 
     if request.method == 'POST':
         form = SiteSettingsForm(request.POST, request.FILES, instance=site_settings)
+        active_panel = request.POST.get('active_panel', 'home-page')
         if form.is_valid():
             form.save()
             messages.success(request, 'Website content updated successfully! Check the home page.')
-            return redirect('admin_site_settings')
+            return redirect(reverse('admin_site_settings') + '?panel=' + active_panel)
     else:
         form = SiteSettingsForm(instance=site_settings)
 
-    return render(request, 'admin/admin_site_settings.html', {'form': form})
+    return render(request, 'admin/admin_site_settings.html', {'form': form, 'updates': updates})
 
 
 @admin_required
@@ -1195,6 +1254,68 @@ def admin_faq_delete(request, faq_id):
 
 
 # ==========================================================
+# ADMIN: HOME PAGE "UPDATES" CARDS
+# ==========================================================
+@admin_required
+def admin_update_list(request):
+    """Shows every 'Updates From [NGO]' card with quick Edit / Delete actions."""
+    update_list = Update.objects.all()
+    paginator = Paginator(update_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'admin/admin_update_list.html', {'page_obj': page_obj})
+
+
+@admin_required
+def admin_update_add(request):
+    """Lets a staff member add a new update card to show on the home page."""
+    if request.method == 'POST':
+        form = UpdateForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Update added successfully!')
+            return redirect(reverse('admin_site_settings') + '?panel=home-page')
+    else:
+        form = UpdateForm()
+
+    return render(request, 'admin/admin_update_form.html', {
+        'form': form, 'page_title': 'Add New Update'
+    })
+
+
+@admin_required
+def admin_update_edit(request, update_id):
+    """Lets a staff member edit an existing update card."""
+    update = get_object_or_404(Update, id=update_id)
+
+    if request.method == 'POST':
+        form = UpdateForm(request.POST, request.FILES, instance=update)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Update saved successfully!')
+            return redirect(reverse('admin_site_settings') + '?panel=home-page')
+    else:
+        form = UpdateForm(instance=update)
+
+    return render(request, 'admin/admin_update_form.html', {
+        'form': form, 'page_title': 'Edit Update'
+    })
+
+
+@admin_required
+def admin_update_delete(request, update_id):
+    """Deletes an update card after confirmation."""
+    update = get_object_or_404(Update, id=update_id)
+
+    if request.method == 'POST':
+        update.delete()
+        messages.success(request, 'Update deleted.')
+        return redirect(reverse('admin_site_settings') + '?panel=home-page')
+
+    return render(request, 'admin/admin_update_delete.html', {'update': update})
+
+
+# ==========================================================
 # ADMIN: CONTACT MESSAGES
 # ==========================================================
 @admin_required
@@ -1290,8 +1411,8 @@ def admin_request_delete(request, request_id):
 # ==========================================================
 @admin_required
 def admin_notifications_list(request):
-    """Shows all notifications for the admin."""
-    notification_list = Notification.objects.all()
+    """Shows all notifications for the admin, latest unread first."""
+    notification_list = Notification.objects.order_by('is_read', '-created_at')
     paginator = Paginator(notification_list, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -1313,3 +1434,36 @@ def admin_notifications_mark_all_read(request):
     Notification.objects.filter(is_read=False).update(is_read=True)
     messages.success(request, 'All notifications marked as read.')
     return redirect('admin_notifications_list')
+
+
+@admin_required
+def admin_notification_mark_read_ajax(request, notification_id):
+    """AJAX: marks a single notification as read and returns updated counts."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+    notification = get_object_or_404(Notification, id=notification_id)
+    notification.is_read = True
+    notification.save()
+
+    unread_count = Notification.objects.filter(is_read=False).count()
+
+    return JsonResponse({
+        'success': True,
+        'unread_count': unread_count,
+        'notification_id': notification.id,
+        'url': notification.url,
+    })
+
+
+@admin_required
+def admin_notifications_mark_all_read_ajax(request):
+    """AJAX: marks all notifications as read and returns updated counts."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+    Notification.objects.filter(is_read=False).update(is_read=True)
+    return JsonResponse({
+        'success': True,
+        'unread_count': 0,
+    })

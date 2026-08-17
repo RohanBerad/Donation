@@ -72,7 +72,7 @@
                 </thead>
                 <tbody>
                     {% for campaign in top_campaigns %}
-                        {% widthratio campaign.raised_amount campaign.goal_amount 100 as progress_pct %}
+                        {% with progress_pct=campaign.progress_percentage %}
                         <tr>
                             <td class="fw-semibold">{{ campaign.campaign_name }}</td>
                             <td>{{ campaign.get_category_display }}</td>
@@ -85,6 +85,7 @@
                                 <span class="small text-muted">{{ progress_pct }}%</span>
                             </td>
                         </tr>
+                        {% endwith %}
                     {% endfor %}
                 </tbody>
             </table>

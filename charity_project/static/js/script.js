@@ -196,8 +196,9 @@ document.addEventListener('DOMContentLoaded', function () {
         useQrBtn.addEventListener('click', () => {
             const amount = amountInput.value || '0';
             const currency = currencySelect.value;
+            const ngoName = (document.body.dataset.ngoName || 'Charity').replace(/[^a-zA-Z0-9 ]/g, '');
             qrCodeImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' +
-                encodeURIComponent('upi://pay?pa=helpinghands@upi&pn=HopeRise&am=' + amount);
+                encodeURIComponent('upi://pay?pa=helpinghands@upi&pn=' + ngoName + '&am=' + amount);
             qrAmountLabel.textContent = currency + ' ' + amount;
             flipInner.classList.add('is-flipped');
         });
@@ -234,55 +235,69 @@ document.addEventListener('DOMContentLoaded', function () {
             const photoUrl = button.dataset.testimonialPhoto || '';
             const hasPhoto = button.dataset.testimonialHasPhoto === 'true';
 
-            document.getElementById('storyDetailName').textContent = name;
-            document.getElementById('storyDetailRole').textContent = role;
-            document.getElementById('storyDetailTitle').textContent = title;
-            document.getElementById('storyDetailMessage').textContent = message;
-            document.getElementById('storyDetailCategory').textContent = category;
+            const nameEl = document.getElementById('storyDetailName');
+            const roleEl = document.getElementById('storyDetailRole');
+            const titleEl = document.getElementById('storyDetailTitle');
+            const messageEl = document.getElementById('storyDetailMessage');
+            const categoryEl = document.getElementById('storyDetailCategory');
+            const ratingEl = document.getElementById('storyDetailRating');
 
-            // Build rating stars
-            const ratingContainer = document.getElementById('storyDetailRating');
-            ratingContainer.innerHTML = '';
-            for (let i = 1; i <= 5; i++) {
-                const star = document.createElement('i');
-                star.className = 'bi ' + (i <= rating ? 'bi-star-fill' : 'bi-star') + ' text-warning';
-                ratingContainer.appendChild(star);
+            if (nameEl) nameEl.textContent = name;
+            if (roleEl) roleEl.textContent = role;
+            if (titleEl) titleEl.textContent = title;
+            if (messageEl) messageEl.textContent = message;
+            if (categoryEl) categoryEl.textContent = category;
+
+            if (ratingEl) {
+                ratingEl.innerHTML = '';
+                for (let i = 1; i <= 5; i++) {
+                    const star = document.createElement('i');
+                    star.className = 'bi ' + (i <= rating ? 'bi-star-fill' : 'bi-star') + ' text-warning';
+                    ratingEl.appendChild(star);
+                }
+                const ratingSpan = document.createElement('span');
+                ratingSpan.className = 'text-muted small ms-1';
+                ratingSpan.textContent = rating + '.0';
+                ratingEl.appendChild(ratingSpan);
             }
-            const ratingSpan = document.createElement('span');
-            ratingSpan.className = 'text-muted small ms-1';
-            ratingSpan.textContent = rating + '.0';
-            ratingContainer.appendChild(ratingSpan);
 
-            // Set avatar
-            if (hasPhoto && photoUrl) {
-                storyAvatar.innerHTML = '<img src="' + photoUrl + '" alt="' + name + '">';
-            } else {
-                const avatarInitial = name ? name.charAt(0).toUpperCase() : '?';
-                storyAvatar.innerHTML = '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(avatarInitial) + '&background=26e07f&color=fff&size=96&bold=true" alt="' + name + '">';
+            if (storyAvatar) {
+                if (hasPhoto && photoUrl) {
+                    storyAvatar.innerHTML = '<img src="' + photoUrl + '" alt="' + name + '">';
+                } else {
+                    const avatarInitial = name ? name.charAt(0).toUpperCase() : '?';
+                    storyAvatar.innerHTML = '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(avatarInitial) + '&background=26e07f&color=fff&size=96&bold=true" alt="' + name + '">';
+                }
             }
 
-            // Handle photo
-            if (hasPhoto && photoUrl) {
-                storyImg.src = photoUrl;
-                storyImg.style.display = 'block';
-                storyImgError.classList.add('d-none');
-            } else {
-                storyImg.style.display = 'none';
-                storyImgError.classList.remove('d-none');
+            if (storyImg && storyImgError) {
+                if (hasPhoto && photoUrl) {
+                    storyImg.src = photoUrl;
+                    storyImg.style.display = 'block';
+                    storyImgError.classList.add('d-none');
+                } else {
+                    storyImg.style.display = 'none';
+                    storyImgError.classList.remove('d-none');
+                }
             }
         });
 
         storyDetailModal.addEventListener('hidden.bs.modal', function () {
-            storyImg.style.display = 'block';
-            storyImgError.classList.add('d-none');
-            storyImg.src = '';
-            storyAvatar.innerHTML = '';
+            if (storyImg) {
+                storyImg.style.display = 'block';
+                storyImgError.classList.add('d-none');
+                storyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            }
+            if (storyAvatar) {
+                storyAvatar.innerHTML = '';
+            }
         });
 
-        // Image error handler
-        storyImg.addEventListener('error', function () {
-            storyImg.style.display = 'none';
-            storyImgError.classList.remove('d-none');
-        });
+        if (storyImg) {
+            storyImg.addEventListener('error', function () {
+                storyImg.style.display = 'none';
+                storyImgError.classList.remove('d-none');
+            });
+        }
     }
 });

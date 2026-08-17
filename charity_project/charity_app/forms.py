@@ -9,7 +9,7 @@ the public donation form, registration, the custom admin panel's forms
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Donation, Campaign, SiteSettings, Testimonial, UserProfile, FAQ, ContactMessage, HelpRequest
+from .models import Donation, Campaign, SiteSettings, Testimonial, UserProfile, FAQ, ContactMessage, HelpRequest, Update
 
 import re
 
@@ -201,7 +201,7 @@ class EmailLoginForm(forms.Form):
 class ProfileForm(forms.ModelForm):
     """
     Lets a logged-in donor update their account info (username, email) as well
-    as their profile picture, phone number and address.
+    as their profile picture, phone number, address, and bio.
 
     NOTE: username and email actually belong to Django's built-in User model,
     not UserProfile -- so they are added here as extra form fields and saved
@@ -215,10 +215,14 @@ class ProfileForm(forms.ModelForm):
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={'class': 'form-control'})
     )
+    bio = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Tell us a little about yourself...'})
+    )
 
     class Meta:
         model = UserProfile
-        fields = ['profile_picture', 'phone_number', 'address']
+        fields = ['profile_picture', 'phone_number', 'address', 'bio']
         widgets = {
             'profile_picture': forms.FileInput(attrs={'class': 'profile-file-input', 'accept': 'image/*'}),
             'phone_number': forms.TextInput(attrs={
@@ -660,3 +664,30 @@ class HelpRequestForm(forms.ModelForm):
         document = self.cleaned_data.get('document')
         validate_document_file(document)
         return document
+
+
+class UpdateForm(forms.ModelForm):
+    """Used in the custom admin panel to Add/Edit an 'Updates' card shown on the home page."""
+
+    class Meta:
+        model = Update
+        fields = ['title', 'image', 'publish_date', 'link_url', 'is_active', 'display_order']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Adam Williams Celebrates Successful Remission'}),
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'publish_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'link_url': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'https:// (optional)'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'display_order': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean_title(self):
+        title = self.cleaned_data['title'].strip()
+        if len(title) < 5:
+            raise forms.ValidationError("Title should be at least 5 characters long.")
+        return title
+
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+        validate_image_file(image)
+        return image

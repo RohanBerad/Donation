@@ -107,7 +107,7 @@
                             <span class="badge bg-light text-dark fw-bold border small py-2 px-3"># Financial Aid</span>
                             <span class="badge bg-light text-dark fw-bold border small py-2 px-3"># Therapy</span>
                         </div>
-                        <a href="#get-help" class="btn-hr-circle-arrow">
+                        <a href="{% url 'get_support' %}" class="btn-hr-circle-arrow">
                             <i class="bi bi-arrow-up-right"></i>
                         </a>
                     </div>
@@ -157,7 +157,7 @@
                     <input type="hidden" name="submit_help_request" value="1">
 
                     <div class="mb-3">
-                        <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 small fw-bold">Get Help</span>
+                        <span class="badge bg-white bg-opacity-20 text-dark rounded-pill px-3 py-2 small fw-bold">Get Help</span>
                     </div>
 
                     <h3 class="font-heading fw-bold mb-4 text-white">We're Here To Support You Every Step Of The Way</h3>
@@ -438,7 +438,7 @@
                         </div>
                         <div class="p-4">
                             <h6 class="font-heading fw-bold mb-2">{{ testimonial.display_title }}</h6>
-                            <p class="text-muted small mb-3"> {{ testimonial.message|truncatechars:10 }}</p>
+                            <p class="text-muted small mb-3"> {{ testimonial.excerpt|truncatechars:10 }}</p>
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-2">
                                     {% if testimonial.photo %}
@@ -451,7 +451,7 @@
                                         <span class="text-muted" style="font-size: 0.72rem;">{{ testimonial.donor_role }}</span>
                                     </div>
                                 </div>
-                                <a href="#" class="d-inline-flex align-items-center gap-1 text-emerald fw-bold text-uppercase small text-decoration-none"
+                                <button type="button" class="d-inline-flex align-items-center gap-1 text-emerald fw-bold text-uppercase small text-decoration-none bg-transparent border-0 p-0"
                                    data-bs-toggle="modal" data-bs-target="#storyDetailModal"
                                    data-testimonial-name="{{ testimonial.donor_name|escape }}"
                                    data-testimonial-role="{{ testimonial.donor_role|escape }}"
@@ -461,8 +461,8 @@
                                    data-testimonial-category="{{ testimonial.get_category_display|escape }}"
                                    data-testimonial-photo="{% if testimonial.photo %}{{ testimonial.photo.url }}{% endif %}"
                                    data-testimonial-has-photo="{% if testimonial.photo %}true{% else %}false{% endif %}">
-                                    Read More <i class="bi bi-arrow-right"></i>
-                                </a>
+                                     Read More <i class="bi bi-arrow-right"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -590,7 +590,7 @@
                 <div class="row g-0">
                     <div class="col-lg-5">
                         <div class="hr-story-detail-img-wrap">
-                            <img src="" alt="Story Image" id="storyDetailImg" class="hr-story-detail-img">
+                            <img src="" alt="Story" id="storyDetailImg" class="hr-story-detail-img d-none">
                             <div class="hr-story-detail-img-error d-none" id="storyDetailImgError">
                                 <i class="bi bi-image-slash"></i>
                                 <p class="mb-0">Image unavailable</p>
@@ -599,8 +599,8 @@
                     </div>
                     <div class="col-lg-7">
                         <div class="p-4 p-lg-5 d-flex flex-column">
-                            <span class="hr-story-category-badge mb-3 align-self-start" id="storyDetailCategory">Category</span>
-                            <h4 class="font-heading fw-bold mb-3" id="storyDetailTitle">Story Title</h4>
+                            <span class="hr-story-category-badge mb-3 align-self-start" id="storyDetailCategory">{{ testimonial.get_category_display }}</span>
+                            <h4 class="font-heading fw-bold mb-3" id="storyDetailTitle">{{ testimonial.display_title }}</h4>
                             <div class="hr-testimonial-rating mb-3" id="storyDetailRating"></div>
                             <p class="text-muted mb-4" id="storyDetailMessage" style="line-height: 1.8; flex-grow: 1;"></p>
                             <div class="d-flex align-items-center gap-3 pt-3 border-top">
@@ -665,17 +665,78 @@
                 new bootstrap.Modal(shareStoryModalEl).show();
             }
         {% endif %}
+
+        // ---- Story detail modal: fill it in with the clicked card's data ----
+        var storyDetailModalEl = document.getElementById('storyDetailModal');
+        if (storyDetailModalEl) {
+            storyDetailModalEl.addEventListener('show.bs.modal', function (event) {
+                var triggerBtn = event.relatedTarget;
+                if (!triggerBtn) return;
+
+                var name = triggerBtn.getAttribute('data-testimonial-name') || '';
+                var role = triggerBtn.getAttribute('data-testimonial-role') || '';
+                var title = triggerBtn.getAttribute('data-testimonial-title') || '';
+                var message = triggerBtn.getAttribute('data-testimonial-message') || '';
+                var rating = parseInt(triggerBtn.getAttribute('data-testimonial-rating'), 10) || 0;
+                var category = triggerBtn.getAttribute('data-testimonial-category') || '';
+                var photoUrl = triggerBtn.getAttribute('data-testimonial-photo') || '';
+                var hasPhoto = triggerBtn.getAttribute('data-testimonial-has-photo') === 'true';
+
+                // Text fields
+                document.getElementById('storyDetailTitle').textContent = title;
+                document.getElementById('storyDetailMessage').textContent = message;
+                document.getElementById('storyDetailName').textContent = name;
+                document.getElementById('storyDetailRole').textContent = role;
+                document.getElementById('storyDetailCategory').textContent = category;
+
+                // Star rating
+                var ratingEl = document.getElementById('storyDetailRating');
+                ratingEl.innerHTML = '';
+                for (var i = 1; i <= 5; i++) {
+                    var starIcon = document.createElement('i');
+                    starIcon.className = i <= rating ? 'bi bi-star-fill text-warning' : 'bi bi-star text-warning';
+                    ratingEl.appendChild(starIcon);
+                }
+
+                // Main story image (falls back to an "unavailable" state if there is no photo)
+                var imgEl = document.getElementById('storyDetailImg');
+                var imgErrorEl = document.getElementById('storyDetailImgError');
+                if (hasPhoto && photoUrl) {
+                    imgEl.src = photoUrl;
+                    imgEl.classList.remove('d-none');
+                    imgErrorEl.classList.add('d-none');
+                    imgEl.onerror = function () {
+                        imgEl.classList.add('d-none');
+                        imgErrorEl.classList.remove('d-none');
+                    };
+                } else {
+                    imgEl.removeAttribute('src');
+                    imgEl.classList.add('d-none');
+                    imgErrorEl.classList.remove('d-none');
+                }
+
+                // Small avatar next to the name (photo, or generated initials as a fallback)
+                var avatarWrap = document.getElementById('storyDetailAvatar');
+                avatarWrap.innerHTML = '';
+                var avatarImg = document.createElement('img');
+                avatarImg.alt = name;
+                avatarImg.src = hasPhoto && photoUrl
+                    ? photoUrl
+                    : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=26e07f&color=fff&size=64&bold=true';
+                avatarWrap.appendChild(avatarImg);
+            });
+        }
     });
 </script>
 
-<!-- ===================== 7. UPDATES FROM HOPERISE SECTION (Screenshot 6) ===================== -->
+<!-- ===================== 7. UPDATES FROM [NGO] SECTION ===================== -->
 <section class="hr-section">
     <div class="container">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 text-center text-md-start">
             <div>
-                <h2 class="display-5 font-heading fw-bold">Updates From HopeRise</h2>
+                <h2 class="display-5 font-heading fw-bold">Updates From {{ settings.ngo_name }}</h2>
             </div>
-            <div class="mt-3 mt-md-0 d-flex align-items-center gap-3">
+            <div class="mt-3 mt-md-0">
                 <a href="{% url 'campaign_list' %}" class="d-inline-flex align-items-center gap-2 text-dark font-heading fw-bold text-uppercase small me-3">
                     SEE ALL
                     <span class="hr-icon-circle-btn"><i class="bi bi-arrow-up-right"></i></span>
@@ -683,47 +744,39 @@
             </div>
         </div>
 
-        <div class="row g-4">
-            <!-- News Card 1 -->
-            <div class="col-lg-3 col-md-6">
-                <div class="hr-story-card h-100 p-0 border-0 bg-transparent">
-                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop" class="hr-story-img mb-3" style="height: 240px;" alt="News 1">
-                    <small class="text-muted d-block mb-1">June 12, 2025</small>
-                    <h6 class="font-heading fw-bold text-dark">Adam Williams Celebrates Successful Remission</h6>
-                </div>
-            </div>
-
-            <!-- News Card 2 -->
-            <div class="col-lg-3 col-md-6">
-                <div class="hr-story-card h-100 p-0 border-0 bg-transparent">
-                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=400&auto=format&fit=crop" class="hr-story-img mb-3" style="height: 240px;" alt="News 2">
-                    <small class="text-muted d-block mb-1">June 5, 2025</small>
-                    <h6 class="font-heading fw-bold text-dark">Our Team Expands to 50 Members Already</h6>
-                </div>
-            </div>
-
-            <!-- News Card 3 -->
-            <div class="col-lg-3 col-md-6">
-                <div class="hr-story-card h-100 p-0 border-0 bg-transparent">
-                    <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=400&auto=format&fit=crop" class="hr-story-img mb-3" style="height: 240px;" alt="News 3">
-                    <small class="text-muted d-block mb-1">June 2, 2025</small>
-                    <h6 class="font-heading fw-bold text-dark">Another Successful Therapeutic Session</h6>
-                </div>
-            </div>
-
-            <!-- News Card 4 -->
-            <div class="col-lg-3 col-md-6">
-                <div class="hr-story-card h-100 p-0 border-0 bg-transparent">
-                    <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=400&auto=format&fit=crop" class="hr-story-img mb-3" style="height: 240px;" alt="News 4">
-                    <small class="text-muted d-block mb-1">May 29, 2025</small>
-                    <h6 class="font-heading fw-bold text-dark">A Volunteer Who Inspires All Our Crue</h6>
-                </div>
+        <div class="hr-updates-slider-wrap position-relative">
+            <div class="hr-updates-slider-track" id="updatesSliderTrack">
+                {% for update in updates %}
+                    <div class="hr-slide-item">
+                        <a href="{% if update.link_url %}{{ update.link_url }}{% else %}#{% endif %}" class="text-decoration-none">
+                            <div class="hr-story-card h-100 p-0 border-0 bg-transparent">
+                                {% if update.image %}
+                                    <img src="{{ update.image.url }}" class="hr-story-img mb-3" style="height: 240px; width: 100%; object-fit: cover;" alt="{{ update.title }}">
+                                {% else %}
+                                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop" class="hr-story-img mb-3" style="height: 240px; width: 100%; object-fit: cover;" alt="{{ update.title }}">
+                                {% endif %}
+                                <small class="text-muted d-block mb-1">{{ update.publish_date|date:"F j, Y" }}</small>
+                                <h6 class="font-heading fw-bold text-dark">{{ update.title }}</h6>
+                            </div>
+                        </a>
+                    </div>
+                {% empty %}
+                    <div class="hr-slide-item">
+                        <div class="text-center text-muted">
+                            No updates posted yet -- check back soon!
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
         </div>
 
         <div class="d-flex justify-content-end gap-2 mt-4">
-            <span class="hr-icon-circle-btn"><i class="bi bi-arrow-left"></i></span>
-            <span class="hr-icon-circle-btn bg-emerald border-0"><i class="bi bi-arrow-right text-dark"></i></span>
+            <button type="button" class="hr-icon-circle-btn" id="updatesPrev" aria-label="Previous">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <button type="button" class="hr-icon-circle-btn bg-emerald border-0" id="updatesNext" aria-label="Next">
+                <i class="bi bi-arrow-right text-dark"></i>
+            </button>
         </div>
     </div>
 </section>
@@ -814,10 +867,10 @@
         </div>
 
         <div class="border-top border-dark border-opacity-10 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center text-muted small">
-            <p class="mb-0">&copy; 2025 HopeRise Foundation | All Rights Reserved</p>
+            <p class="mb-0">&copy; {% now "Y" %} {{ site_settings.ngo_name }}. All Rights Reserved.</p>
             <div class="d-flex gap-3">
-                <a href="#" class="text-muted">Privacy Policy</a>
-                <a href="#" class="text-muted">Terms Of Service</a>
+                <a href="{% url 'privacy_policy' %}" class="text-muted">Privacy Policy</a>
+                <a href="{% url 'terms' %}" class="text-muted">Terms Of Service</a>
             </div>
             <a href="#" class="text-dark font-heading fw-bold text-uppercase extra-small">
                 BACK TO TOP <span class="hr-icon-circle-btn ms-1" style="width:28px; height:28px; font-size:0.7rem;"><i class="bi bi-arrow-up"></i></span>
@@ -826,4 +879,112 @@
     </div>
 </footer>
 
+<style>
+    .hr-updates-slider-wrap {
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .hr-updates-slider-track {
+        display: flex;
+        gap: 1.5rem;
+        transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        will-change: transform;
+    }
+
+    .hr-slide-item {
+        flex: 0 0 100%;
+        box-sizing: border-box;
+    }
+
+    .hr-slide-item a {
+        display: block;
+        height: 100%;
+    }
+
+    @media (min-width: 768px) {
+        .hr-slide-item {
+            flex: 0 0 calc(50% - 0.75rem);
+        }
+    }
+
+    @media (min-width: 992px) {
+        .hr-slide-item {
+            flex: 0 0 calc(25% - 1.125rem);
+        }
+    }
+
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var track = document.getElementById('updatesSliderTrack');
+        var prevBtn = document.getElementById('updatesPrev');
+        var nextBtn = document.getElementById('updatesNext');
+
+        if (!track || !prevBtn || !nextBtn) return;
+
+        var currentIndex = 0;
+        var items = track.querySelectorAll('.hr-slide-item');
+        var totalItems = items.length;
+
+        function getItemsPerView() {
+            if (window.innerWidth >= 992) return 4;
+            if (window.innerWidth >= 768) return 2;
+            return 1;
+        }
+
+        function getStep() {
+            if (items.length < 2) return 0;
+            return Math.abs(items[1].offsetLeft - items[0].offsetLeft);
+        }
+
+        function updateSlider() {
+            var itemsPerView = getItemsPerView();
+            var maxIndex = Math.max(0, totalItems - itemsPerView);
+
+            if (currentIndex > maxIndex) {
+                currentIndex = maxIndex;
+            }
+            if (currentIndex < 0) {
+                currentIndex = 0;
+            }
+
+            var step = getStep();
+            var offset = currentIndex * step;
+
+            track.style.transform = 'translateX(-' + offset + 'px)';
+
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex >= maxIndex;
+        }
+
+        prevBtn.addEventListener('click', function () {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateSlider();
+            }
+        });
+
+        nextBtn.addEventListener('click', function () {
+            var itemsPerView = getItemsPerView();
+            var maxIndex = Math.max(0, totalItems - itemsPerView);
+            if (currentIndex < maxIndex) {
+                currentIndex++;
+                updateSlider();
+            }
+        });
+
+        window.addEventListener('resize', function () {
+            var itemsPerView = getItemsPerView();
+            var maxIndex = Math.max(0, totalItems - itemsPerView);
+            if (currentIndex > maxIndex) {
+                currentIndex = maxIndex;
+            }
+            updateSlider();
+        });
+
+        updateSlider();
+    });
+</script>
 {% endblock %}

@@ -15,6 +15,7 @@ urlpatterns = [
 
     # Static / informational pages
     path('about/', views.about_view, name='about'),
+    path('get-support/', views.get_support_view, name='get_support'),
     path('contact/', views.contact_view, name='contact'),
     path('faq/', views.faq_view, name='faq'),
     path('privacy-policy/', views.privacy_policy_view, name='privacy_policy'),
@@ -53,6 +54,7 @@ urlpatterns = [
     path('myadmin/', views.admin_dashboard, name='admin_dashboard'),
     path('myadmin/reports/', views.admin_reports, name='admin_reports'),
     path('myadmin/account-settings/', views.admin_account_settings, name='admin_account_settings'),
+    path('myadmin/profile/', views.admin_profile, name='admin_profile'),
 
     path('myadmin/campaigns/', views.admin_campaign_list, name='admin_campaign_list'),
     path('myadmin/campaigns/add/', views.admin_campaign_add, name='admin_campaign_add'),
@@ -73,6 +75,11 @@ urlpatterns = [
     path('myadmin/faqs/<int:faq_id>/edit/', views.admin_faq_edit, name='admin_faq_edit'),
     path('myadmin/faqs/<int:faq_id>/delete/', views.admin_faq_delete, name='admin_faq_delete'),
 
+    path('myadmin/updates/', views.admin_update_list, name='admin_update_list'),
+    path('myadmin/updates/add/', views.admin_update_add, name='admin_update_add'),
+    path('myadmin/updates/<int:update_id>/edit/', views.admin_update_edit, name='admin_update_edit'),
+    path('myadmin/updates/<int:update_id>/delete/', views.admin_update_delete, name='admin_update_delete'),
+
     path('myadmin/messages/', views.admin_contact_list, name='admin_contact_list'),
     path('myadmin/messages/<int:message_id>/', views.admin_contact_view, name='admin_contact_view'),
     path('myadmin/messages/<int:message_id>/delete/', views.admin_contact_delete, name='admin_contact_delete'),
@@ -86,4 +93,6 @@ urlpatterns = [
     path('myadmin/notifications/', views.admin_notifications_list, name='admin_notifications_list'),
     path('myadmin/notifications/<int:notification_id>/read/', views.admin_notification_mark_read, name='admin_notification_mark_read'),
     path('myadmin/notifications/mark-all-read/', views.admin_notifications_mark_all_read, name='admin_notifications_mark_all_read'),
+    path('myadmin/notifications/ajax/mark-read/<int:notification_id>/', views.admin_notification_mark_read_ajax, name='admin_notification_mark_read_ajax'),
+    path('myadmin/notifications/ajax/mark-all-read/', views.admin_notifications_mark_all_read_ajax, name='admin_notifications_mark_all_read_ajax'),
 ]

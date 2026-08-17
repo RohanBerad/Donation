@@ -45,6 +45,7 @@
 
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
+    <input type="hidden" name="active_panel" id="activePanelInput" value="{{ request.GET.panel|default:'home-page' }}">
 
     <div class="admin-card mb-4 page-form-panel d-none" id="home-page" data-content-panel="home-page">
         <h5 class="fw-bold mb-3">Home Page</h5>
@@ -130,6 +131,69 @@
                     <label class="form-label fw-semibold">{{ form.contact_phone.label }}</label>
                     {{ form.contact_phone }}
                 </div>
+            </div>
+        </div>
+
+        <!-- Home Page Updates Section -->
+        <div class="border-top pt-4 mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h5 class="fw-bold mb-0">Home Page Updates</h5>
+                <a href="{% url 'admin_update_add' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add New Update
+                </a>
+            </div>
+            <p class="text-muted small">These power the "Updates From {{ site_settings.ngo_name }}" cards on the home page. Only "Active" ones are shown.</p>
+
+            <div class="table-responsive">
+                <table class="table align-middle table-sm" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Active?</th>
+                            <th>Order</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for update in updates %}
+                        <tr>
+                            <td>
+                                {% if update.image %}
+                                    <img src="{{ update.image.url }}" alt="{{ update.title }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">
+                                {% else %}
+                                    <div class="bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 6px;">
+                                        <i class="bi bi-image text-muted" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="fw-semibold">{{ update.title }}</td>
+                            <td class="small text-muted">{{ update.publish_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if update.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Hidden</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ update.display_order }}</td>
+                            <td>
+                                <a href="{% url 'admin_update_edit' update.id %}" class="btn btn-sm btn-outline-primary py-0 px-1">
+                                    <i class="bi bi-pencil" style="font-size: 0.85rem;"></i>
+                                </a>
+                                <a href="{% url 'admin_update_delete' update.id %}" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                    <i class="bi bi-trash" style="font-size: 0.85rem;"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-muted text-center py-3">No updates yet. Add one to show it on the home page.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -251,6 +315,7 @@
         const pageCards = document.querySelectorAll('[data-page-target]');
         const panels = document.querySelectorAll('[data-content-panel]');
         const saveButton = document.querySelector('.page-save-button');
+        const activePanelInput = document.getElementById('activePanelInput');
 
         panels.forEach(function (panel) {
             if (panel.classList.contains('page-form-panel')) {
@@ -265,6 +330,9 @@
         pageCards.forEach(function (card) {
             card.addEventListener('click', function () {
                 const target = card.getAttribute('data-page-target');
+                if (activePanelInput) {
+                    activePanelInput.value = target;
+                }
 
                 panels.forEach(function (panel) {
                     if (panel.classList.contains('page-form-panel')) {
@@ -290,6 +358,16 @@
                 });
             });
         });
+
+        // Auto-click card corresponding to URL panel parameter on load
+        const urlParams = new URLSearchParams(window.location.search);
+        const activePanel = urlParams.get('panel');
+        if (activePanel) {
+            const cardToClick = document.querySelector(`[data-page-target="${activePanel}"]`);
+            if (cardToClick) {
+                cardToClick.click();
+            }
+        }
     });
 </script>
 

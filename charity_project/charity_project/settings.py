@@ -131,7 +131,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # Extra folders where Django will look for static files (besides each app's static/ folder)
 STATICFILES_DIRS = [
@@ -139,7 +139,7 @@ STATICFILES_DIRS = [
 ]
 
 # Media files (user-uploaded campaign images)
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default field type for auto-created primary keys

@@ -2,14 +2,14 @@
 Django==6.0.7
 gunicorn==23.0.0
 
-# Database (MySQL backend used in settings.py)
+# Database
 mysqlclient==2.2.4
 
-# Image handling (ImageField / FileField in models.py)
+# Image handling
 Pillow==10.4.0
 
-# Payments (razorpay imported in views.py)
-razorpay==1.4.1
+# Payments
+razorpay==2.0.1
 
-# Static files serving in production
+# Static files
 whitenoise==6.12.0

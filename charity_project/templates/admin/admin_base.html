@@ -51,6 +51,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {% if 'volunteer' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'admin_volunteer_list' %}">
+                        <i class="bi bi-person-heart"></i> Volunteers
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {% if 'testimonial' in request.resolver_match.url_name %}active{% endif %}"
                        href="{% url 'admin_testimonial_list' %}">
                         <i class="bi bi-chat-heart-fill"></i> Stories
@@ -115,10 +121,14 @@
             </div>
 
             <div class="admin-sidebar-profile dropdown">
+                {% if nav_user_profile and nav_user_profile.profile_picture %}
+                <img src="{{ nav_user_profile.profile_picture.url }}" alt="{{ request.user.username }}" class="admin-sidebar-profile-avatar" style="object-fit: cover;">
+                {% else %}
                 <div class="admin-sidebar-profile-avatar">{{ request.user.username|slice:":1"|upper }}</div>
+                {% endif %}
                 <div class="flex-grow-1 dropdown-toggle" role="button" data-bs-toggle="dropdown" style="cursor: pointer;">
                     <div class="small fw-bold">{{ request.user.username }}</div>
-                    <div class="small" style="color: rgba(255,255,255,0.5); font-size: 0.72rem;">Super Administrator</div>
+                    <div class="small" style="color: rgba(255,255,255,0.5); font-size: 0.72rem;">Administrator</div>
                 </div>
                 <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="{% url 'admin_account_settings' %}"><i class="bi bi-gear me-2"></i>Account Settings</a></li>
@@ -139,10 +149,7 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <div class="admin-search-pill d-none d-md-flex">
-                        <i class="bi bi-search"></i>
-                        <input type="text" placeholder="Search here...">
-                    </div>
+               
 
                     <div class="dropdown admin-notification-dropdown" id="adminNotificationDropdown">
                         <button class="admin-topbar-icon-btn admin-notification-btn" type="button" id="adminNotificationBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
@@ -202,15 +209,17 @@
                         </div>
                     </div>
 
-                    <button type="button" class="admin-topbar-icon-btn" id="adminDarkModeToggle" title="Toggle dark mode">
-                        <i class="bi bi-moon-stars-fill" id="adminDarkModeIcon"></i>
-                    </button>
+         
 
                     <div class="dropdown">
                         <div class="d-flex align-items-center gap-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" style="cursor: pointer;">
-                            <div class="admin-sidebar-profile-avatar" style="background: var(--admin-green);">
+                            {% if nav_user_profile and nav_user_profile.profile_picture %}
+                            <img src="{{ nav_user_profile.profile_picture.url }}" alt="{{ request.user.username }}" class="admin-sidebar-profile-avatar" style="object-fit: cover;">
+                            {% else %}
+                            <div class="admin-sidebar-profile-avatar" >
                                 {{ request.user.username|slice:":1"|upper }}
                             </div>
+                            {% endif %}
                             <span class="fw-semibold d-none d-sm-inline">{{ request.user.username|title }}</span>
                         </div>
                         <ul class="dropdown-menu dropdown-menu-end">
@@ -298,7 +307,7 @@
                 return cookieValue;
             }
 
-            var csrftoken = getCookie('csrftoken');
+            var csrftoken = getCookie('csrftoken') || '{{ csrf_token }}';
 
             function updateUnreadCount(count) {
                 if (!unreadBadge) return;
@@ -410,6 +419,99 @@
                         }
                     }
                 }
+            });
+        })();
+
+        // ---- Generic Client-Side Table Pagination for Admin panel ----
+        (function () {
+            var paginatedTables = document.querySelectorAll('.admin-paginated-table');
+            paginatedTables.forEach(function (table) {
+                var tbody = table.querySelector('tbody');
+                if (!tbody) return;
+                var rows = Array.from(tbody.querySelectorAll('tr'));
+                if (rows.length <= 10) return; // Only paginated when row count exceeds 10
+
+                var itemsPerPage = 10;
+                var totalPages = Math.ceil(rows.length / itemsPerPage);
+                var currentPage = 1;
+
+                // Create pagination nav element
+                var nav = document.createElement('nav');
+                nav.className = 'mt-3';
+                nav.setAttribute('aria-label', 'Table pagination');
+                
+                var ul = document.createElement('ul');
+                ul.className = 'pagination pagination-sm justify-content-center';
+                nav.appendChild(ul);
+                
+                // Append nav after table-responsive wrapper or table itself
+                var wrapper = table.closest('.table-responsive') || table;
+                wrapper.parentNode.insertBefore(nav, wrapper.nextSibling);
+
+                function showPage(page) {
+                    currentPage = page;
+                    var start = (page - 1) * itemsPerPage;
+                    var end = start + itemsPerPage;
+                    
+                    rows.forEach(function (row, idx) {
+                        row.style.display = (idx >= start && idx < end) ? '' : 'none';
+                    });
+
+                    renderPagination();
+                }
+
+                function renderPagination() {
+                    ul.innerHTML = '';
+                    
+                    // Previous Button
+                    var prevLi = document.createElement('li');
+                    prevLi.className = 'page-item ' + (currentPage === 1 ? 'disabled' : '');
+                    var prevLink = document.createElement('a');
+                    prevLink.className = 'page-link';
+                    prevLink.href = '#';
+                    prevLink.innerHTML = '&laquo; Previous';
+                    prevLink.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        if (currentPage > 1) showPage(currentPage - 1);
+                    });
+                    prevLi.appendChild(prevLink);
+                    ul.appendChild(prevLi);
+
+                    // Page numbers
+                    for (var i = 1; i <= totalPages; i++) {
+                        (function (pageIndex) {
+                            var li = document.createElement('li');
+                            li.className = 'page-item ' + (currentPage === pageIndex ? 'active' : '');
+                            var link = document.createElement('a');
+                            link.className = 'page-link';
+                            link.href = '#';
+                            link.textContent = pageIndex;
+                            link.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                showPage(pageIndex);
+                            });
+                            li.appendChild(link);
+                            ul.appendChild(li);
+                        })(i);
+                    }
+
+                    // Next Button
+                    var nextLi = document.createElement('li');
+                    nextLi.className = 'page-item ' + (currentPage === totalPages ? 'disabled' : '');
+                    var nextLink = document.createElement('a');
+                    nextLink.className = 'page-link';
+                    nextLink.href = '#';
+                    nextLink.innerHTML = 'Next &raquo;';
+                    nextLink.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        if (currentPage < totalPages) showPage(currentPage + 1);
+                    });
+                    nextLi.appendChild(nextLink);
+                    ul.appendChild(nextLi);
+                }
+
+                // Initialize first page
+                showPage(1);
             });
         })();
     </script>

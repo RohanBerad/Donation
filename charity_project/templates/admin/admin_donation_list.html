@@ -15,7 +15,7 @@
                 <tr>
                     <th>Donor</th>
                     <th>Email</th>
-                    <th>Campaign</th>
+                    <th>Supporting</th>
                     <th>Amount</th>
                     <th>Payment Method</th>
                     <th>Transaction ID</th>
@@ -27,7 +27,7 @@
                 <tr>
                     <td>{{ donation.donor_name }}</td>
                     <td>{{ donation.email }}</td>
-                    <td>{{ donation.campaign.campaign_name }}</td>
+                    <td>{{ donation.subject_name }}</td>
                     <td>Rs. {{ donation.amount }}</td>
                     <td>{{ donation.get_payment_method_display }}</td>
                     <td><span class="badge bg-primary">{{ donation.transaction_id }}</span></td>

@@ -47,7 +47,7 @@
 
                     <li class="nav-item">
                         <a class="nav-link hr-nav-link {% if request.resolver_match.url_name == 'campaign_list' %}active{% endif %}" href="{% url 'campaign_list' %}">
-                            <i class="fa-solid fa-hand-holding-heart"></i> Campaigns
+                            <i class="fa-solid fa-hand-holding-heart"></i> Fundraise
                         </a>
                     </li>
                     <li class="nav-item">
@@ -88,7 +88,7 @@
                         </a>
                     {% endif %}
                     
-                    <a class="btn-hr-pill hr-donate-btn" href="{% url 'campaign_list' %}" data-bs-toggle="modal" data-bs-target="#quickDonateModal">
+                    <a class="btn-hr-pill hr-donate-btn" href="{% url 'donate_generic' %}" data-bs-toggle="modal" data-bs-target="#appealPickerModal">
                         <i class="bi bi-heart-fill"></i> Donate
                     </a>
                 </div>
@@ -158,85 +158,188 @@
     </footer>
     {% endblock %}
 
-    <!-- ===================== QUICK DONATE MODAL ===================== -->
-    <div class="modal fade" id="quickDonateModal" tabindex="-1" aria-hidden="true" aria-labelledby="quickDonateLabel" data-donate-url="{% url 'donate_generic' %}">
+    <!-- ===================== DONATION APPEAL PICKER MODAL ===================== -->
+    <div class="modal fade" id="appealPickerModal" tabindex="-1" aria-labelledby="appealPickerLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content hr-donate-modal">
-                <div class="hr-donate-flip-outer">
-                    <div class="hr-donate-flip-inner" id="donateFlipInner">
-
-                        <!-- FRONT FACE: choose amount -->
-                        <div class="hr-donate-face hr-donate-face-front">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h5 class="font-heading fw-bold mb-0" id="quickDonateLabel">Choose Amount</h5>
-                                <button type="button" class="hr-modal-close" data-bs-dismiss="modal" aria-label="Close">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
-
-                            <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
-                                <span class="hr-toggle-label active" id="labelOneTime">One-Time Donation</span>
-                                <label class="hr-toggle-switch mb-0">
-                                    <input type="checkbox" id="monthlyToggle">
-                                    <span class="hr-toggle-track"><span class="hr-toggle-thumb"></span></span>
-                                </label>
-                                <span class="hr-toggle-label" id="labelMonthly">Monthly Support <i class="bi bi-heart-fill text-emerald"></i></span>
-                            </div>
-
-                            <div class="hr-amount-input-wrap mb-3">
-                                <input type="number" id="donateAmountInput" class="hr-amount-input" value="500" min="1">
-                                <select class="hr-currency-select" id="donateCurrency">
-                                    <option value="Rs." selected>Rs.</option>
-                                </select>
-                            </div>
-
-                            <div class="hr-amount-pills mb-4" id="amountPills">
-                                <button type="button" class="hr-amount-pill" data-amount="100">Rs.100</button>
-                                <button type="button" class="hr-amount-pill active" data-amount="500">Rs.500</button>
-                                <button type="button" class="hr-amount-pill" data-amount="1000">Rs.1000</button>
-                                <button type="button" class="hr-amount-pill" data-amount="2500">Rs.2500</button>
-                            </div>
-
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="anonymousCheck">
-                                <label class="form-check-label small" for="anonymousCheck">Donate Anonymously</label>
-                            </div>
-
-                            <input type="text" class="hr-name-input mb-3" id="donateNameInput" placeholder="Your full name">
-
-                            <div class="form-check mb-4">
-                                <input class="form-check-input" type="checkbox" id="termsCheck">
-                                <label class="form-check-label small" for="termsCheck">I Agree To The Terms</label>
-                            </div>
-
-                            <div class="d-flex gap-2">
-                                <button type="button" id="donateSubmitBtn" class="btn-hr-green flex-grow-1" disabled>DONATE</button>
-
-                            </div>
-                        </div>
-
-                        <!-- BACK FACE: QR code -->
-                        <div class="hr-donate-face hr-donate-face-back">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <button type="button" class="hr-modal-close" id="qrBackBtn" aria-label="Back">
-                                    <i class="bi bi-arrow-left"></i>
-                                </button>
-                                <h5 class="font-heading fw-bold mb-0">Scan To Donate</h5>
-                                <button type="button" class="hr-modal-close" data-bs-dismiss="modal" aria-label="Close">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
-                            <div class="text-center">
-                                <div class="hr-qr-box mb-3">
-                                    <img id="qrCodeImg" src="" alt="QR Code" width="180" height="180">
-                                </div>
-                                <p class="text-muted small mb-1">Scan with any UPI app to pay</p>
-                                <h5 class="font-heading fw-bold text-emerald mb-4" id="qrAmountLabel">Rs. 500</h5>
-                                <button type="button" class="btn-hr-green w-100" id="qrDoneBtn">CONTINUE TO CHECKOUT</button>
-                            </div>
-                        </div>
-
+                <div class="p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="font-heading fw-bold mb-0" id="appealPickerLabel">Choose A Story To Support</h5>
+                        <button type="button" class="hr-modal-close" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                     </div>
+                    <p class="text-muted small mb-3">Pick a current appeal below to see how your donation helps, or make a general donation.</p>
+
+                    <div class="d-flex flex-column gap-2 mb-3" id="appealPickerList">
+                        {% for appeal in donation_appeals %}
+                            <button type="button" class="appeal-picker-link btn text-start d-flex align-items-center gap-3 p-2 border rounded-3"
+                                    data-appeal-id="{{ appeal.id }}"
+                                    data-appeal-title="{{ appeal.title }}"
+                                    data-appeal-content="{{ appeal.content|escape }}"
+                                    data-appeal-image="{% if appeal.image %}{{ appeal.image.url }}{% endif %}"
+                                    data-appeal-image2="{% if appeal.image2 %}{{ appeal.image2.url }}{% endif %}"
+                                    data-appeal-image3="{% if appeal.image3 %}{{ appeal.image3.url }}{% endif %}"
+                                    data-appeal-image4="{% if appeal.image4 %}{{ appeal.image4.url }}{% endif %}"
+                                    data-appeal-campaign-id="{% if appeal.campaign %}{{ appeal.campaign.id }}{% endif %}"
+                                    data-appeal-supplies='[{% for item in appeal.supply_items.all %}{"name": "{{ item.item_name|escapejs }}", "quantity": "{{ item.quantity }}", "unit": "{{ item.unit }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+                                {% if appeal.image %}
+                                    <img src="{{ appeal.image.url }}" class="rounded-3" style="width: 52px; height: 52px; object-fit: cover;" alt="{{ appeal.title }}">
+                                {% else %}
+                                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center flex-shrink-0" style="width: 52px; height: 52px;">
+                                        <i class="bi bi-heart-fill text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                <span class="fw-semibold small">{{ appeal.title }}</span>
+                            </button>
+                        {% empty %}
+                            <p class="text-muted small mb-0">No specific appeals right now -- but you can still make a general donation below.</p>
+                        {% endfor %}
+                    </div>
+
+                    <a href="{% url 'donate_generic' %}" class="btn-hr-pill-outline w-100 justify-content-center text-center text-decoration-none">
+                        Make A General Donation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== DONATION APPEAL DETAIL + DONATE MODAL ===================== -->
+    <style>
+        .hr-amount-card {
+            border: 1px solid #dee2e6 !important;
+            background-color: #ffffff !important;
+            cursor: pointer;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        .hr-amount-card.active {
+            border: 2px solid #198754 !important;
+            background-color: #eaf6ec !important;
+        }
+        .hr-amount-card:hover {
+            border-color: #198754 !important;
+        }
+        .hr-story-detail-img-wrap img {
+            border-radius: 1rem;
+        }
+    </style>
+    <div class="modal fade" id="appealDetailModal" tabindex="-1" aria-labelledby="appealDetailLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 rounded-4 overflow-hidden shadow-lg">
+                <!-- Upper Split Columns -->
+                <div class="row g-0">
+                    <!-- Left: Story Image & Slider -->
+                    <div class="col-lg-5 position-relative bg-light" style="min-height: 400px; max-height: 550px;">
+                        <!-- Story Image -->
+                        <img src="" alt="" id="appealDetailImg" class="w-100 h-100 object-fit-cover d-none" style="cursor: pointer; object-fit: cover;">
+                        <div class="hr-story-detail-img-error d-none w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-secondary-subtle" id="appealDetailImgError">
+                            <i class="bi bi-image-slash text-muted" style="font-size: 2.5rem;"></i>
+                            <p class="mb-0 text-muted">Image unavailable</p>
+                        </div>
+                        
+                        <!-- Top Story Progress Bar Indicators -->
+                        <div class="position-absolute top-0 start-0 end-0 p-3 d-flex gap-2" id="appealDetailProgressIndicators" style="z-index: 12; background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);">
+                            <!-- Progress bars injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Story Details Text -->
+                    <div class="col-lg-7 d-flex flex-column bg-white position-relative">
+                        <!-- Close button top right -->
+                        <div class="position-absolute top-0 end-0 p-3" style="z-index: 10;">
+                            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close" style="background-color: #f8f9fa; padding: 0.8rem; border-radius: 50%; border: 1px solid #dee2e6;"></button>
+                        </div>
+                        
+                        <div class="p-4 p-lg-5 flex-grow-1" style="max-height: 550px; overflow-y: auto;">
+                            <h3 class="font-heading fw-bold mb-3 mt-2 text-dark" id="appealDetailTitle"></h3>
+                            <div class="text-secondary mb-4" id="appealDetailContent" style="line-height: 1.8; font-size: 0.95rem;"></div>
+
+                            <!-- Supplies received list -->
+                            <div class="border rounded-4 p-3 bg-white mb-3 d-none" id="appealDetailSuppliesWrap" style="border-color: #e5e7eb !important;">
+                                <p class="fw-bold small mb-3 text-dark">With your support, we have received the following essential supplies:</p>
+                                <div class="row g-2" id="appealDetailSupplies"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lower Donation Section Banner -->
+                <div class="border-top p-4 bg-light bg-opacity-75" style="background-color: #fcfbf7 !important; border-top: 1px solid #f1f0ea !important;">
+                    <div class="text-center mb-3">
+                        <h5 class="fw-bold text-success mb-1" style="color: #198754 !important;">Choose Your Donation</h5>
+                    </div>
+
+                    <form method="post" id="appealDonateForm" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="campaign" id="appealDonateCampaignId" value="">
+                        <input type="hidden" name="payment_method" value="upi">
+
+                        <!-- Preset Cards -->
+                        <div class="row g-3 mb-3 justify-content-center" id="appealAmountPills">
+                            <!-- Preset 1 -->
+                            <div class="col-6 col-sm-3">
+                                <button type="button" class="btn w-100 bg-white border rounded-3 p-3 text-center hr-amount-card active" data-amount="500" style="transition: all 0.2s ease;">
+                                    <div class="fw-bold text-dark fs-5">₹500</div>
+                                    <div class="text-muted small mt-1">Feed a Sadhu</div>
+                                </button>
+                            </div>
+                            <!-- Preset 2 -->
+                            <div class="col-6 col-sm-3">
+                                <button type="button" class="btn w-100 bg-white border rounded-3 p-3 text-center hr-amount-card" data-amount="1000" style="transition: all 0.2s ease;">
+                                    <div class="fw-bold text-dark fs-5">₹1,000</div>
+                                    <div class="text-muted small mt-1">Feed 2 Sadhus</div>
+                                </button>
+                            </div>
+                            <!-- Preset 3 -->
+                            <div class="col-6 col-sm-3">
+                                <button type="button" class="btn w-100 bg-white border rounded-3 p-3 text-center hr-amount-card" data-amount="2500" style="transition: all 0.2s ease;">
+                                    <div class="fw-bold text-dark fs-5">₹2,500</div>
+                                    <div class="text-muted small mt-1">Feed 5 Sadhus</div>
+                                </button>
+                            </div>
+                            <!-- Preset 4 -->
+                            <div class="col-6 col-sm-3">
+                                <button type="button" class="btn w-100 bg-white border rounded-3 p-3 text-center hr-amount-card" data-amount="5000" style="transition: all 0.2s ease;">
+                                    <div class="fw-bold text-dark fs-5">₹5,000</div>
+                                    <div class="text-muted small mt-1">Feed 10 Sadhus</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Form Fields Row -->
+                        <div class="row g-2 align-items-center mb-3">
+                            <div class="col-md-3 position-relative">
+                                <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input type="text" name="donor_name" class="form-control rounded-pill ps-5 py-2 border-secondary-subtle shadow-sm" placeholder="Your Name" required style="font-size: 0.95rem;">
+                            </div>
+                            <div class="col-md-3 position-relative">
+                                <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
+                                <input type="email" name="email" class="form-control rounded-pill ps-5 py-2 border-secondary-subtle shadow-sm" placeholder="Email Address" required style="font-size: 0.95rem;">
+                            </div>
+                            <div class="col-md-3 position-relative">
+                                <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted fw-semibold" style="pointer-events: none;">₹</span>
+                                <input type="number" name="amount" id="appealDonateAmount" class="form-control rounded-pill ps-5 py-2 border-secondary-subtle shadow-sm font-heading fw-bold" value="500" min="10" required style="font-size: 0.95rem;">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-success w-100 rounded-pill py-2 fw-bold text-uppercase d-flex align-items-center justify-content-center gap-2 shadow-sm" style="background-color: #198754; border-color: #198754; font-size: 0.95rem;">
+                                    <i class="bi bi-heart-fill"></i> Donate Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Safety Badges -->
+                        <div class="d-flex flex-wrap gap-4 justify-content-center text-muted small mt-3" style="font-size: 0.8rem;">
+                            <span><i class="bi bi-shield-check text-success me-1"></i> 100% Secure Payment</span>
+                            <span><i class="bi bi-percent text-success me-1"></i> Tax Benefits Available</span>
+                            <span><i class="bi bi-heart-fill text-success me-1"></i> Your Donation is Safe</span>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

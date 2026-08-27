@@ -180,6 +180,11 @@ body.admin-dark-mode {
     flex-shrink: 0;
 }
 
+img.admin-sidebar-profile-avatar {
+    object-fit: cover;
+    display: block;
+}
+
 /* ---------------- TOPBAR ---------------- */
 .admin-topbar {
     background-color: var(--admin-bg);
@@ -748,4 +753,25 @@ body.admin-dark-mode .admin-notification-unread {
 .admin-notification-footer .btn-success {
     background: var(--admin-green);
     border-color: var(--admin-green);
+}
+
+/* ---------------- Donation Appeal admin form ---------------- */
+.hr-upload-dropzone-admin {
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.hr-upload-dropzone-admin:hover {
+    border-color: var(--admin-green) !important;
+    background: var(--admin-green-light);
+}
+
+.hr-rte-toolbar .btn.active {
+    background-color: var(--admin-green);
+    color: #fff;
+    border-color: var(--admin-green);
+}
+
+#rteEditor:empty:before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
 }

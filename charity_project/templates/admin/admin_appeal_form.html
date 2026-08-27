@@ -1,0 +1,387 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}{{ page_title }}{% endblock %}
+{% block admin_heading %}{{ page_title }}{% endblock %}
+
+{% block admin_content %}
+
+<p class="text-muted mb-4">Share a story of impact and inspire more hearts.</p>
+
+    {% if form.errors or formset.errors %}
+        <div class="alert alert-danger rounded-4 p-3 mb-4 shadow-sm">
+            <h5 class="fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Please correct the following errors:</h5>
+            <ul class="mb-0 small">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+                {% for form_in_set in formset %}
+                    {% for field in form_in_set %}
+                        {% for error in field.errors %}
+                            <li><strong>Supply Row #{{ forloop.parentloop.parentloop.counter }} ({{ field.label }}):</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form_in_set.non_field_errors %}
+                        <li><strong>Supply Row #{{ forloop.parentloop.counter }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in formset.non_form_errors %}
+                    <li><strong>Supplies:</strong> {{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+<form method="post" enctype="multipart/form-data" id="appealForm">
+    {% csrf_token %}
+
+    <div class="admin-card mb-4">
+        <div class="mb-4">
+            <label class="form-label fw-semibold">Story Title <span class="text-danger">*</span></label>
+            {{ form.title }}
+            <small class="text-muted d-block mt-1">Example: Together, We Are Feeding Hundreds of Sadhus Every Day</small>
+            {% for error in form.title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fw-semibold">Story Content / Description <span class="text-danger">*</span></label>
+
+            <div class="hr-rte-toolbar border rounded-top p-2 d-flex align-items-center gap-2 flex-wrap bg-light">
+                
+                <div class="vr"></div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-rte-cmd="bold"><i class="bi bi-type-bold"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-rte-cmd="italic"><i class="bi bi-type-italic"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-rte-cmd="underline"><i class="bi bi-type-underline"></i></button>
+                <div class="vr"></div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-rte-cmd="insertUnorderedList"><i class="bi bi-list-ul"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-rte-cmd="insertOrderedList"><i class="bi bi-list-ol"></i></button>
+                <div class="vr"></div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-rte-cmd="justifyLeft"><i class="bi bi-text-left"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-rte-cmd="justifyCenter"><i class="bi bi-text-center"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-rte-cmd="justifyRight"><i class="bi bi-text-right"></i></button>
+                <div class="vr"></div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="rteLinkBtn"><i class="bi bi-link-45deg"></i></button>
+            </div>
+            <div id="rteEditor" class="form-control border-top-0 rounded-top-0" contenteditable="true"
+                 style="min-height: 160px; overflow-y: auto;"
+                 data-placeholder="Write the full story here...">{{ form.instance.content|default:""|safe }}</div>
+
+            {{ form.content }}
+            <small class="text-muted d-block mt-1">Share what you did, how it helped, what was received, and how donors supported.</small>
+            {% for error in form.content.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fw-semibold">Story Images (Up to 4 images)</label>
+            <div class="row g-3">
+                <!-- Image 1 -->
+                <div class="col-md-3">
+                    <label for="id_image" class="hr-upload-dropzone-admin d-block text-center border rounded p-3" id="appealImageDropzone" style="cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                        {% if form.instance.image and form.instance.image.name %}
+                            <img src="{{ form.instance.image.url }}" id="appealImagePreview" class="d-block mx-auto mb-2 rounded" style="max-height: 80px; max-width: 100%; object-fit: cover;">
+                        {% else %}
+                            <i class="bi bi-cloud-arrow-up d-block mb-2" style="font-size: 1.4rem;"></i>
+                        {% endif %}
+                        <div class="fw-semibold text-center" style="font-size: 0.8rem;" id="appealImageLabel">Main Image *</div>
+                    </label>
+                    {{ form.image }}
+                    {% for error in form.image.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+
+                <!-- Image 2 -->
+                <div class="col-md-3">
+                    <label for="id_image2" class="hr-upload-dropzone-admin d-block text-center border rounded p-3" id="appealImage2Dropzone" style="cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                        {% if form.instance.image2 and form.instance.image2.name %}
+                            <img src="{{ form.instance.image2.url }}" id="appealImage2Preview" class="d-block mx-auto mb-2 rounded" style="max-height: 80px; max-width: 100%; object-fit: cover;">
+                        {% else %}
+                            <i class="bi bi-cloud-arrow-up d-block mb-2" style="font-size: 1.4rem;"></i>
+                        {% endif %}
+                        <div class="fw-semibold text-center" style="font-size: 0.8rem;" id="appealImage2Label">Image 2 (Optional)</div>
+                    </label>
+                    {{ form.image2 }}
+                    {% for error in form.image2.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+
+                <!-- Image 3 -->
+                <div class="col-md-3">
+                    <label for="id_image3" class="hr-upload-dropzone-admin d-block text-center border rounded p-3" id="appealImage3Dropzone" style="cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                        {% if form.instance.image3 and form.instance.image3.name %}
+                            <img src="{{ form.instance.image3.url }}" id="appealImage3Preview" class="d-block mx-auto mb-2 rounded" style="max-height: 80px; max-width: 100%; object-fit: cover;">
+                        {% else %}
+                            <i class="bi bi-cloud-arrow-up d-block mb-2" style="font-size: 1.4rem;"></i>
+                        {% endif %}
+                        <div class="fw-semibold text-center" style="font-size: 0.8rem;" id="appealImage3Label">Image 3 (Optional)</div>
+                    </label>
+                    {{ form.image3 }}
+                    {% for error in form.image3.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+
+                <!-- Image 4 -->
+                <div class="col-md-3">
+                    <label for="id_image4" class="hr-upload-dropzone-admin d-block text-center border rounded p-3" id="appealImage4Dropzone" style="cursor: pointer; min-height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                        {% if form.instance.image4 and form.instance.image4.name %}
+                            <img src="{{ form.instance.image4.url }}" id="appealImage4Preview" class="d-block mx-auto mb-2 rounded" style="max-height: 80px; max-width: 100%; object-fit: cover;">
+                        {% else %}
+                            <i class="bi bi-cloud-arrow-up d-block mb-2" style="font-size: 1.4rem;"></i>
+                        {% endif %}
+                        <div class="fw-semibold text-center" style="font-size: 0.8rem;" id="appealImage4Label">Image 4 (Optional)</div>
+                    </label>
+                    {{ form.image4 }}
+                    {% for error in form.image4.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+            </div>
+            <small class="text-muted d-block mt-2">Use clear and real images related to the story. Recommended size: 1200x800px (JPG, PNG up to 5MB). Main image is required, others are optional.</small>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label class="form-label fw-semibold">Linked Campaign (Optional)</label>
+                {{ form.campaign }}
+                <small class="text-muted">Donations made from this story are recorded against the selected campaign. Leave blank to track independently.</small>
+                {% for error in form.campaign.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-2 mb-3">
+                <label class="form-label fw-semibold">{{ form.display_order.label }}</label>
+                {{ form.display_order }}
+            </div>
+            <div class="col-md-2 mb-3 d-flex align-items-end">
+                <div class="form-check">
+                    {{ form.is_published }}
+                    <label class="form-check-label ms-1">{{ form.is_published.label }}</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-card mb-4">
+        <label class="form-label fw-semibold">Essential Supplies Received <span class="text-danger">*</span></label>
+
+        {{ formset.management_form }}
+
+        <div class="table-responsive">
+            <table class="table align-middle" id="supplyItemsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Item / Supply</th>
+                        <th style="width: 140px;">Quantity</th>
+                        <th style="width: 140px;">Unit</th>
+                        <th style="width: 60px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="supplyItemsBody">
+                    {% for item_form in formset %}
+                        <tr class="supply-item-row {% if item_form.DELETE.value %}d-none{% endif %}">
+                            <td class="supply-row-number">{{ forloop.counter }}</td>
+                            <td>
+                                {{ item_form.item_name }}
+                                {{ item_form.id }}
+                            </td>
+                            <td>{{ item_form.quantity }}</td>
+                            <td>{{ item_form.unit }}</td>
+                            <td>
+                                {% if item_form.instance.pk %}
+                                    <label class="btn btn-sm btn-outline-danger mb-0 remove-supply-row">
+                                        <i class="bi bi-trash"></i>
+                                        <span class="d-none">{{ item_form.DELETE }}</span>
+                                    </label>
+                                {% else %}
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-supply-row"><i class="bi bi-trash"></i></button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <button type="button" class="btn btn-outline-success btn-sm" id="addSupplyRowBtn">
+            <i class="bi bi-plus-circle"></i> Add More Item
+        </button>
+        <div id="emptyFormTemplate" class="d-none">{{ formset.empty_form }}</div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'admin_site_settings' %}?panel=home-page" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-send"></i> Save Story
+        </button>
+    </div>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // ---- Lightweight rich text editor ----
+        var rteEditor = document.getElementById('rteEditor');
+        var rteHidden = document.getElementById('id_content_raw');
+
+        function syncContent() {
+            rteHidden.value = rteEditor.innerHTML.trim();
+        }
+        rteEditor.addEventListener('input', syncContent);
+        syncContent(); // capture any pre-filled content on edit
+
+        document.querySelectorAll('[data-rte-cmd]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                rteEditor.focus();
+                document.execCommand(btn.getAttribute('data-rte-cmd'), false, null);
+                syncContent();
+            });
+        });
+
+        document.getElementById('rteBlockFormat').addEventListener('change', function () {
+            rteEditor.focus();
+            document.execCommand('formatBlock', false, this.value);
+            syncContent();
+        });
+
+        document.getElementById('rteLinkBtn').addEventListener('click', function () {
+            var url = prompt('Enter a URL:');
+            if (url) {
+                rteEditor.focus();
+                document.execCommand('createLink', false, url);
+                syncContent();
+            }
+        });
+
+        document.getElementById('appealForm').addEventListener('submit', syncContent);
+
+        // ---- Image upload preview ----
+        function setupImagePreview(inputId, labelId, dropzoneId, previewId) {
+            var input = document.getElementById(inputId);
+            var label = document.getElementById(labelId);
+            var dropzone = document.getElementById(dropzoneId);
+            var preview = document.getElementById(previewId);
+
+            if (input) {
+                input.addEventListener('change', function () {
+                    if (input.files && input.files.length > 0) {
+                        var file = input.files[0];
+                        if (label) label.textContent = file.name;
+                        if (dropzone) dropzone.classList.add('border-success');
+
+                        // Show dynamic image preview immediately when a file is selected
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            if (!preview) {
+                                preview = document.createElement('img');
+                                preview.id = previewId;
+                                preview.className = 'd-block mx-auto mb-2 rounded';
+                                preview.style.maxHeight = '80px';
+                                preview.style.maxWidth = '100%';
+                                preview.style.objectFit = 'cover';
+                                
+                                var cloudIcon = dropzone.querySelector('.bi-cloud-arrow-up');
+                                if (cloudIcon) {
+                                    cloudIcon.remove();
+                                }
+                                
+                                dropzone.insertBefore(preview, label);
+                            }
+                            preview.src = e.target.result;
+                            preview.classList.remove('d-none');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        }
+
+        setupImagePreview('id_image', 'appealImageLabel', 'appealImageDropzone', 'appealImagePreview');
+        setupImagePreview('id_image2', 'appealImage2Label', 'appealImage2Dropzone', 'appealImage2Preview');
+        setupImagePreview('id_image3', 'appealImage3Label', 'appealImage3Dropzone', 'appealImage3Preview');
+        setupImagePreview('id_image4', 'appealImage4Label', 'appealImage4Dropzone', 'appealImage4Preview');
+
+        // ---- Dynamic "Essential Supplies Received" rows ----
+        var supplyBody = document.getElementById('supplyItemsBody');
+        var addRowBtn = document.getElementById('addSupplyRowBtn');
+        var totalFormsInput = document.querySelector('#id_items-TOTAL_FORMS');
+        var emptyFormHtml = document.getElementById('emptyFormTemplate').innerHTML;
+
+        function renumberRows() {
+            var visibleRows = supplyBody.querySelectorAll('.supply-item-row:not(.d-none)');
+            visibleRows.forEach(function (row, index) {
+                row.querySelector('.supply-row-number').textContent = index + 1;
+            });
+        }
+
+        addRowBtn.addEventListener('click', function () {
+            var formIndex = parseInt(totalFormsInput.value, 10);
+            var newRowHtml = emptyFormHtml.replace(/__prefix__/g, formIndex);
+
+            var tempRow = document.createElement('tr');
+            tempRow.className = 'supply-item-row';
+            tempRow.innerHTML =
+                '<td class="supply-row-number"></td>' +
+                '<td colspan="3">' + newRowHtml + '</td>' +
+                '<td><button type="button" class="btn btn-sm btn-outline-danger remove-supply-row"><i class="bi bi-trash"></i></button></td>';
+
+            // Split the 3 cells (item/qty/unit) back out from the wrapped form html isn't trivial via innerHTML
+            // so instead we build the row directly using the same fields the server-rendered rows use.
+            var wrapper = document.createElement('div');
+            wrapper.innerHTML = newRowHtml;
+            var itemInput = wrapper.querySelector('[id$="-item_name"]');
+            var qtyInput = wrapper.querySelector('[id$="-quantity"]');
+            var unitSelect = wrapper.querySelector('[id$="-unit"]');
+            var idInput = wrapper.querySelector('[id$="-id"]');
+
+            var row = document.createElement('tr');
+            row.className = 'supply-item-row';
+
+            var tdNum = document.createElement('td');
+            tdNum.className = 'supply-row-number';
+            row.appendChild(tdNum);
+
+            var tdItem = document.createElement('td');
+            tdItem.appendChild(itemInput);
+            if (idInput) tdItem.appendChild(idInput);
+            row.appendChild(tdItem);
+
+            var tdQty = document.createElement('td');
+            tdQty.appendChild(qtyInput);
+            row.appendChild(tdQty);
+
+            var tdUnit = document.createElement('td');
+            tdUnit.appendChild(unitSelect);
+            row.appendChild(tdUnit);
+
+            var tdAction = document.createElement('td');
+            var removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-sm btn-outline-danger remove-supply-row';
+            removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
+            tdAction.appendChild(removeBtn);
+            row.appendChild(tdAction);
+
+            supplyBody.appendChild(row);
+            totalFormsInput.value = formIndex + 1;
+            renumberRows();
+        });
+
+        supplyBody.addEventListener('click', function (event) {
+            var removeBtn = event.target.closest('.remove-supply-row');
+            if (!removeBtn) return;
+
+            var row = removeBtn.closest('.supply-item-row');
+            var deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+
+            if (deleteCheckbox) {
+                // Existing (saved) row -- mark for deletion on the server instead of removing it,
+                // so the formset correctly deletes it when the form is submitted.
+                deleteCheckbox.checked = true;
+                row.classList.add('d-none');
+            } else {
+                // Brand-new (unsaved) row -- just remove it from the page.
+                row.remove();
+            }
+            renumberRows();
+        });
+    });
+</script>
+
+{% endblock %}

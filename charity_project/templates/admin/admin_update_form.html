@@ -28,11 +28,13 @@
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">{{ form.publish_date.label }}</label>
                 {{ form.publish_date }}
+                {% for error in form.publish_date.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">{{ form.link_url.label }}</label>
                 {{ form.link_url }}
                 <small class="text-muted">{{ form.link_url.help_text }}</small>
+                {% for error in form.link_url.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
             </div>
         </div>
 

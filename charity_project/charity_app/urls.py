@@ -24,6 +24,7 @@ urlpatterns = [
     # Donation flow: Step 1 (details form) -> Step 2 (payment gateway) -> Success
     path('donate/', views.donate, name='donate_generic'),
     path('donate/<int:campaign_id>/', views.donate, name='donate'),
+    path('donate/appeal/<int:appeal_id>/', views.donate, name='donate_appeal'),
     path('payment/', views.payment_gateway, name='payment_gateway'),
     path('payment-success/',views.payment_success,name='payment_success'),
     path('success/<int:donation_id>/', views.success_view, name='success'),
@@ -45,6 +46,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/donations/', views.dashboard_donations, name='dashboard_donations'),
     path('dashboard/receipts/', views.dashboard_receipts, name='dashboard_receipts'),
+    path('dashboard/volunteer-messages/', views.dashboard_volunteer_messages, name='dashboard_volunteer_messages'),
     path('dashboard/profile/', views.dashboard_profile, name='dashboard_profile'),
     path('dashboard/change-password/', views.dashboard_change_password, name='dashboard_change_password'),
 
@@ -63,6 +65,8 @@ urlpatterns = [
 
     path('myadmin/donations/', views.admin_donation_list, name='admin_donation_list'),
     path('myadmin/donors/', views.admin_donor_list, name='admin_donor_list'),
+    path('myadmin/volunteers/', views.admin_volunteer_list, name='admin_volunteer_list'),
+    path('myadmin/volunteers/message/', views.admin_volunteer_message, name='admin_volunteer_message'),
 
     path('myadmin/settings/', views.admin_site_settings, name='admin_site_settings'),
 
@@ -79,6 +83,10 @@ urlpatterns = [
     path('myadmin/updates/add/', views.admin_update_add, name='admin_update_add'),
     path('myadmin/updates/<int:update_id>/edit/', views.admin_update_edit, name='admin_update_edit'),
     path('myadmin/updates/<int:update_id>/delete/', views.admin_update_delete, name='admin_update_delete'),
+
+    path('myadmin/appeals/add/', views.admin_appeal_add, name='admin_appeal_add'),
+    path('myadmin/appeals/<int:appeal_id>/edit/', views.admin_appeal_edit, name='admin_appeal_edit'),
+    path('myadmin/appeals/<int:appeal_id>/delete/', views.admin_appeal_delete, name='admin_appeal_delete'),
 
     path('myadmin/messages/', views.admin_contact_list, name='admin_contact_list'),
     path('myadmin/messages/<int:message_id>/', views.admin_contact_view, name='admin_contact_view'),

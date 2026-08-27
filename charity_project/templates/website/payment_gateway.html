@@ -22,7 +22,7 @@
                 <p class="text-muted mb-4">
                     You are supporting
                     <strong class="text-dark">
-                        {{ campaign.campaign_name }}
+                        {{ subject_title }}
                     </strong>
                 </p>
 
@@ -69,8 +69,8 @@
                         </div>
 
                         <div class="col-12 mt-2">
-                            <small class="text-muted">Campaign</small>
-                            <div class="fw-semibold">{{ campaign.campaign_name }}</div>
+                            <small class="text-muted">Supporting</small>
+                            <div class="fw-semibold">{{ subject_title }}</div>
                         </div>
                     </div>
                 </div>
@@ -112,7 +112,7 @@ var options = {
     amount: "{{ payment.amount }}",
     currency: "INR",
     name: "Helping Hands NGO",
-    description: "Campaign Donation",
+    description: "Donation: {{ subject_title }}",
     order_id: "{{ payment.id }}",
 
     handler: function (response) {

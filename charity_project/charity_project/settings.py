@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-lbi6l(9=m3&))vqn9a7s+1p786f8-e)%j9y%kgjgshi@eekb2l
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -73,6 +73,7 @@ TEMPLATES = [
                 'charity_app.context_processors.site_settings',
                 'charity_app.context_processors.user_profile',
                 'charity_app.context_processors.admin_alerts',
+                'charity_app.context_processors.donation_appeals',
             ],
         },
     },
@@ -151,7 +152,7 @@ LOGOUT_REDIRECT_URL = 'home'       # where users go after logging out
 
 # ---- Session Settings ----
 # Sessions expire after 10 minutes of inactivity.
-SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
+SESSION_COOKIE_AGE = 600
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 

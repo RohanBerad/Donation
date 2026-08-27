@@ -24,7 +24,7 @@
         </h1>
 
         <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
-            <a href="{% url 'donate_generic' %}" class="btn-hr-green" data-bs-toggle="modal" data-bs-target="#quickDonateModal">
+            <a href="{% url 'donate_generic' %}" class="btn-hr-green" data-bs-toggle="modal" data-bs-target="#appealPickerModal">
                 DONATE
             </a>
             <a href="#get-help" class="d-inline-flex align-items-center gap-2 text-dark font-heading fw-bold text-uppercase small">
@@ -84,7 +84,7 @@
                             <i class="bi bi-paypal fs-6"></i>
                             <span class="small font-heading fw-bold text-muted ms-1">Payment Options</span>
                         </div>
-                        <a href="{% url 'donate_generic' %}" class="btn-hr-circle-arrow bg-emerald border-0" data-bs-toggle="modal" data-bs-target="#quickDonateModal">
+                        <a href="{% url 'donate_generic' %}" class="btn-hr-circle-arrow bg-emerald border-0" data-bs-toggle="modal" data-bs-target="#appealPickerModal">
                             <i class="bi bi-arrow-up-right"></i>
                         </a>
                     </div>
@@ -96,7 +96,7 @@
                 <div class="hr-card-white h-100 d-flex flex-column justify-content-between">
                     <div>
                         <div class="hr-card-icon-wrap bg-light"><i class="bi bi-heart-pulse-fill text-dark"></i></div>
-                        <h4 class="font-heading fw-bold text-dark mb-3">Get Support</h4>
+                        <h4 class="font-heading fw-bold text-dark mb-3">Get Support Details</h4>
                         <p class="text-muted small leading-relaxed mb-4">
                             Access vital resources, financial aid, and counseling for patients and their families in their time of need.
                         </p>
@@ -152,7 +152,7 @@
             <div class="position-absolute inset-0 bg-dark bg-opacity-40"></div>
 
             <div class="position-relative z-1 w-100">
-                <form method="post" enctype="multipart/form-data" class="hr-gethelp-card">
+                <form method="post" enctype="multipart/form-data" class="hr-gethelp-card needs-validation" novalidate>
                     {% csrf_token %}
                     <input type="hidden" name="submit_help_request" value="1">
 
@@ -202,7 +202,7 @@
 
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <label for="id_document" class="btn btn-link text-white text-uppercase font-heading fw-bold small p-0 text-decoration-none mb-0" style="cursor: pointer;">
-                            <span id="attach-doc-label">ATTACH DOCUMENTS</span> <i class="bi bi-upload ms-1"></i>
+                            <span id="attach-doc-label">ATTACH PDF DOCUMENT *</span> <i class="bi bi-upload ms-1"></i>
                         </label>
                         {{ help_request_form.document }}
                         <button type="submit" class="btn bg-white text-dark rounded-pill font-heading fw-bold text-uppercase px-4 py-2 small ms-auto">
@@ -232,7 +232,7 @@
                 if (docInput.files && docInput.files.length > 0) {
                     docLabel.textContent = docInput.files[0].name;
                 } else {
-                    docLabel.textContent = 'ATTACH DOCUMENTS';
+                    docLabel.textContent = 'ATTACH PDF DOCUMENT *';
                 }
             });
         }
@@ -499,8 +499,9 @@
 <div class="modal fade" id="shareStoryModal" tabindex="-1" aria-labelledby="shareStoryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <button type="button" class="btn-close position-absolute top-0 end-0 m-4" data-bs-dismiss="modal" aria-label="Close"></button>
-
+                                <button type="button" class="hr-modal-close   ms-auto m-4 " data-bs-dismiss="modal" aria-label="Close">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
             <div class="modal-body">
                 <div class="text-center mb-4">
                     <div class="hr-story-modal-icon"><i class="bi bi-pencil-square"></i></div>
@@ -514,7 +515,7 @@
                     </div>
                 {% endif %}
 
-                <form method="post" enctype="multipart/form-data" id="shareStoryForm">
+                <form method="post" enctype="multipart/form-data" id="shareStoryForm" class="needs-validation" novalidate>
                     {% csrf_token %}
                     <input type="hidden" name="submit_story" value="1">
 
@@ -585,8 +586,9 @@
 <div class="modal fade" id="storyDetailModal" tabindex="-1" aria-labelledby="storyDetailTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <button type="button" class="btn-close position-absolute top-0 end-0 m-4" data-bs-dismiss="modal" aria-label="Close"></button>
+
             <div class="modal-body p-0">
+
                 <div class="row g-0">
                     <div class="col-lg-5">
                         <div class="hr-story-detail-img-wrap">
@@ -598,6 +600,9 @@
                         </div>
                     </div>
                     <div class="col-lg-7">
+                    <button type="button" style="float: right;" class="hr-modal-close ms-auto m-4 " data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                         <div class="p-4 p-lg-5 d-flex flex-column">
                             <span class="hr-story-category-badge mb-3 align-self-start" id="storyDetailCategory">{{ testimonial.get_category_display }}</span>
                             <h4 class="font-heading fw-bold mb-3" id="storyDetailTitle">{{ testimonial.display_title }}</h4>
@@ -617,6 +622,8 @@
         </div>
     </div>
 </div>
+
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -726,6 +733,8 @@
                 avatarWrap.appendChild(avatarImg);
             });
         }
+
+
     });
 </script>
 
@@ -817,7 +826,7 @@
     <div class="container text-center">
         <!-- Giant Centered Green Donate Button -->
         <div class="mb-5">
-            <a href="{% url 'donate_generic' %}" class="btn-hr-green py-3 px-5 fs-5" data-bs-toggle="modal" data-bs-target="#quickDonateModal">
+            <a href="{% url 'donate_generic' %}" class="btn-hr-green py-3 px-5 fs-5" data-bs-toggle="modal" data-bs-target="#appealPickerModal">
                 DONATE
             </a>
         </div>
@@ -888,8 +897,8 @@
     .hr-updates-slider-track {
         display: flex;
         gap: 1.5rem;
-        transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         will-change: transform;
+        transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
 
     .hr-slide-item {
@@ -924,67 +933,75 @@
 
         if (!track || !prevBtn || !nextBtn) return;
 
-        var currentIndex = 0;
         var items = track.querySelectorAll('.hr-slide-item');
-        var totalItems = items.length;
+        if (items.length === 0) return;
 
-        function getItemsPerView() {
-            if (window.innerWidth >= 992) return 4;
-            if (window.innerWidth >= 768) return 2;
-            return 1;
+        var currentTranslate = 0;
+        var originalSetWidth = 0;
+
+        function getGap() {
+            return parseFloat(getComputedStyle(track).gap) || 24;
         }
 
-        function getStep() {
-            if (items.length < 2) return 0;
-            return Math.abs(items[1].offsetLeft - items[0].offsetLeft);
+        function getOriginalSetWidth() {
+            if (originalSetWidth > 0) return originalSetWidth;
+            var totalWidth = 0;
+            var originalCount = items.length / 2;
+            var gap = getGap();
+            for (var i = 0; i < originalCount; i++) {
+                totalWidth += items[i].offsetWidth;
+                if (i < originalCount - 1) {
+                    totalWidth += gap;
+                }
+            }
+            originalSetWidth = totalWidth;
+            return totalWidth;
         }
 
-        function updateSlider() {
-            var itemsPerView = getItemsPerView();
-            var maxIndex = Math.max(0, totalItems - itemsPerView);
-
-            if (currentIndex > maxIndex) {
-                currentIndex = maxIndex;
-            }
-            if (currentIndex < 0) {
-                currentIndex = 0;
-            }
-
-            var step = getStep();
-            var offset = currentIndex * step;
-
-            track.style.transform = 'translateX(-' + offset + 'px)';
-
-            prevBtn.disabled = currentIndex === 0;
-            nextBtn.disabled = currentIndex >= maxIndex;
+        function getLoopWidth() {
+            return getOriginalSetWidth() + getGap();
         }
 
-        prevBtn.addEventListener('click', function () {
-            if (currentIndex > 0) {
-                currentIndex--;
-                updateSlider();
+        function cloneItems() {
+            var fragment = document.createDocumentFragment();
+            var originalCount = items.length;
+            for (var i = 0; i < originalCount; i++) {
+                var clone = items[i].cloneNode(true);
+                clone.setAttribute('aria-hidden', 'true');
+                fragment.appendChild(clone);
             }
-        });
+            track.appendChild(fragment);
+            items = track.querySelectorAll('.hr-slide-item');
+        }
 
         nextBtn.addEventListener('click', function () {
-            var itemsPerView = getItemsPerView();
-            var maxIndex = Math.max(0, totalItems - itemsPerView);
-            if (currentIndex < maxIndex) {
-                currentIndex++;
-                updateSlider();
+            var maxTranslate = getLoopWidth();
+            currentTranslate = currentTranslate - maxTranslate / 4;
+            if (currentTranslate < -maxTranslate) {
+                currentTranslate = 0;
             }
+            track.style.transform = 'translateX(' + currentTranslate + 'px)';
+        });
+
+        prevBtn.addEventListener('click', function () {
+            var maxTranslate = getLoopWidth();
+            currentTranslate = currentTranslate + maxTranslate / 4;
+            if (currentTranslate > 0) {
+                currentTranslate = -maxTranslate;
+            }
+            track.style.transform = 'translateX(' + currentTranslate + 'px)';
         });
 
         window.addEventListener('resize', function () {
-            var itemsPerView = getItemsPerView();
-            var maxIndex = Math.max(0, totalItems - itemsPerView);
-            if (currentIndex > maxIndex) {
-                currentIndex = maxIndex;
+            originalSetWidth = 0;
+            var maxTranslate = getLoopWidth();
+            if (currentTranslate < -maxTranslate) {
+                currentTranslate = -maxTranslate;
             }
-            updateSlider();
+            track.style.transform = 'translateX(' + currentTranslate + 'px)';
         });
 
-        updateSlider();
+        cloneItems();
     });
 </script>
 {% endblock %}

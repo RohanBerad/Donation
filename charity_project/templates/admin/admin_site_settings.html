@@ -145,7 +145,7 @@
             <p class="text-muted small">These power the "Updates From {{ site_settings.ngo_name }}" cards on the home page. Only "Active" ones are shown.</p>
 
             <div class="table-responsive">
-                <table class="table align-middle table-sm" style="font-size: 0.9rem;">
+                <table class="table align-middle table-sm admin-paginated-table" style="font-size: 0.9rem;">
                     <thead>
                         <tr>
                             <th>Image</th>
@@ -190,6 +190,74 @@
                         {% empty %}
                         <tr>
                             <td colspan="6" class="text-muted text-center py-3">No updates yet. Add one to show it on the home page.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Donation Appeals Section -->
+        <div class="border-top pt-4 mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div>
+                    <h5 class="fw-bold mb-0">Donation Appeals</h5>
+                    <p class="text-muted small mb-0">
+                        Rich donor-facing stories shown when someone clicks Donate on the website
+                        (e.g. "Together, We Are Feeding Hundreds of Sadhus Every Day"). Only "Published" ones appear.
+                    </p>
+                </div>
+                <a href="{% url 'admin_appeal_add' %}" class="btn btn-sm btn-primary flex-shrink-0">
+                    <i class="bi bi-plus-circle"></i> Add New Story
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle table-sm admin-paginated-table" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Title</th>
+                            <th>Linked Campaign</th>
+                            <th>Published?</th>
+                            <th>Order</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appeal in donation_appeals %}
+                        <tr>
+                            <td>
+                                {% if appeal.image %}
+                                    <img src="{{ appeal.image.url }}" alt="{{ appeal.title }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">
+                                {% else %}
+                                    <div class="bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 6px;">
+                                        <i class="bi bi-image text-muted" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="fw-semibold">{{ appeal.title }}</td>
+                            <td class="small text-muted">{{ appeal.campaign.campaign_name|default:"None (Tracks independently)" }}</td>
+                            <td>
+                                {% if appeal.is_published %}
+                                    <span class="badge bg-success">Published</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ appeal.display_order }}</td>
+                            <td>
+                                <a href="{% url 'admin_appeal_edit' appeal.id %}" class="btn btn-sm btn-outline-primary py-0 px-1">
+                                    <i class="bi bi-pencil" style="font-size: 0.85rem;"></i>
+                                </a>
+                                <a href="{% url 'admin_appeal_delete' appeal.id %}" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                    <i class="bi bi-trash" style="font-size: 0.85rem;"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-muted text-center py-3">No donation appeals yet. Add one to show it when donors click Donate.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

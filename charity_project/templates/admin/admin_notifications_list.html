@@ -113,7 +113,7 @@
         return cookieValue;
     }
 
-    var csrftoken = getCookie('csrftoken');
+    var csrftoken = getCookie('csrftoken') || '{{ csrf_token }}';
     var btn = document.querySelector('.admin-ajax-mark-all-read');
     if (!btn) return;
     btn.addEventListener('click', function(e) {

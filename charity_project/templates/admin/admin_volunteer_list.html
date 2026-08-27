@@ -1,0 +1,124 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Volunteers{% endblock %}
+{% block admin_heading %}Volunteers{% endblock %}
+
+{% block admin_content %}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon bg-tint-green"><i class="bi bi-person-heart"></i></div>
+            <div>
+                <p class="text-muted small mb-1">Total Volunteers</p>
+                <h3 class="fw-bold mb-0">{{ total_volunteers }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <p class="text-muted mb-0">Everyone who checked "I'd like to volunteer" when creating an account.</p>
+    <a href="{% url 'admin_volunteer_message' %}" class="btn btn-primary">
+        <i class="bi bi-send"></i> Send Message
+    </a>
+</div>
+
+<div class="admin-card">
+    {% if page_obj %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Joined</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for profile in page_obj %}
+                <tr>
+                    <td>
+                        <div class="admin-sidebar-profile-avatar" style="background: var(--admin-green); width: 34px; height: 34px; font-size: 0.75rem;">
+                            {{ profile.user.username|slice:":1"|upper }}
+                        </div>
+                    </td>
+                    <td class="fw-semibold">{{ profile.user.username }}</td>
+                    <td class="small text-muted">{{ profile.user.email|default:"--" }}</td>
+                    <td class="small text-muted">{{ profile.phone_number|default:"--" }}</td>
+                    <td class="small text-muted">{{ profile.profile_created_on|date:"d M Y" }}</td>
+                    <td>
+                        <a href="{% url 'admin_volunteer_message' %}?volunteer_ids={{ profile.user.id }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-envelope"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No volunteers yet. When someone checks "I'd like to volunteer" while creating an account, they'll show up here.</p>
+    {% endif %}
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Page navigation" class="mt-3">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo; Previous</a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% if recent_messages %}
+<div class="admin-card mt-4">
+    <h5 class="fw-bold mb-3">Recently Sent Messages</h5>
+    <div class="table-responsive">
+        <table class="table align-middle table-sm">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Recipients</th>
+                    <th>Sent By</th>
+                    <th>Sent At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for msg in recent_messages %}
+                <tr>
+                    <td class="fw-semibold">{{ msg.subject }}</td>
+                    <td class="small text-muted">
+                        {% if msg.sent_to_all %}All volunteers{% else %}{{ msg.recipients.count }} selected{% endif %}
+                    </td>
+                    <td class="small text-muted">{{ msg.sent_by.username|default:"--" }}</td>
+                    <td class="small text-muted">{{ msg.sent_at|date:"d M Y, h:i A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

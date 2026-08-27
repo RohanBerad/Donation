@@ -49,6 +49,17 @@ def admin_alerts(request):
     if request.path.startswith('/myadmin/') and request.user.is_authenticated and request.user.is_staff:
         try:
             from .models import ContactMessage, HelpRequest, Notification
+
+            # Auto-mark notifications as read when the admin visits the corresponding page/detail
+            if request.path.startswith('/myadmin/requests/'):
+                Notification.objects.filter(notification_type='help_request', is_read=False).update(is_read=True)
+            elif request.path.startswith('/myadmin/messages/'):
+                Notification.objects.filter(notification_type='contact_message', is_read=False).update(is_read=True)
+            elif request.path.startswith('/myadmin/donations/'):
+                Notification.objects.filter(notification_type='donation', is_read=False).update(is_read=True)
+            elif request.path.startswith('/myadmin/testimonials/') or request.path.startswith('/myadmin/site-settings/'):
+                Notification.objects.filter(notification_type='story_submission', is_read=False).update(is_read=True)
+
             unread = ContactMessage.objects.filter(is_read=False).count()
             new_requests = HelpRequest.objects.filter(status='new').count()
             latest_notifications = Notification.objects.order_by('is_read', '-created_at')[:5]
@@ -63,3 +74,17 @@ def admin_alerts(request):
         except (OperationalError, ProgrammingError):
             pass
     return {}
+
+
+def donation_appeals(request):
+    """Makes active donation appeals available in every template automatically."""
+    from .models import DonationAppeal
+    from django.db.models import Q
+    try:
+        appeals = DonationAppeal.objects.filter(
+            Q(campaign__isnull=True) | Q(campaign__status='active'),
+            is_published=True
+        ).select_related('campaign').prefetch_related('supply_items').order_by('display_order', '-created_at')
+        return {'donation_appeals': appeals}
+    except (OperationalError, ProgrammingError):
+        return {'donation_appeals': []}

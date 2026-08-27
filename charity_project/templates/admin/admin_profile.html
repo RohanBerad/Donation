@@ -22,21 +22,7 @@
                 {% endif %}
             </div>
             <h4 class="fw-bold mb-1">{{ request.user.get_full_name|default:request.user.username|title }}</h4>
-            <p class="text-muted small mb-2">@{{ request.user.username }}</p>
             <span class="badge bg-success-subtle text-success border border-success-subtle">Administrator</span>
-
-            <div class="mt-4 pt-3 border-top">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="small text-muted">Profile Completion</span>
-                    <span class="small fw-bold">{{ profile_completion }}%</span>
-                </div>
-                <div class="admin-progress-track" style="height: 8px;">
-                    <div class="admin-progress-fill" style="width: {{ profile_completion }}%;"></div>
-                </div>
-                <p class="small text-muted mt-2 mb-0">
-                    {{ profile_fields_filled }}/{{ total_profile_fields }} fields completed
-                </p>
-            </div>
         </div>
 
         <div class="admin-card mb-4">
@@ -93,7 +79,7 @@
                 </div>
             </div>
 
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                 {% csrf_token %}
 
                 <!-- Profile Picture Upload -->
@@ -117,12 +103,13 @@
                                name="{{ form.profile_picture.name }}"
                                id="{{ form.profile_picture.id_for_label }}"
                                class="d-none"
-                               accept="image/*"
+                               accept="image/jpeg,image/png,image/gif,image/webp"
                                onchange="previewAdminProfileImage(this)">
                         <label for="{{ form.profile_picture.id_for_label }}"
                                class="btn btn-outline-secondary rounded-pill px-4">
                             <i class="bi bi-camera me-2"></i>Change Photo
                         </label>
+                        <div class="small text-muted mt-1">JPG, PNG, GIF or WEBP. Max 5MB.</div>
                     </div>
                     {% for error in form.profile_picture.errors %}
                         <div class="text-danger small mt-1">{{ error }}</div>
@@ -134,46 +121,89 @@
                 <!-- Username + Email Row -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">{{ form.username.label }}</label>
-                        {{ form.username }}
-                        {% for error in form.username.errors %}
-                            <div class="text-danger small mt-1">{{ error }}</div>
-                        {% endfor %}
+                        <label for="{{ form.username.id_for_label }}" class="form-label small fw-semibold">Username <span class="text-danger">*</span></label>
+                        <input type="text" name="username" id="{{ form.username.id_for_label }}"
+                               class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                               value="{{ form.username.value|default:'' }}"
+                               required minlength="3" maxlength="150"
+                               pattern="^[a-zA-Z0-9_]+$"
+                               placeholder="Enter username">
+                        <div class="invalid-feedback">
+                            {% if form.username.errors %}
+                                {{ form.username.errors.0 }}
+                            {% else %}
+                                Username is required (3-150 chars, letters, digits & underscores only).
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">{{ form.email.label }}</label>
-                        {{ form.email }}
-                        {% for error in form.email.errors %}
-                            <div class="text-danger small mt-1">{{ error }}</div>
-                        {% endfor %}
+                        <label for="{{ form.email.id_for_label }}" class="form-label small fw-semibold">Email <span class="text-danger">*</span></label>
+                        <input type="email" name="email" id="{{ form.email.id_for_label }}"
+                               class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                               value="{{ form.email.value|default:'' }}"
+                               required
+                               placeholder="Enter email address">
+                        <div class="invalid-feedback">
+                            {% if form.email.errors %}
+                                {{ form.email.errors.0 }}
+                            {% else %}
+                                Please enter a valid email address.
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
                 <!-- Phone + Bio Row -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">{{ form.phone_number.label }}</label>
-                        {{ form.phone_number }}
-                        {% for error in form.phone_number.errors %}
-                            <div class="text-danger small mt-1">{{ error }}</div>
-                        {% endfor %}
+                        <label for="{{ form.phone_number.id_for_label }}" class="form-label small fw-semibold">Phone number <span class="text-danger">*</span></label>
+                        <input type="tel" name="phone_number" id="{{ form.phone_number.id_for_label }}"
+                               class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}"
+                               value="{{ form.phone_number.value|default:'' }}"
+                               required
+                               pattern="^\+?[0-9][0-9\s\-]{6,14}$"
+                               placeholder="e.g. +91 98765 43210">
+                        <div class="invalid-feedback">
+                            {% if form.phone_number.errors %}
+                                {{ form.phone_number.errors.0 }}
+                            {% else %}
+                                Enter a valid phone number (7-15 digits, may start with +).
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">{{ form.bio.label }}</label>
-                        {{ form.bio }}
-                        {% for error in form.bio.errors %}
-                            <div class="text-danger small mt-1">{{ error }}</div>
-                        {% endfor %}
+                        <label for="{{ form.bio.id_for_label }}" class="form-label small fw-semibold">Bio</label>
+                        <textarea name="bio" id="{{ form.bio.id_for_label }}"
+                                  class="form-control {% if form.bio.errors %}is-invalid{% endif %}"
+                                  rows="3" maxlength="500"
+                                  placeholder="Tell us a little about yourself...">{{ form.bio.value|default:'' }}</textarea>
+                        <div class="d-flex justify-content-between">
+                            <div class="invalid-feedback">
+                                {% if form.bio.errors %}
+                                    {{ form.bio.errors.0 }}
+                                {% else %}
+                                    Bio must be 500 characters or fewer.
+                                {% endif %}
+                            </div>
+                            <small class="text-muted mt-1" id="bioCharCount"></small>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Address -->
                 <div class="mb-4">
-                    <label class="form-label small fw-semibold">{{ form.address.label }}</label>
-                    {{ form.address }}
-                    {% for error in form.address.errors %}
-                        <div class="text-danger small mt-1">{{ error }}</div>
-                    {% endfor %}
+                    <label for="{{ form.address.id_for_label }}" class="form-label small fw-semibold">Address</label>
+                    <textarea name="address" id="{{ form.address.id_for_label }}"
+                              class="form-control {% if form.address.errors %}is-invalid{% endif %}"
+                              rows="3" maxlength="500"
+                              placeholder="Your address">{{ form.address.value|default:'' }}</textarea>
+                    <div class="invalid-feedback">
+                        {% if form.address.errors %}
+                            {{ form.address.errors.0 }}
+                        {% else %}
+                            Address must be 500 characters or fewer.
+                        {% endif %}
+                    </div>
                 </div>
 
                 <!-- Submit -->
@@ -191,6 +221,19 @@
 <script>
 function previewAdminProfileImage(input) {
     if (input.files && input.files[0]) {
+        // Validate file size (max 5MB)
+        if (input.files[0].size > 5 * 1024 * 1024) {
+            alert('Image is too large. Maximum allowed size is 5MB.');
+            input.value = '';
+            return;
+        }
+        // Validate file type
+        var allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (allowedTypes.indexOf(input.files[0].type) === -1) {
+            alert('Unsupported image format. Please upload a JPG, PNG, GIF or WEBP file.');
+            input.value = '';
+            return;
+        }
         var reader = new FileReader();
         reader.onload = function(e) {
             var preview = document.getElementById('adminProfilePreview');
@@ -203,6 +246,19 @@ function previewAdminProfileImage(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+// Bio character counter
+(function() {
+    var bioField = document.getElementById('{{ form.bio.id_for_label }}');
+    var counter = document.getElementById('bioCharCount');
+    if (bioField && counter) {
+        function updateCount() {
+            counter.textContent = bioField.value.length + '/500';
+        }
+        bioField.addEventListener('input', updateCount);
+        updateCount();
+    }
+})();
 </script>
 
 {% endblock %}

@@ -14,7 +14,7 @@
             <thead>
                 <tr>
                     <th>Transaction ID</th>
-                    <th>Campaign</th>
+                    <th>Supporting</th>
                     <th>Amount</th>
                     <th>Date</th>
                     <th>Action</th>
@@ -24,7 +24,7 @@
                 {% for donation in donations %}
                 <tr>
                     <td><span class="badge bg-dark text-white font-heading">{{ donation.transaction_id }}</span></td>
-                    <td class="fw-bold text-dark">{{ donation.campaign.campaign_name }}</td>
+                    <td class="fw-bold text-dark">{{ donation.subject_name }}</td>
                     <td class="text-emerald fw-bold font-heading">Rs. {{ donation.amount }}</td>
                     <td class="text-muted small">{{ donation.donation_date|date:"d M Y" }}</td>
                     <td>

@@ -114,106 +114,196 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // 6. Quick Donate Modal — "Choose Amount" popup interactions
-    const quickDonateModal = document.getElementById('quickDonateModal');
-    if (quickDonateModal) {
-        const amountInput = document.getElementById('donateAmountInput');
-        const currencySelect = document.getElementById('donateCurrency');
-        const pills = document.querySelectorAll('.hr-amount-pill');
-        const monthlyToggle = document.getElementById('monthlyToggle');
-        const labelOneTime = document.getElementById('labelOneTime');
-        const labelMonthly = document.getElementById('labelMonthly');
-        const anonymousCheck = document.getElementById('anonymousCheck');
-        const nameInput = document.getElementById('donateNameInput');
-        const termsCheck = document.getElementById('termsCheck');
-        const donateSubmitBtn = document.getElementById('donateSubmitBtn');
-        const useQrBtn = document.getElementById('useQrBtn');
-        const qrBackBtn = document.getElementById('qrBackBtn');
-        const flipInner = document.getElementById('donateFlipInner');
-        const qrCodeImg = document.getElementById('qrCodeImg');
-        const qrAmountLabel = document.getElementById('qrAmountLabel');
-        const qrDoneBtn = document.getElementById('qrDoneBtn');
+    // 6. Donation appeal picker -> detail modal chain
+    var appealPickerModalEl = document.getElementById('appealPickerModal');
+    var appealDetailModalEl = document.getElementById('appealDetailModal');
 
-        // Preset pills fill the amount box and mark themselves active
-        pills.forEach(pill => {
-            pill.addEventListener('click', () => {
-                pills.forEach(p => p.classList.remove('active'));
-                pill.classList.add('active');
-                amountInput.value = pill.dataset.amount;
-            });
-        });
+    function populateAppealDetailModal(data) {
+        var titleEl = document.getElementById('appealDetailTitle');
+        var contentEl = document.getElementById('appealDetailContent');
+        if (titleEl) titleEl.textContent = data.title;
+        if (contentEl) contentEl.innerHTML = data.content;
 
-        // Typing a custom amount clears any preset selection
-        amountInput.addEventListener('input', () => {
-            pills.forEach(p => p.classList.remove('active'));
-            const match = Array.from(pills).find(p => p.dataset.amount === amountInput.value);
-            if (match) match.classList.add('active');
-        });
-
-        // Currency select updates the pill labels for consistency
-        currencySelect.addEventListener('change', () => {
-            pills.forEach(p => {
-                p.textContent = currencySelect.value + p.dataset.amount;
-            });
-        });
-
-        // One-Time / Monthly toggle swaps the emphasis + button label
-        monthlyToggle.addEventListener('change', () => {
-            const isMonthly = monthlyToggle.checked;
-            labelOneTime.classList.toggle('active', !isMonthly);
-            labelMonthly.classList.toggle('active', isMonthly);
-            donateSubmitBtn.textContent = isMonthly ? 'SUBSCRIBE MONTHLY' : 'DONATE';
-        });
-
-        // Donate anonymously collapses the name field smoothly
-        anonymousCheck.addEventListener('change', () => {
-            nameInput.classList.toggle('is-collapsed', anonymousCheck.checked);
-            if (anonymousCheck.checked) nameInput.value = '';
-        });
-
-        // Require the Terms checkbox before allowing submission
-        termsCheck.addEventListener('change', () => {
-            donateSubmitBtn.disabled = !termsCheck.checked;
-        });
-
-        function buildCheckoutUrl() {
-            const baseUrl = quickDonateModal.dataset.donateUrl || '/donate/';
-            const params = new URLSearchParams();
-            params.set('amount', amountInput.value || '0');
-            if (!anonymousCheck.checked && nameInput.value.trim()) {
-                params.set('name', nameInput.value.trim());
+        var imgEl = document.getElementById('appealDetailImg');
+        var imgErrorEl = document.getElementById('appealDetailImgError');
+        if (imgEl && imgErrorEl) {
+            if (data.image) {
+                imgEl.src = data.image;
+                imgEl.classList.remove('d-none');
+                imgErrorEl.classList.add('d-none');
+                imgEl.onerror = function () {
+                    imgEl.classList.add('d-none');
+                    imgErrorEl.classList.remove('d-none');
+                };
+            } else {
+                imgEl.removeAttribute('src');
+                imgEl.classList.add('d-none');
+                imgErrorEl.classList.remove('d-none');
             }
-            return baseUrl + '?' + params.toString();
         }
 
-        // DONATE -> hand off to the full checkout flow (email + payment method)
-        donateSubmitBtn.addEventListener('click', () => {
-            if (donateSubmitBtn.disabled) return;
-            window.location.href = buildCheckoutUrl();
-        });
+        // Setup story-style progress indicators and image clicking slider
+        var progressContainer = document.getElementById('appealDetailProgressIndicators');
+        var images = [data.image, data.image2, data.image3, data.image4].filter(Boolean);
+        var currentImgIdx = 0;
 
-        // USE QR CODE -> 3D-flip the card to a scannable QR face
-        useQrBtn.addEventListener('click', () => {
-            const amount = amountInput.value || '0';
-            const currency = currencySelect.value;
-            const ngoName = (document.body.dataset.ngoName || 'Charity').replace(/[^a-zA-Z0-9 ]/g, '');
-            qrCodeImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' +
-                encodeURIComponent('upi://pay?pa=helpinghands@upi&pn=' + ngoName + '&am=' + amount);
-            qrAmountLabel.textContent = currency + ' ' + amount;
-            flipInner.classList.add('is-flipped');
-        });
+        function updateSliderImage() {
+            if (images.length === 0) return;
+            imgEl.src = images[currentImgIdx];
+            if (progressContainer) {
+                var indicators = progressContainer.querySelectorAll('.slider-bar-indicator');
+                indicators.forEach(function (indicator, idx) {
+                    if (idx === currentImgIdx) {
+                        indicator.style.backgroundColor = '#198754'; // Active green bar
+                    } else {
+                        indicator.style.backgroundColor = 'rgba(255, 255, 255, 0.4)'; // Inactive translucent white
+                    }
+                });
+            }
+        }
 
-        qrBackBtn.addEventListener('click', () => {
-            flipInner.classList.remove('is-flipped');
-        });
+        if (progressContainer) {
+            progressContainer.innerHTML = '';
+            if (images.length > 1) {
+                images.forEach(function (_, idx) {
+                    var bar = document.createElement('div');
+                    bar.className = 'slider-bar-indicator flex-grow-1';
+                    bar.style.height = '4px';
+                    bar.style.borderRadius = '2px';
+                    bar.style.backgroundColor = idx === 0 ? '#198754' : 'rgba(255, 255, 255, 0.4)';
+                    bar.style.transition = 'background-color 0.2s ease';
+                    progressContainer.appendChild(bar);
+                });
+                progressContainer.classList.remove('d-none');
+            } else {
+                progressContainer.classList.add('d-none');
+            }
+        }
 
-        qrDoneBtn.addEventListener('click', () => {
-            window.location.href = buildCheckoutUrl();
-        });
+        if (imgEl && images.length > 1) {
+            // Recreate image element to clear previous click listeners
+            var newImgEl = imgEl.cloneNode(true);
+            imgEl.parentNode.replaceChild(newImgEl, imgEl);
+            imgEl = newImgEl;
 
-        // Reset to the front face + defaults every time the modal is closed
-        quickDonateModal.addEventListener('hidden.bs.modal', () => {
-            flipInner.classList.remove('is-flipped');
+            imgEl.addEventListener('click', function (e) {
+                var rect = imgEl.getBoundingClientRect();
+                var clickX = e.clientX - rect.left;
+                // Click left 40% goes to previous image, right 60% goes to next image
+                if (clickX < rect.width * 0.4) {
+                    currentImgIdx = (currentImgIdx - 1 + images.length) % images.length;
+                } else {
+                    currentImgIdx = (currentImgIdx + 1) % images.length;
+                }
+                updateSliderImage();
+            });
+        }
+
+        var suppliesWrap = document.getElementById('appealDetailSuppliesWrap');
+        var suppliesEl = document.getElementById('appealDetailSupplies');
+        if (suppliesEl && suppliesWrap) {
+            suppliesEl.innerHTML = '';
+            if (data.supplies && data.supplies.length > 0) {
+                data.supplies.forEach(function (item) {
+                    var col = document.createElement('div');
+                    col.className = 'col-md-6 d-flex align-items-center gap-2 small mb-2';
+                    col.innerHTML = '<i class="bi bi-check-circle-fill text-success" style="font-size: 1.15rem; color: #198754 !important;"></i> <span class="text-dark"><strong>' +
+                        item.name + '</strong> &ndash; ' + item.quantity + ' ' + item.unit + '</span>';
+                    suppliesEl.appendChild(col);
+                });
+                suppliesWrap.classList.remove('d-none');
+            } else {
+                suppliesWrap.classList.add('d-none');
+            }
+        }
+
+        var appealDonateCampaignIdInput = document.getElementById('appealDonateCampaignId');
+        if (appealDonateCampaignIdInput) appealDonateCampaignIdInput.value = data.campaignId;
+
+        var appealDonateForm = document.getElementById('appealDonateForm');
+        if (appealDonateForm) {
+            appealDonateForm.action = '/donate/appeal/' + data.appealId + '/';
+        }
+
+        // Reset the amount picker back to the default preset each time a new story opens
+        var defaultAmount = 500;
+        var appealDonateAmountInput = document.getElementById('appealDonateAmount');
+        if (appealDonateAmountInput) appealDonateAmountInput.value = defaultAmount;
+        
+        var cards = document.querySelectorAll('#appealAmountPills .hr-amount-card');
+        cards.forEach(function (card) {
+            card.classList.toggle('active', parseInt(card.getAttribute('data-amount'), 10) === defaultAmount);
+        });
+    }
+
+    function openAppealById(appealId) {
+        if (!appealDetailModalEl) return;
+        var link = document.querySelector(`.appeal-picker-link[data-appeal-id="${appealId}"]`);
+        if (!link) return;
+
+        var supplies = [];
+        try {
+            supplies = JSON.parse(link.getAttribute('data-appeal-supplies') || '[]');
+        } catch (e) {
+            supplies = [];
+        }
+
+        var data = {
+            appealId: link.getAttribute('data-appeal-id') || '',
+            title: link.getAttribute('data-appeal-title') || '',
+            content: link.getAttribute('data-appeal-content') || '',
+            image: link.getAttribute('data-appeal-image') || '',
+            image2: link.getAttribute('data-appeal-image2') || '',
+            image3: link.getAttribute('data-appeal-image3') || '',
+            image4: link.getAttribute('data-appeal-image4') || '',
+            campaignId: link.getAttribute('data-appeal-campaign-id') || '',
+            supplies: supplies,
+        };
+
+        populateAppealDetailModal(data);
+        var detailModal = bootstrap.Modal.getOrCreateInstance(appealDetailModalEl);
+        if (detailModal) detailModal.show();
+    }
+
+    if (appealPickerModalEl) {
+        appealPickerModalEl.addEventListener('click', function (event) {
+            var link = event.target.closest('.appeal-picker-link');
+            if (!link) return;
+
+            var appealId = link.getAttribute('data-appeal-id');
+            var pickerModal = bootstrap.Modal.getOrCreateInstance(appealPickerModalEl);
+            if (pickerModal) pickerModal.hide();
+
+            openAppealById(appealId);
+        });
+    }
+
+    // Auto-open appeal detail modal if 'appeal' parameter is in the URL query string
+    var urlParams = new URLSearchParams(window.location.search);
+    var appealIdParam = urlParams.get('appeal');
+    if (appealIdParam) {
+        setTimeout(function() {
+            openAppealById(appealIdParam);
+        }, 400);
+    }
+
+    // ---- Appeal donate amount cards ----
+    var appealAmountPills = document.getElementById('appealAmountPills');
+    var appealDonateAmountInput = document.getElementById('appealDonateAmount');
+    if (appealAmountPills && appealDonateAmountInput) {
+        appealAmountPills.addEventListener('click', function (event) {
+            var card = event.target.closest('.hr-amount-card');
+            if (!card) return;
+            appealAmountPills.querySelectorAll('.hr-amount-card').forEach(function (c) {
+                c.classList.remove('active');
+            });
+            card.classList.add('active');
+            appealDonateAmountInput.value = card.getAttribute('data-amount');
+        });
+        appealDonateAmountInput.addEventListener('input', function () {
+            appealAmountPills.querySelectorAll('.hr-amount-card').forEach(function (c) {
+                c.classList.toggle('active', c.getAttribute('data-amount') === appealDonateAmountInput.value);
+            });
         });
     }
 
@@ -300,4 +390,16 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     }
+
+    // ---- Bootstrap 5 Form Client-side Validation ----
+    var validationForms = document.querySelectorAll('.needs-validation');
+    validationForms.forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
 });

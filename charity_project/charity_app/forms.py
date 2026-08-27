@@ -7,9 +7,10 @@ the public donation form, registration, the custom admin panel's forms
 """
 
 from django import forms
+from django.forms import inlineformset_factory
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Donation, Campaign, SiteSettings, Testimonial, UserProfile, FAQ, ContactMessage, HelpRequest, Update
+from .models import Donation, Campaign, SiteSettings, Testimonial, UserProfile, FAQ, ContactMessage, HelpRequest, Update, DonationAppeal, AppealSupplyItem, VolunteerMessage
 
 import re
 
@@ -120,6 +121,8 @@ class DonationForm(forms.ModelForm):
         # accidentally donate to a completed/upcoming campaign.
         self.fields['campaign'].queryset = Campaign.objects.filter(status='active')
         self.fields['campaign'].label = 'Select Campaign'
+        self.fields['campaign'].empty_label = 'General Donation (No specific fundraiser)'
+        self.fields['campaign'].required = False
         self.fields['amount'].label = 'Donation Amount (Rs.)'
 
     def clean_donor_name(self):
@@ -136,12 +139,18 @@ class DonationForm(forms.ModelForm):
 
 class RegisterForm(UserCreationForm):
     """
-    Extends Django's built-in UserCreationForm to also ask for an email address.
+    Extends Django's built-in UserCreationForm to also ask for an email address
+    and whether the person wants to volunteer with us.
     """
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
         'class': 'form-control',
         'placeholder': 'Enter your email'
     }))
+    is_volunteer = forms.BooleanField(
+        required=False,
+        label="I'd like to volunteer with you",
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
 
     class Meta:
         model = User
@@ -222,7 +231,7 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = UserProfile
-        fields = ['profile_picture', 'phone_number', 'address', 'bio']
+        fields = ['profile_picture', 'phone_number', 'address', 'bio', 'is_volunteer']
         widgets = {
             'profile_picture': forms.FileInput(attrs={'class': 'profile-file-input', 'accept': 'image/*'}),
             'phone_number': forms.TextInput(attrs={
@@ -231,6 +240,7 @@ class ProfileForm(forms.ModelForm):
             'address': forms.Textarea(attrs={
                 'class': 'form-control', 'rows': 3, 'placeholder': 'Your address'
             }),
+            'is_volunteer': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -247,7 +257,11 @@ class ProfileForm(forms.ModelForm):
             self.fields['email'].initial = self.current_user.email
 
     def clean_username(self):
-        username = self.cleaned_data['username']
+        username = self.cleaned_data['username'].strip()
+        if len(username) < 3:
+            raise forms.ValidationError('Username must be at least 3 characters long.')
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            raise forms.ValidationError('Username may only contain letters, digits, and underscores.')
         existing = User.objects.filter(username=username)
         if self.current_user:
             existing = existing.exclude(pk=self.current_user.pk)
@@ -256,9 +270,9 @@ class ProfileForm(forms.ModelForm):
         return username
 
     def clean_email(self):
-        # Same idea as clean_username above -- but for email, since login and
-        # "Forgot Password" both look accounts up by email address.
         email = self.cleaned_data['email'].strip().lower()
+        if not email:
+            raise forms.ValidationError('Email address is required.')
         existing = User.objects.filter(email__iexact=email)
         if self.current_user:
             existing = existing.exclude(pk=self.current_user.pk)
@@ -267,7 +281,22 @@ class ProfileForm(forms.ModelForm):
         return email
 
     def clean_phone_number(self):
-        return validate_phone(self.cleaned_data.get('phone_number', ''))
+        phone = self.cleaned_data.get('phone_number', '').strip()
+        if not phone:
+            raise forms.ValidationError('Phone number is required.')
+        return validate_phone(phone)
+
+    def clean_bio(self):
+        bio = self.cleaned_data.get('bio', '').strip()
+        if len(bio) > 500:
+            raise forms.ValidationError('Bio must be 500 characters or fewer.')
+        return bio
+
+    def clean_address(self):
+        address = self.cleaned_data.get('address', '').strip()
+        if len(address) > 500:
+            raise forms.ValidationError('Address must be 500 characters or fewer.')
+        return address
 
     def clean_profile_picture(self):
         picture = self.cleaned_data.get('profile_picture')
@@ -343,9 +372,6 @@ class CampaignForm(forms.ModelForm):
 
         if start_date and end_date and end_date <= start_date:
             self.add_error('end_date', "End date must be after the start date.")
-
-        if goal_amount is not None and raised_amount is not None and raised_amount > goal_amount:
-            self.add_error('raised_amount', "Raised amount cannot exceed the goal amount.")
 
         return cleaned_data
 
@@ -625,7 +651,10 @@ class HelpRequestForm(forms.ModelForm):
                 'class': 'form-control hr-glass-input', 'placeholder': 'Your full name'
             }),
             'email': forms.EmailInput(attrs={
-                'class': 'form-control hr-glass-input', 'placeholder': 'Your email address'
+                'class': 'form-control hr-glass-input',
+                'placeholder': 'Your email address',
+                'pattern': r'^[a-zA-Z0-9._%+-]+@gmail\.com$',
+                'title': 'Please enter a valid Gmail address ending in @gmail.com'
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control hr-glass-input', 'placeholder': 'Phone number (optional)'
@@ -637,11 +666,26 @@ class HelpRequestForm(forms.ModelForm):
                 'class': 'form-control hr-glass-input', 'placeholder': '56000', 'step': '1'
             }),
             'treatment_stage': forms.RadioSelect(attrs={'class': 'd-none'}),
-            'document': forms.ClearableFileInput(attrs={'class': 'form-control d-none', 'id': 'id_document'}),
+            'document': forms.ClearableFileInput(attrs={
+                'class': 'form-control d-none',
+                'id': 'id_document',
+                'accept': '.pdf',
+                'required': 'required'
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['document'].required = True
 
     def clean_full_name(self):
         return validate_name(self.cleaned_data['full_name'], "Name")
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        if not email.endswith('@gmail.com'):
+            raise forms.ValidationError("Only Gmail addresses (ending with @gmail.com) are accepted for help requests.")
+        return email
 
     def clean_phone(self):
         return validate_phone(self.cleaned_data.get('phone', ''))
@@ -662,6 +706,11 @@ class HelpRequestForm(forms.ModelForm):
 
     def clean_document(self):
         document = self.cleaned_data.get('document')
+        if not document:
+            raise forms.ValidationError("Supporting document is required.")
+        ext = document.name.rsplit('.', 1)[-1].lower() if '.' in document.name else ''
+        if ext != 'pdf':
+            raise forms.ValidationError("Supporting document must be a PDF file.")
         validate_document_file(document)
         return document
 
@@ -691,3 +740,118 @@ class UpdateForm(forms.ModelForm):
         image = self.cleaned_data.get('image')
         validate_image_file(image)
         return image
+
+    def clean_link_url(self):
+        link_url = (self.cleaned_data.get('link_url') or '').strip()
+        if link_url and not re.match(r'^https?://', link_url, re.IGNORECASE):
+            raise forms.ValidationError("Link must be a full URL starting with http:// or https://.")
+        return link_url
+
+
+class DonationAppealForm(forms.ModelForm):
+    """
+    Used in the admin panel (Website Content -> Donation Appeals) to Add/Edit
+    a rich donation appeal -- the "Story Title / Story Content / Story Image"
+    form the client designed.
+    """
+
+    class Meta:
+        model = DonationAppeal
+        fields = ['title', 'content', 'image', 'image2', 'image3', 'image4', 'campaign', 'is_published', 'display_order']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control', 'placeholder': 'Enter a short and attractive title'
+            }),
+            'content': forms.Textarea(attrs={
+                'class': 'form-control d-none', 'id': 'id_content_raw', 'rows': 6,
+            }),
+            'image': forms.ClearableFileInput(attrs={'class': 'd-none', 'id': 'id_image'}),
+            'image2': forms.ClearableFileInput(attrs={'class': 'd-none', 'id': 'id_image2'}),
+            'image3': forms.ClearableFileInput(attrs={'class': 'd-none', 'id': 'id_image3'}),
+            'image4': forms.ClearableFileInput(attrs={'class': 'd-none', 'id': 'id_image4'}),
+            'campaign': forms.Select(attrs={'class': 'form-select'}),
+            'is_published': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'display_order': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean_title(self):
+        title = self.cleaned_data['title'].strip()
+        if len(title) < 5:
+            raise forms.ValidationError("Title should be at least 5 characters long.")
+        return title
+
+    def clean_content(self):
+        content = self.cleaned_data['content'].strip()
+        if len(content) < 20:
+            raise forms.ValidationError("Please write a fuller story (at least 20 characters).")
+        return content
+
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+        validate_image_file(image)
+        return image
+
+    def clean_image2(self):
+        image = self.cleaned_data.get('image2')
+        validate_image_file(image)
+        return image
+
+    def clean_image3(self):
+        image = self.cleaned_data.get('image3')
+        validate_image_file(image)
+        return image
+
+    def clean_image4(self):
+        image = self.cleaned_data.get('image4')
+        validate_image_file(image)
+        return image
+
+
+class AppealSupplyItemForm(forms.ModelForm):
+    class Meta:
+        model = AppealSupplyItem
+        fields = ['item_name', 'quantity', 'unit']
+        widgets = {
+            'item_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Atta'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 250', 'step': '0.01'}),
+            'unit': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def clean_quantity(self):
+        quantity = self.cleaned_data.get('quantity')
+        if quantity is not None and quantity <= 0:
+            raise forms.ValidationError("Quantity must be greater than zero.")
+        return quantity
+
+
+AppealSupplyItemFormSet = inlineformset_factory(
+    DonationAppeal, AppealSupplyItem,
+    form=AppealSupplyItemForm,
+    extra=5, can_delete=True,
+)
+
+
+class VolunteerMessageForm(forms.Form):
+    """
+    Used on the admin Volunteers page to compose a message that gets
+    emailed to either one volunteer or every volunteer at once.
+    """
+    subject = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Subject'})
+    )
+    body = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 6, 'placeholder': 'Write your message to volunteers here...'})
+    )
+
+    def clean_subject(self):
+        subject = self.cleaned_data['subject'].strip()
+        if len(subject) < 3:
+            raise forms.ValidationError("Subject should be at least 3 characters long.")
+        return subject
+
+    def clean_body(self):
+        body = self.cleaned_data['body'].strip()
+        if len(body) < 10:
+            raise forms.ValidationError("Message should be at least 10 characters long.")
+        return body

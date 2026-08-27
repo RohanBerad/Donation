@@ -56,7 +56,7 @@
         <table class="table table-hover align-middle">
             <thead>
                 <tr>
-                    <th>Campaign</th>
+                    <th>Supporting</th>
                     <th>Amount</th>
                     <th>Date</th>
                     <th>Payment Method</th>
@@ -66,7 +66,7 @@
             <tbody>
                 {% for donation in donations %}
                 <tr>
-                    <td class="fw-bold text-dark">{{ donation.campaign.campaign_name }}</td>
+                    <td class="fw-bold text-dark">{{ donation.subject_name }}</td>
                     <td class="text-emerald fw-bold font-heading">Rs. {{ donation.amount }}</td>
                     <td class="text-muted small">{{ donation.donation_date|date:"d M Y" }}</td>
                     <td class="text-muted small">{{ donation.get_payment_method_display }}</td>

@@ -1,3 +1,15 @@
-Django>=5.0,<6.1
-razorpay>=1.4.2
-mysqlclient>=2.2.0
+# Core
+Django==6.0.7
+gunicorn==23.0.0
+
+# Database (MySQL backend used in settings.py)
+mysqlclient==2.2.4
+
+# Image handling (ImageField / FileField in models.py)
+Pillow==10.4.0
+
+# Payments (razorpay imported in views.py)
+razorpay==1.4.1
+
+# Static files serving in production
+whitenoise==6.12.0

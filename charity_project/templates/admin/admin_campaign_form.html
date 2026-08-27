@@ -10,36 +10,50 @@
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <div class="mb-3">
             <label class="form-label fw-semibold">{{ form.campaign_name.label }}</label>
             {{ form.campaign_name }}
+            {% for error in form.campaign_name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
         </div>
 
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">{{ form.category.label }}</label>
                 {{ form.category }}
+                {% for error in form.category.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">{{ form.status.label }}</label>
                 {{ form.status }}
+                {% for error in form.status.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
             </div>
         </div>
 
         <div class="mb-3">
             <label class="form-label fw-semibold">{{ form.description.label }}</label>
             {{ form.description }}
+            {% for error in form.description.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
         </div>
 
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">{{ form.goal_amount.label }} (Rs.)</label>
                 {{ form.goal_amount }}
+                {% for error in form.goal_amount.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">{{ form.raised_amount.label }} (Rs.)</label>
                 {{ form.raised_amount }}
                 <small class="text-muted">Update this manually if you receive offline donations.</small>
+                {% for error in form.raised_amount.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
             </div>
         </div>
 
@@ -47,10 +61,12 @@
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">{{ form.start_date.label }}</label>
                 {{ form.start_date }}
+                {% for error in form.start_date.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold">{{ form.end_date.label }}</label>
                 {{ form.end_date }}
+                {% for error in form.end_date.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
             </div>
         </div>
 
@@ -62,6 +78,7 @@
                     <img src="{{ campaign.campaign_image.url }}" alt="" style="max-height: 100px; border-radius: 8px;">
                 </div>
             {% endif %}
+            {% for error in form.campaign_image.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
         </div>
 
         <button type="submit" class="btn btn-primary">

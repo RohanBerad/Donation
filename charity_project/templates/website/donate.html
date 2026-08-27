@@ -18,13 +18,15 @@
                         </div>
                     </div>
 
-                    <form method="post" id="donation-form">
+                    <form method="post" id="donation-form" class="needs-validation" novalidate>
                         {% csrf_token %}
 
+                        {% if not appeal %}
                         <div class="mb-4">
                             <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">{{ form.campaign.label }}</label>
                             {{ form.campaign }}
                         </div>
+                        {% endif %}
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
@@ -41,30 +43,30 @@
                             <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">{{ form.amount.label }}</label>
                             {{ form.amount }}
                         </div>
-<div class="mb-4">
-    <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">
-        Payment Method
-    </label>
+                        <div class="mb-4">
+                            <label class="form-label text-dark fw-bold small text-uppercase tracking-wider">
+                                Payment Method
+                            </label>
 
-    <div class="d-flex flex-column gap-2">
+                            <div class="d-flex flex-column gap-2">
 
-        {% for radio in form.payment_method %}
-        <div class="form-check border rounded-3 p-3">
-            {{ radio.tag }}
-            <label class="form-check-label ms-2" for="{{ radio.id_for_label }}">
-                {{ radio.choice_label }}
-            </label>
-        </div>
-        {% endfor %}
+                                {% for radio in form.payment_method %}
+                                <div class="form-check border rounded-3 p-3">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label ms-2" for="{{ radio.id_for_label }}">
+                                        {{ radio.choice_label }}
+                                    </label>
+                                </div>
+                                {% endfor %}
 
-    </div>
+                            </div>
 
-    {% if form.payment_method.errors %}
-        <div class="text-danger mt-2">
-            {{ form.payment_method.errors }}
-        </div>
-    {% endif %}
-</div>
+                            {% if form.payment_method.errors %}
+                                <div class="text-danger mt-2">
+                                    {{ form.payment_method.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
 
                         <button type="submit" class="btn-hr-green w-100 py-3 fs-6">
                             PROCEED TO PAYMENT <i class="bi bi-arrow-up-right ms-2"></i>
@@ -75,22 +77,48 @@
 
             <!-- LIVE PREVIEW CARD -->
             <div class="col-lg-5">
-                <div class="hr-form-card sticky-top" style="top: 100px;">
-                    <span class="hr-badge-pill mb-3">Selected Campaign</span>
+                <div class="hr-form-card" >
+                    {% if appeal %}
+                        <span class="hr-badge-pill mb-3">Selected Story</span>
 
-                    <img id="preview-image" src="{% if campaign.campaign_image %}{{ campaign.campaign_image.url }}{% else %}https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=600&auto=format&fit=crop{% endif %}"
-                         class="w-100 rounded-4 mb-3" alt="Campaign preview" style="height: 180px; object-fit: cover;">
+                        <img id="preview-image" src="{% if appeal.image %}{{ appeal.image.url }}{% else %}https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=600&auto=format&fit=crop{% endif %}"
+                             class="w-100 rounded-4 mb-3" alt="Story preview" style="height: 180px; object-fit: cover;">
 
-                    <h4 id="preview-name" class="font-heading fw-bold text-dark mb-2">{{ campaign.campaign_name|default:"Select a campaign" }}</h4>
+                        <h4 id="preview-name" class="font-heading fw-bold text-dark mb-2">{{ appeal.title }}</h4>
 
-                    <div class="hr-progress mb-2">
-                        <div id="preview-progress" class="hr-progress-bar" style="width: {{ campaign.progress_percentage|default:0 }}%"></div>
-                    </div>
-                    <p class="small text-muted mb-4">
-                        Rs. <span id="preview-raised" class="text-dark fw-bold">{{ campaign.raised_amount|default:0 }}</span> raised of
-                        Rs. <span id="preview-goal" class="text-dark fw-bold">{{ campaign.goal_amount|default:0 }}</span>
-                        (<span id="preview-percent" class="text-emerald fw-bold">{{ campaign.progress_percentage|default:0 }}</span>%)
-                    </p>
+                        {% if appeal.campaign %}
+                            <div class="hr-progress mb-2">
+                                <div id="preview-progress" class="hr-progress-bar" style="width: {{ appeal.campaign.progress_percentage }}%"></div>
+                            </div>
+                            <p class="small text-muted mb-4">
+                                Rs. <span id="preview-raised" class="text-dark fw-bold">{{ appeal.campaign.raised_amount }}</span> raised of
+                                Rs. <span id="preview-goal" class="text-dark fw-bold">{{ appeal.campaign.goal_amount }}</span>
+                                (<span id="preview-percent" class="text-emerald fw-bold">{{ appeal.campaign.progress_percentage }}</span>%)
+                            </p>
+                        {% else %}
+                            <p class="small text-muted mb-4">
+                                Rs. <span id="preview-raised" class="text-dark fw-bold">{{ appeal.raised_amount }}</span> raised so far
+                            </p>
+                        {% endif %}
+                    {% else %}
+                        <span class="hr-badge-pill mb-3">Selected Campaign</span>
+
+                        <img id="preview-image" src="{% if campaign.campaign_image %}{{ campaign.campaign_image.url }}{% else %}https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=600&auto=format&fit=crop{% endif %}"
+                             class="w-100 rounded-4 mb-3" alt="Campaign preview" style="height: 180px; object-fit: cover;">
+
+                        <h4 id="preview-name" class="font-heading fw-bold text-dark mb-2">{{ campaign.campaign_name|default:"Select a campaign" }}</h4>
+
+                        {% if campaign %}
+                            <div class="hr-progress mb-2">
+                                <div id="preview-progress" class="hr-progress-bar" style="width: {{ campaign.progress_percentage }}%"></div>
+                            </div>
+                            <p class="small text-muted mb-4">
+                                Rs. <span id="preview-raised" class="text-dark fw-bold">{{ campaign.raised_amount }}</span> raised of
+                                Rs. <span id="preview-goal" class="text-dark fw-bold">{{ campaign.goal_amount }}</span>
+                                (<span id="preview-percent" class="text-emerald fw-bold">{{ campaign.progress_percentage|default:0 }}</span>%)
+                            </p>
+                        {% endif %}
+                    {% endif %}
 
                     <div class="p-3 rounded-4 bg-light border text-center">
                         <span class="text-muted small d-block mb-1">Your Total Donation</span>

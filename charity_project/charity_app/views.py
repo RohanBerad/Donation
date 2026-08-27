@@ -25,11 +25,12 @@ import random
 import razorpay
 from django.conf import settings
 from django.contrib.auth.models import User
-from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile, PasswordResetOTP, FAQ, ContactMessage, HelpRequest, Notification, Update
+from .models import Campaign, Donation, SiteSettings, Testimonial, UserProfile, PasswordResetOTP, FAQ, ContactMessage, HelpRequest, Notification, Update, DonationAppeal, AppealSupplyItem, VolunteerMessage
 from .forms import (
     DonationForm, RegisterForm, CampaignForm, AdminLoginForm,
     SiteSettingsForm, TestimonialForm, TestimonialSubmissionForm, ProfileForm, EmailLoginForm,
-    FAQForm, ContactForm, HelpRequestForm, UpdateForm,
+    FAQForm, ContactForm, HelpRequestForm, UpdateForm, DonationAppealForm, AppealSupplyItemFormSet,
+    VolunteerMessageForm,
 )
 
 
@@ -134,8 +135,8 @@ def home(request):
     stories_shared_count = testimonials.count()
     average_rating = testimonials.aggregate(avg=Avg('rating'))['avg'] or 0
 
-    # "Updates From [NGO Name]" cards -- managed from the admin panel
-    updates = Update.objects.filter(is_active=True)[:12]
+    # "Updates From [NGO Name]" cards -- managed from the admin panel, oldest first
+    updates = Update.objects.filter(is_active=True).order_by('publish_date')[:12]
 
     context = {
         'settings': site_settings,
@@ -257,7 +258,13 @@ def contact_view(request):
             messages.success(request, "Thanks for reaching out! We'll get back to you soon.")
             return redirect('contact')
     else:
-        form = ContactForm()
+        # If a logged-in user visits the Contact page, pre-fill their
+        # name and email so they don't have to type it again.
+        initial = {}
+        if request.user.is_authenticated:
+            initial['name'] = request.user.get_full_name() or request.user.username
+            initial['email'] = request.user.email
+        form = ContactForm(initial=initial)
 
     return render(request, 'website/contact.html', {'form': form})
 
@@ -281,57 +288,46 @@ def terms_view(request):
 # ==========================================================
 # 4. DONATE PAGE (Donation Form) -- Step 1 of the payment flow
 # ==========================================================
-def donate(request, campaign_id=None):
+def donate(request, campaign_id=None, appeal_id=None):
     """
-    Donation Form
+    Donation Form (supports campaigns, appeals/stories, or general donations)
     """
-
     preselected_campaign = None
+    preselected_appeal = None
 
     if campaign_id:
-        preselected_campaign = get_object_or_404(
-            Campaign,
-            id=campaign_id
-        )
+        preselected_campaign = get_object_or_404(Campaign, id=campaign_id)
+    elif appeal_id:
+        preselected_appeal = get_object_or_404(DonationAppeal, id=appeal_id)
+        if preselected_appeal.campaign:
+            preselected_campaign = preselected_appeal.campaign
 
     if request.method == 'POST':
-
-        print("FORM SUBMITTED")
-
         form = DonationForm(request.POST)
-
         if form.is_valid():
-
-            print("FORM VALID")
-
+            campaign_obj = form.cleaned_data.get('campaign') or preselected_campaign
             request.session['pending_donation'] = {
-                'campaign_id': form.cleaned_data['campaign'].id,
+                'campaign_id': campaign_obj.id if campaign_obj else None,
+                'appeal_id': preselected_appeal.id if preselected_appeal else None,
                 'donor_name': form.cleaned_data['donor_name'],
                 'email': form.cleaned_data['email'],
                 'amount': str(form.cleaned_data['amount']),
                 'payment_method': form.cleaned_data['payment_method'],
             }
-
             return redirect('payment_gateway')
-
         else:
-
-            print("FORM ERRORS")
-            print(form.errors)
-
+            print("FORM ERRORS", form.errors)
     else:
-
         initial = {}
-
         if preselected_campaign:
             initial['campaign'] = preselected_campaign
-
+        if request.user.is_authenticated:
+            initial['donor_name'] = request.user.username
+            initial['email'] = request.user.email
         form = DonationForm(initial=initial)
 
     campaigns_json = {}
-
     for c in Campaign.objects.filter(status='active'):
-
         campaigns_json[str(c.id)] = {
             'name': c.campaign_name,
             'image': c.campaign_image.url if c.campaign_image else '',
@@ -343,7 +339,8 @@ def donate(request, campaign_id=None):
     context = {
         'form': form,
         'campaign': preselected_campaign,
-        'campaigns_json': campaigns_json
+        'appeal': preselected_appeal,
+        'campaigns_json': campaigns_json,
     }
 
     return render(
@@ -367,7 +364,13 @@ def payment_gateway(request):
         )
     )
 
-    campaign = get_object_or_404(Campaign, id=pending['campaign_id'])
+    campaign = None
+    if pending.get('campaign_id'):
+        campaign = get_object_or_404(Campaign, id=pending['campaign_id'])
+
+    appeal = None
+    if pending.get('appeal_id'):
+        appeal = get_object_or_404(DonationAppeal, id=pending['appeal_id'])
 
     amount = int(float(pending['amount']) * 100)
 
@@ -377,11 +380,19 @@ def payment_gateway(request):
         "payment_capture": "1"
     })
 
+    subject_title = "General Donation"
+    if campaign:
+        subject_title = campaign.campaign_name
+    elif appeal:
+        subject_title = appeal.title
+
     context = {
         "pending": pending,
         "payment": payment,
         "key": settings.RAZORPAY_KEY_ID,
         "campaign": campaign,
+        "appeal": appeal,
+        "subject_title": subject_title,
     }
 
     return render(
@@ -407,13 +418,17 @@ def payment_success(request):
     if not pending:
         return redirect('campaign_list')
 
-    campaign = get_object_or_404(
-        Campaign,
-        id=pending['campaign_id']
-    )
+    campaign = None
+    if pending.get('campaign_id'):
+        campaign = get_object_or_404(Campaign, id=pending['campaign_id'])
+
+    appeal = None
+    if pending.get('appeal_id'):
+        appeal = get_object_or_404(DonationAppeal, id=pending['appeal_id'])
 
     donation = Donation(
         campaign=campaign,
+        appeal=appeal,
         donor_name=pending['donor_name'],
         email=pending['email'],
         amount=Decimal(pending['amount']),
@@ -426,10 +441,11 @@ def payment_success(request):
     donation.razorpay_payment_id = payment_id
     donation.save()
 
+    subject = donation.subject_name
     Notification.objects.create(
         notification_type='donation',
         title='New Donation Received',
-        message=f"{donation.donor_name} donated Rs. {donation.amount} to {campaign.campaign_name}",
+        message=f"{donation.donor_name} donated Rs. {donation.amount} to {subject}",
         url='/myadmin/donations/',
     )
 
@@ -474,7 +490,7 @@ def download_receipt(request, donation_id):
 
 Donor Name     : {donation.donor_name}
 Email          : {donation.email}
-Campaign       : {donation.campaign.campaign_name}
+Supporting     : {donation.subject_name}
 Amount Donated : Rs. {donation.amount}
 Payment Method : {donation.get_payment_method_display()}
 Transaction ID : {donation.transaction_id}
@@ -504,7 +520,7 @@ def register_view(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            UserProfile.objects.create(user=user)
+            UserProfile.objects.create(user=user, is_volunteer=form.cleaned_data.get('is_volunteer', False))
             login(request, user)  # log the user in immediately after registering
             messages.success(request, 'Account created successfully! Welcome.')
             return redirect('dashboard')
@@ -724,9 +740,12 @@ def reset_password(request):
 @login_required
 def dashboard(request):
     """Overview page: profile summary card, quick stats, and recent donations."""
-    donations = Donation.objects.filter(user=request.user).order_by('-donation_date')
+    donations = Donation.objects.filter(user=request.user).select_related('campaign', 'appeal').order_by('-donation_date')
     total_donated = donations.aggregate(total=Sum('amount'))['total'] or 0
-    campaigns_supported = donations.values('campaign').distinct().count()
+    distinct_campaigns = donations.filter(campaign__isnull=False).values('campaign').distinct().count()
+    distinct_appeals = donations.filter(appeal__isnull=False).values('appeal').distinct().count()
+    has_general = donations.filter(campaign__isnull=True, appeal__isnull=True).exists()
+    campaigns_supported = distinct_campaigns + distinct_appeals + (1 if has_general else 0)
 
     context = {
         'donations': donations[:5],
@@ -740,15 +759,26 @@ def dashboard(request):
 @login_required
 def dashboard_donations(request):
     """Shows the donor's FULL donation history."""
-    donations = Donation.objects.filter(user=request.user).order_by('-donation_date')
+    donations = Donation.objects.filter(user=request.user).select_related('campaign', 'appeal').order_by('-donation_date')
     return render(request, 'website/dashboard_donations.html', {'donations': donations})
 
 
 @login_required
 def dashboard_receipts(request):
     """Shows every donation with a Download Receipt button next to it."""
-    donations = Donation.objects.filter(user=request.user).order_by('-donation_date')
+    donations = Donation.objects.filter(user=request.user).select_related('campaign', 'appeal').order_by('-donation_date')
     return render(request, 'website/dashboard_receipts.html', {'donations': donations})
+
+
+@login_required
+def dashboard_volunteer_messages(request):
+    """Shows messages sent to the logged-in volunteer by the admin team."""
+    volunteer_messages = VolunteerMessage.objects.filter(
+        recipients=request.user
+    ).select_related('sent_by').order_by('-sent_at')
+    return render(request, 'website/dashboard_volunteer_messages.html', {
+        'volunteer_messages': volunteer_messages,
+    })
 
 
 @login_required
@@ -915,7 +945,7 @@ def admin_dashboard(request):
         'total_donations': Donation.objects.count(),
         'total_raised': Donation.objects.aggregate(total=Sum('amount'))['total'] or 0,
         'total_donors': Donation.objects.values('email').distinct().count(),
-        'recent_donations': Donation.objects.select_related('campaign').order_by('-donation_date')[:5],
+        'recent_donations': Donation.objects.select_related('campaign', 'appeal').order_by('-donation_date')[:5],
         'unread_messages': ContactMessage.objects.filter(is_read=False).count(),
         'new_help_requests': HelpRequest.objects.filter(status='new').count(),
         'total_testimonials': Testimonial.objects.count(),
@@ -1007,25 +1037,7 @@ def admin_profile(request):
     else:
         form = ProfileForm(instance=profile, current_user=request.user)
 
-    profile_fields_filled = 0
-    total_profile_fields = 4
-    if profile.profile_picture:
-        profile_fields_filled += 1
-    if profile.phone_number:
-        profile_fields_filled += 1
-    if profile.bio:
-        profile_fields_filled += 1
-    if profile.address:
-        profile_fields_filled += 1
-    profile_completion = int((profile_fields_filled / total_profile_fields) * 100)
-
-    context = {
-        'form': form,
-        'profile_completion': profile_completion,
-        'profile_fields_filled': profile_fields_filled,
-        'total_profile_fields': total_profile_fields,
-    }
-    return render(request, 'admin/admin_profile.html', context)
+    return render(request, 'admin/admin_profile.html', {'form': form})
 
 
 @admin_required
@@ -1091,7 +1103,7 @@ def admin_campaign_delete(request, campaign_id):
 @admin_required
 def admin_donation_list(request):
     """Shows every donation made on the platform, with the newest first."""
-    donation_list = Donation.objects.select_related('campaign').order_by('-donation_date')
+    donation_list = Donation.objects.select_related('campaign', 'appeal').order_by('-donation_date')
     paginator = Paginator(donation_list, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -1126,6 +1138,89 @@ def admin_donor_list(request):
     return render(request, 'admin/admin_donor_list.html', {'page_obj': page_obj})
 
 
+# ==========================================================
+# ADMIN: VOLUNTEERS
+# ==========================================================
+@admin_required
+def admin_volunteer_list(request):
+    """
+    Shows every registered user who checked "I'd like to volunteer" at
+    sign-up, with a checkbox to select some/all of them and send a message.
+    """
+    volunteers = UserProfile.objects.filter(is_volunteer=True).select_related('user').order_by('-profile_created_on')
+
+    paginator = Paginator(volunteers, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    recent_messages = VolunteerMessage.objects.all()[:5]
+
+    context = {
+        'page_obj': page_obj,
+        'total_volunteers': volunteers.count(),
+        'recent_messages': recent_messages,
+    }
+    return render(request, 'admin/admin_volunteer_list.html', context)
+
+
+@admin_required
+def admin_volunteer_message(request):
+    """
+    Sends an email to either every volunteer, or a hand-picked subset,
+    and logs it as a VolunteerMessage so staff can see what was sent.
+    Reached from the "Send Message" button/checkboxes on the Volunteers page.
+    """
+    volunteer_qs = UserProfile.objects.filter(is_volunteer=True).select_related('user')
+
+    if request.method == 'POST':
+        form = VolunteerMessageForm(request.POST)
+        selected_ids = request.POST.getlist('volunteer_ids')
+        send_to_all = request.POST.get('send_to_all') == 'on'
+
+        if send_to_all:
+            recipients = volunteer_qs
+        else:
+            recipients = volunteer_qs.filter(user_id__in=selected_ids)
+
+        if not recipients.exists():
+            messages.error(request, 'Please select at least one volunteer, or choose "Send to all".')
+        elif form.is_valid():
+            subject = form.cleaned_data['subject']
+            body = form.cleaned_data['body']
+            recipient_emails = [v.user.email for v in recipients if v.user.email]
+
+            try:
+                send_mail(
+                    subject=subject,
+                    message=body,
+                    from_email=None,
+                    recipient_list=recipient_emails,
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+            volunteer_message = VolunteerMessage.objects.create(
+                subject=subject, body=body, sent_to_all=send_to_all,
+                sent_by=request.user,
+            )
+            volunteer_message.recipients.set([v.user for v in recipients])
+
+            messages.success(request, f'Message sent to {recipients.count()} volunteer(s).')
+            return redirect('admin_volunteer_list')
+
+    else:
+        form = VolunteerMessageForm()
+        selected_ids = request.GET.getlist('volunteer_ids')
+
+    context = {
+        'form': form,
+        'volunteers': volunteer_qs,
+        'preselected_ids': [int(i) for i in selected_ids] if selected_ids else [],
+    }
+    return render(request, 'admin/admin_volunteer_message.html', context)
+
+
 @admin_required
 def admin_site_settings(request):
     """
@@ -1135,6 +1230,7 @@ def admin_site_settings(request):
     """
     site_settings = SiteSettings.load()
     updates = Update.objects.all().order_by('-publish_date')
+    donation_appeals = DonationAppeal.objects.all().select_related('campaign')
 
     if request.method == 'POST':
         form = SiteSettingsForm(request.POST, request.FILES, instance=site_settings)
@@ -1146,7 +1242,7 @@ def admin_site_settings(request):
     else:
         form = SiteSettingsForm(instance=site_settings)
 
-    return render(request, 'admin/admin_site_settings.html', {'form': form, 'updates': updates})
+    return render(request, 'admin/admin_site_settings.html', {'form': form, 'updates': updates, 'donation_appeals': donation_appeals})
 
 
 @admin_required
@@ -1316,6 +1412,71 @@ def admin_update_delete(request, update_id):
 
 
 # ==========================================================
+# ADMIN: DONATION APPEALS (rich "story" shown in the Donate flow)
+# ==========================================================
+@admin_required
+def admin_appeal_add(request):
+    """
+    Lets a staff member write a new donation appeal -- the "Add New Story"
+    form: title, rich content, image, linked campaign, and a dynamic table
+    of essential supplies received.
+    """
+    if request.method == 'POST':
+        form = DonationAppealForm(request.POST, request.FILES)
+        formset = AppealSupplyItemFormSet(request.POST, prefix='items')
+
+        if form.is_valid() and formset.is_valid():
+            appeal = form.save()
+            formset.instance = appeal
+            formset.save()
+            messages.success(request, 'Donation appeal saved successfully!')
+            return redirect(reverse('admin_site_settings') + '?panel=home-page')
+    else:
+        form = DonationAppealForm()
+        formset = AppealSupplyItemFormSet(prefix='items')
+
+    return render(request, 'admin/admin_appeal_form.html', {
+        'form': form, 'formset': formset, 'page_title': 'Add New Story'
+    })
+
+
+@admin_required
+def admin_appeal_edit(request, appeal_id):
+    """Lets a staff member edit an existing donation appeal and its supply list."""
+    appeal = get_object_or_404(DonationAppeal, id=appeal_id)
+
+    if request.method == 'POST':
+        form = DonationAppealForm(request.POST, request.FILES, instance=appeal)
+        formset = AppealSupplyItemFormSet(request.POST, instance=appeal, prefix='items')
+
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            formset.save()
+            messages.success(request, 'Donation appeal saved successfully!')
+            return redirect(reverse('admin_site_settings') + '?panel=home-page')
+    else:
+        form = DonationAppealForm(instance=appeal)
+        formset = AppealSupplyItemFormSet(instance=appeal, prefix='items')
+
+    return render(request, 'admin/admin_appeal_form.html', {
+        'form': form, 'formset': formset, 'page_title': 'Edit Story', 'appeal': appeal
+    })
+
+
+@admin_required
+def admin_appeal_delete(request, appeal_id):
+    """Deletes a donation appeal (and its supply items) after confirmation."""
+    appeal = get_object_or_404(DonationAppeal, id=appeal_id)
+
+    if request.method == 'POST':
+        appeal.delete()
+        messages.success(request, 'Donation appeal deleted.')
+        return redirect(reverse('admin_site_settings') + '?panel=home-page')
+
+    return render(request, 'admin/admin_appeal_delete.html', {'appeal': appeal})
+
+
+# ==========================================================
 # ADMIN: CONTACT MESSAGES
 # ==========================================================
 @admin_required
@@ -1350,6 +1511,10 @@ def admin_contact_delete(request, message_id):
 
     return render(request, 'admin/admin_contact_delete.html', {'contact_message': contact_message})
 
+
+# ==========================================================
+# ADMIN: HELP REQUESTS
+# ==========================================================
 @admin_required
 def admin_request_list(request):
     """Shows every submission from the public 'Get Help' form on the homepage."""
@@ -1375,22 +1540,51 @@ def admin_request_detail(request, request_id):
     """
     Shows one help request's full detail, including the attached document
     (if any) and lets staff update its status / add internal notes.
+    Also allows the admin to send a custom email to the requester.
     """
     help_request = get_object_or_404(HelpRequest, id=request_id)
 
     if request.method == 'POST':
-        new_status = request.POST.get('status')
-        admin_notes = request.POST.get('admin_notes', '')
+        action = request.POST.get('action', 'update_status')
 
-        if new_status in dict(HelpRequest.STATUS_CHOICES):
-            help_request.status = new_status
-        help_request.admin_notes = admin_notes
-        help_request.save()
+        if action == 'send_email':
+            email_subject = request.POST.get('email_subject', '').strip()
+            email_message = request.POST.get('email_message', '').strip()
 
-        messages.success(request, 'Request updated.')
-        return redirect('admin_request_detail', request_id=help_request.id)
+            if not email_subject or not email_message:
+                messages.error(request, 'Both subject and message are required to send an email.')
+            else:
+                try:
+                    send_mail(
+                        subject=email_subject,
+                        message=email_message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[help_request.email],
+                        fail_silently=False,
+                    )
+                    messages.success(request, f'Email sent successfully to {help_request.email}!')
+                except Exception as e:
+                    messages.error(request, f'Failed to send email: {e}')
 
-    return render(request, 'admin/admin_request_detail.html', {'help_request': help_request})
+            return redirect('admin_request_detail', request_id=help_request.id)
+
+        else:
+            new_status = request.POST.get('status')
+            admin_notes = request.POST.get('admin_notes', '')
+
+            if new_status in dict(HelpRequest.STATUS_CHOICES):
+                help_request.status = new_status
+            help_request.admin_notes = admin_notes
+            help_request.save()
+
+            messages.success(request, 'Request updated.')
+            return redirect('admin_request_detail', request_id=help_request.id)
+
+    context = {
+        'help_request': help_request,
+        'admin_email': settings.DEFAULT_FROM_EMAIL,
+    }
+    return render(request, 'admin/admin_request_detail.html', context)
 
 
 @admin_required
@@ -1401,7 +1595,7 @@ def admin_request_delete(request, request_id):
     if request.method == 'POST':
         help_request.delete()
         messages.success(request, 'Request deleted.')
-        return redirect('admin_request_list')
+        return redirect('request')
 
     return render(request, 'admin/admin_request_delete.html', {'help_request': help_request})
 

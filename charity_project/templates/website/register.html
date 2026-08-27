@@ -14,7 +14,7 @@
                         <p class="text-muted small">Join our community of impactful donors</p>
                     </div>
 
-                    <form method="post">
+                    <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
 
                         <div class="mb-3">
@@ -47,6 +47,15 @@
                             {% for error in form.password2.errors %}
                                 <small class="text-danger d-block mt-1">{{ error }}</small>
                             {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_volunteer }}
+                                <label class="form-check-label small text-dark" for="id_is_volunteer">
+                                    {{ form.is_volunteer.label }}
+                                </label>
+                            </div>
                         </div>
 
                         <button type="submit" class="btn-hr-green w-100 py-3 fs-6">REGISTER NOW</button>

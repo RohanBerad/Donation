@@ -1,0 +1,99 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_title %}Send Message to Volunteers{% endblock %}
+{% block admin_heading %}Send Message to Volunteers{% endblock %}
+
+{% block admin_content %}
+
+<form method="post" id="volunteerMessageForm">
+    {% csrf_token %}
+
+    <div class="admin-card mb-4">
+        <div class="mb-3">
+            <label class="form-label fw-semibold">{{ form.subject.label }}</label>
+            {{ form.subject }}
+            {% for error in form.subject.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="mb-1">
+            <label class="form-label fw-semibold">{{ form.body.label }}</label>
+            {{ form.body }}
+            {% for error in form.body.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        </div>
+    </div>
+
+    <div class="admin-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h5 class="fw-bold mb-0">Recipients</h5>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="send_to_all" id="sendToAllCheck">
+                <label class="form-check-label fw-semibold" for="sendToAllCheck">Send to all volunteers ({{ volunteers.count }})</label>
+            </div>
+        </div>
+
+        {% if volunteers %}
+        <div class="table-responsive" id="volunteerCheckboxTable">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" class="form-check-input" id="selectAllVolunteersCheck">
+                        </th>
+                        <th>Name</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in volunteers %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input volunteer-checkbox" name="volunteer_ids" value="{{ profile.user.id }}"
+                                   {% if profile.user.id in preselected_ids %}checked{% endif %}>
+                        </td>
+                        <td class="fw-semibold">{{ profile.user.username }}</td>
+                        <td class="small text-muted">{{ profile.user.email|default:"--" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No volunteers yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'admin_volunteer_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-send"></i> Send Message
+        </button>
+    </div>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var sendToAllCheck = document.getElementById('sendToAllCheck');
+        var selectAllCheck = document.getElementById('selectAllVolunteersCheck');
+        var volunteerTable = document.getElementById('volunteerCheckboxTable');
+        var checkboxes = document.querySelectorAll('.volunteer-checkbox');
+
+        function toggleTable() {
+            if (volunteerTable) {
+                volunteerTable.style.opacity = sendToAllCheck.checked ? '0.4' : '1';
+                volunteerTable.style.pointerEvents = sendToAllCheck.checked ? 'none' : 'auto';
+            }
+        }
+
+        if (sendToAllCheck) {
+            sendToAllCheck.addEventListener('change', toggleTable);
+            toggleTable();
+        }
+
+        if (selectAllCheck) {
+            selectAllCheck.addEventListener('change', function () {
+                checkboxes.forEach(function (cb) { cb.checked = selectAllCheck.checked; });
+            });
+        }
+    });
+</script>
+
+{% endblock %}

@@ -130,6 +130,26 @@
     resize:none;
 }
 
+.profile-form input[type="checkbox"]{
+    width:1.1rem;
+    height:1.1rem;
+    min-height:0;
+    padding:0;
+    margin-top:.2rem;
+    accent-color:#20c878;
+}
+
+.profile-form .form-check{
+    display:flex;
+    align-items:center;
+    gap:.55rem;
+}
+
+.profile-form .form-check label{
+    margin:0;
+    cursor:pointer;
+}
+
 .profile-form label{
     font-size:13px;
     letter-spacing:.5px;

@@ -105,7 +105,8 @@ class Donation(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
 
     # ForeignKey = one campaign can have many donations
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name='donations')
+    campaign = models.ForeignKey(Campaign, on_delete=models.SET_NULL, related_name='donations', blank=True, null=True)
+    appeal = models.ForeignKey('DonationAppeal', on_delete=models.SET_NULL, related_name='donations', blank=True, null=True)
 
     donor_name = models.CharField(max_length=150)
     email = models.EmailField()
@@ -118,6 +119,14 @@ class Donation(models.Model):
         blank=True,
         null=True
     )
+
+    @property
+    def subject_name(self):
+        if self.campaign:
+            return self.campaign.campaign_name
+        elif self.appeal:
+            return self.appeal.title
+        return "General Donation"
 
     def save(self, *args, **kwargs):
         """
@@ -155,6 +164,7 @@ class UserProfile(models.Model):
     phone_number = models.CharField(max_length=15, blank=True)
     address = models.TextField(blank=True)
     bio = models.TextField(blank=True, help_text="Short bio about the user")
+    is_volunteer = models.BooleanField(default=False, help_text="Checked at sign-up if the person wants to volunteer with us")
     profile_created_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -571,7 +581,84 @@ class Update(models.Model):
 
 
 # ==========================================================
-# SIGNALS: Keep Campaign.raised_amount in sync with Donations
+# 11. DONATION APPEAL MODEL (Stories)
+# ==========================================================
+class DonationAppeal(models.Model):
+    """
+    A rich "donation appeal" story shown when someone clicks Donate on the
+    website (e.g. "Together, We Are Feeding Hundreds of Sadhus Every Day").
+    Staff write these from the admin panel under Website Content -> Donation
+    Appeals. Each appeal can optionally be linked to a real Campaign.
+    """
+
+    title = models.CharField(max_length=200)
+    content = models.TextField(
+        help_text="The full letter to donors. Supports basic formatting (bold, italic, lists, links)."
+    )
+    image = models.ImageField(upload_to='appeals/', blank=True, null=True)
+    image2 = models.ImageField(upload_to='appeals/', blank=True, null=True)
+    image3 = models.ImageField(upload_to='appeals/', blank=True, null=True)
+    image4 = models.ImageField(upload_to='appeals/', blank=True, null=True)
+    campaign = models.ForeignKey(
+        Campaign, on_delete=models.SET_NULL, related_name='donation_appeals',
+        blank=True, null=True,
+        help_text="Donations made from this appeal are recorded against this campaign."
+    )
+    raised_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    is_published = models.BooleanField(default=False, help_text="Only published appeals appear on the website")
+    display_order = models.PositiveIntegerField(default=0, help_text="Lower numbers show first")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['display_order', '-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class AppealSupplyItem(models.Model):
+    """One row of the 'Essential Supplies Received' checklist on a DonationAppeal."""
+
+    UNIT_CHOICES = [
+        ('kg', 'kg'), ('g', 'g'), ('ltr', 'Litre'), ('ml', 'ml'),
+        ('pcs', 'Pieces'), ('packet', 'Packet'), ('box', 'Box'), ('unit', 'Unit'),
+    ]
+
+    appeal = models.ForeignKey(DonationAppeal, on_delete=models.CASCADE, related_name='supply_items')
+    item_name = models.CharField(max_length=100)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    unit = models.CharField(max_length=20, choices=UNIT_CHOICES, default='kg')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"{self.item_name} - {self.quantity}{self.unit}"
+
+
+class VolunteerMessage(models.Model):
+    """
+    Logs every message staff send to volunteers from the admin Volunteers
+    page, so there's a record of what was sent, to whom, and when.
+    """
+
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    sent_to_all = models.BooleanField(default=False, help_text="True if this was broadcast to every volunteer")
+    recipients = models.ManyToManyField(User, related_name='volunteer_messages_received', blank=True)
+    sent_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='volunteer_messages_sent')
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-sent_at']
+
+    def __str__(self):
+        return self.subject
+
+
+# ==========================================================
+# SIGNALS: Keep Campaign and DonationAppeal raised_amount in sync
 # ==========================================================
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -583,12 +670,15 @@ from django.db.models import Sum
 def sync_campaign_raised_amount(sender, instance, **kwargs):
     """
     Whenever a Donation is created, updated, or deleted, recalculate
-    the linked Campaign's raised_amount from ALL actual donations.
-    This makes the stored field a cache that is always correct,
-    eliminating race conditions and the need for manual fixes.
+    the linked Campaign's and/or DonationAppeal's raised_amount.
     """
     if instance.campaign_id:
         total = Donation.objects.filter(
             campaign_id=instance.campaign_id
         ).aggregate(total=Sum('amount'))['total'] or 0
         Campaign.objects.filter(pk=instance.campaign_id).update(raised_amount=total)
+    if instance.appeal_id:
+        total = Donation.objects.filter(
+            appeal_id=instance.appeal_id
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        DonationAppeal.objects.filter(pk=instance.appeal_id).update(raised_amount=total)

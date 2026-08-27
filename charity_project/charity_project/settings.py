@@ -28,8 +28,10 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://donation-production-b409.up.railway.app/',
+    'https://donation-production-b409.up.railway.app',
 ]
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 # Application definition
 
 INSTALLED_APPS = [
@@ -140,6 +142,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (user-uploaded campaign images)
 MEDIA_URL = '/media/'
